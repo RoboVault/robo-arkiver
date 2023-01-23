@@ -1,7 +1,7 @@
 import { SupabaseClient, RealtimeChannel } from "../../deps.ts";
 import { Arkive, ArkiveMessageEvent } from "../types.ts";
 import { getSupabaseClient, rm, unpack } from "../utils.ts";
-import { logError } from "../worker/utils.ts";
+import { logError } from "../utils.ts";
 
 export class ArkiveManager {
   private indexerWorker: Worker;
@@ -9,6 +9,9 @@ export class ArkiveManager {
   private newArkiveListener?: RealtimeChannel;
 
   constructor() {
+    this.sendArkives = this.sendArkives.bind(this);
+    this.pullPackages = this.pullPackages.bind(this);
+    this.removePackage = this.removePackage.bind(this);
     this.indexerWorker = new Worker(
       new URL("../worker/mod.ts", import.meta.url),
       {
@@ -33,11 +36,22 @@ export class ArkiveManager {
         },
       }
     );
-    this.indexerWorker.onmessage = (e: MessageEvent<ArkiveMessageEvent>) => {
+    this.indexerWorker.onmessage = async (
+      e: MessageEvent<ArkiveMessageEvent>
+    ) => {
       if (e.data.topic === "workerError") {
         logError(e.data.data.error, {
           source: "worker-arkive-" + e.data.data.arkive.id,
         });
+      } else if (e.data.topic === "synced") {
+        try {
+          await this.removePackage(e.data.data.arkive);
+          await this.updateArkiveStatus(e.data.data.arkive, "retired");
+        } catch (error) {
+          logError(error, {
+            source: "worker-arkive-synced-" + e.data.data.arkive.id,
+          });
+        }
       }
     };
     this.supabase = getSupabaseClient();
@@ -69,16 +83,14 @@ export class ArkiveManager {
   }
 
   private listenForNewArkives() {
-    const sendArkives = this.sendArkives.bind(this);
-    const pullPackages = this.pullPackages.bind(this);
     const listener = this.supabase
       .channel("arkive-changes")
       .on<Arkive>(
         "postgres_changes",
         { event: "INSERT", schema: "public" },
         async (payload) => {
-          await pullPackages([payload.new]);
-          sendArkives([payload.new]);
+          await this.pullPackages([payload.new]);
+          this.sendArkives([payload.new]);
         }
       )
       .subscribe();
@@ -132,6 +144,25 @@ export class ArkiveManager {
       await rm(localPath.pathname);
     });
     await Promise.all(promises);
+  }
+
+  private async removePackage(arkive: Arkive) {
+    const path = `${arkive.owner_id}/${arkive.name}`;
+    const localDir = new URL(
+      `../packages/${path}/${arkive.version_number}`,
+      import.meta.url
+    );
+    await rm(localDir.pathname, { recursive: true });
+  }
+
+  private async updateArkiveStatus(arkive: Arkive, status: string) {
+    const { error } = await this.supabase
+      .from("arkive")
+      .update({ status })
+      .eq("id", arkive.id);
+    if (error) {
+      throw error;
+    }
   }
 
   public cleanup() {

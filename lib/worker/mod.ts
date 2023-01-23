@@ -1,13 +1,16 @@
 import { delay } from "../../deps.ts";
-import { ArkiveMessageEvent } from "../types.ts";
-import { Arkive } from "../types.ts";
-import { ArkiveRunner } from "./arkive-runner.ts";
+import { Arkive, ArkiveMessageEvent } from "../types.ts";
+import { TaskManager } from "./task-manager/mod.ts";
 
 declare const self: Worker;
 
-await delay(1000);
+const taskManager = new TaskManager();
+taskManager.addEventListener("synced", (e) => {
+  const arkive = (e as CustomEvent<{ arkive: Arkive }>).detail.arkive;
+  self.postMessage({ topic: "synced", data: { arkive } });
+});
 
-const arkiveRunners: { arkive: Arkive; runner: ArkiveRunner }[] = [];
+await delay(1000); // we wait 1 seconds for worker to be ready to listen to events
 
 self.onmessage = (e: MessageEvent<ArkiveMessageEvent>) => {
   const { topic, data } = e.data;
@@ -16,27 +19,9 @@ self.onmessage = (e: MessageEvent<ArkiveMessageEvent>) => {
     case "newArkives": {
       const { arkives } = data;
       for (const arkive of arkives) {
-        addRunner(arkive);
+        taskManager.addTask(arkive);
       }
       break;
     }
-  }
-};
-
-const addRunner = async (arkive: Arkive) => {
-  const manifestPath = `../packages/${arkive.owner_id}/${arkive.name}/${arkive.version_number}/manifest.config.ts`;
-  try {
-    const { manifest } = await import(manifestPath);
-    const runner = new ArkiveRunner(manifest, arkive);
-    arkiveRunners.push({ runner, arkive });
-    runner.run();
-  } catch (e) {
-    self.postMessage({
-      topic: "workerError",
-      data: {
-        error: e,
-        arkive,
-      },
-    });
   }
 };
