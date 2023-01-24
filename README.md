@@ -7,7 +7,7 @@ RoboArkiver is a highly configurable and extensible tool for indexing evm data.
 ### Prerequisites
 * [deno](https://deno.land/)
 
-### Run the indexer locally
+### Run the arkiver locally
 1. clone the repo
 2. setup a supabase project
 3. copy .env.sample to .env and fill the supabase variables. you can omit the influxdb variables if you're not persisting the data
