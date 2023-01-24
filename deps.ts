@@ -9,4 +9,5 @@ export {
   Point,
   InfluxDB,
   type FluxTableMetaData,
+  type QueryApi,
 } from "https://esm.sh/@influxdata/influxdb-client@1.33.0";

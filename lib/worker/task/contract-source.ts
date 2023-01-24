@@ -1,7 +1,9 @@
 import { ethers, Point } from "../../../deps.ts";
-import { Measurement } from "./influx.ts";
-import { devLog, logError } from "../../utils.ts";
+import { devLog, getEnv, logError } from "../../utils.ts";
 import { EventHandler } from "../../types.ts";
+import { StatusProvider } from "../../providers/types.ts";
+import { InfluxDBAdapter } from "../../providers/influxdb.ts";
+import { mockStatusProvider } from "../../providers/mock.ts";
 
 export class ContractSource {
   private readonly abiName: string;
@@ -11,6 +13,7 @@ export class ContractSource {
   private readonly contract: ethers.Contract;
   private readonly blockRange: number;
   private readonly eventHandler: EventHandler;
+  private readonly statusProvider: StatusProvider;
 
   constructor(params: {
     abiName: string;
@@ -28,6 +31,16 @@ export class ContractSource {
     this.contract = params.contract;
     this.blockRange = params.blockRange;
     this.eventHandler = params.eventHandler;
+    if (getEnv("DENO_ENV") === "PROD") {
+      this.statusProvider = new InfluxDBAdapter({
+        url: getEnv("INFLUXDB_URL"),
+        token: getEnv("INFLUXDB_TOKEN"),
+        bucket: getEnv("INFLUXDB_BUCKET"),
+        org: getEnv("INFLUXDB_ORG"),
+      });
+    } else {
+      this.statusProvider = mockStatusProvider;
+    }
   }
 
   public async init() {
@@ -35,17 +48,11 @@ export class ContractSource {
   }
 
   private async checkIndexedBlockHeight() {
-    const measurement = new Measurement();
-
-    const indexedBlockHeight = await measurement.getLastValue({
-      field: "blockHeight",
-      range: { start: new Date(0), end: new Date() },
-      filters: {
-        contract: this.contract.address,
-        chain: this.chainName,
-        eventName: this.eventQuery,
-      },
-      groupKeys: ["contract", "chain", "eventName"],
+    const indexedBlockHeight = await this.statusProvider.getIndexedBlockHeight({
+      type: "eventHandler",
+      address: this.contract.address,
+      chain: this.chainName,
+      eventName: this.eventQuery,
     });
 
     devLog(

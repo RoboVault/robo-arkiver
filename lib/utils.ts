@@ -36,7 +36,7 @@ export const getEnv = (key: string, defaultValue?: string): string => {
 };
 
 export const devLog = (...logs: unknown[]) => {
-  if (getEnv("NODE_ENV") === "DEV") {
+  if (getEnv("DENO_ENV") === "DEV") {
     console.log(logs.map((log) => JSON.stringify(log)).join(" "));
   }
 };

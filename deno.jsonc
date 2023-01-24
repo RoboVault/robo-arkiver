@@ -1,5 +1,5 @@
 {
   "tasks": {
-    "dev": "NODE_ENV=DEV deno run -A --unstable main.ts"
+    "dev": "DENO_ENV=DEV deno run -A --unstable main.ts"
   }
 }
