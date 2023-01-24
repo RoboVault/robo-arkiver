@@ -6,7 +6,6 @@ RoboArkiver is a highly configurable and extensible tool for indexing evm data.
 
 ### Prerequisites
 * [deno](https://deno.land/)
-* [docker](https://www.docker.com/)
 
 ### Run the indexer locally
 1. clone the repo
