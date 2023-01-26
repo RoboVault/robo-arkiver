@@ -37,7 +37,7 @@ export class ArkiveManager {
 
   private listenForNewArkives() {
     this.arkiveProvider.listenNewArkive(async (arkive) => {
-      console.log("new arkive", arkive);
+      devLog("new arkive", arkive);
       await this.addNewArkive(arkive);
     });
   }
@@ -45,7 +45,7 @@ export class ArkiveManager {
   private listenForDeletedArkives() {
     this.arkiveProvider.listenDeletedArkive(async (arkive) => {
       const fullArkive = this.arkives.find((a) => a.arkive.id === arkive.id);
-      console.log("deleted arkive", fullArkive?.arkive);
+      devLog("deleted arkive", fullArkive?.arkive);
       if (!fullArkive) {
         return;
       }

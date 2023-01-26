@@ -1,6 +1,6 @@
 import { ArkiveProvider } from "./types.ts";
 import { RealtimeChannel, SupabaseClient } from "../../deps.ts";
-import { getEnv, getSupabaseClient, rm, unpack } from "../utils.ts";
+import { devLog, getEnv, getSupabaseClient, rm, unpack } from "../utils.ts";
 import { Arkive } from "../types.ts";
 
 export class SupabaseProvider implements ArkiveProvider {
@@ -35,13 +35,11 @@ export class SupabaseProvider implements ArkiveProvider {
           table: getEnv("SUPABASE_ARKIVE_TABLE"),
         },
         async (payload) => {
-          console.log("new arkive heard", payload);
           await callback(payload.new);
         }
       )
       .subscribe();
 
-    console.log("listening for new arkives");
     this.newArkiveListener = listener;
   }
 
@@ -68,7 +66,6 @@ export class SupabaseProvider implements ArkiveProvider {
 
   public async pullArkive(arkive: Arkive): Promise<void> {
     const path = `${arkive.user_id}/${arkive.name}`;
-    console.log(`Pulling ${path}...`);
 
     const { data, error } = await this.supabase.storage
       .from(getEnv("SUPABASE_ARKIVE_STORAGE"))
@@ -112,6 +109,6 @@ export class SupabaseProvider implements ArkiveProvider {
     if (this.deletedArkiveListener) {
       this.deletedArkiveListener.unsubscribe();
     }
-    console.log("closed");
+    devLog("closed");
   }
 }

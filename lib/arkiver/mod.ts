@@ -6,10 +6,10 @@ import { BlockHandler } from "./block-handler.ts";
 import { Arkive } from "../types.ts";
 
 declare const self: Worker;
-console.log("worker started");
+devLog("worker started");
 
 self.onmessage = (e: MessageEvent<ArkiveMessageEvent>) => {
-  console.log("worker received message", e.data);
+  devLog("worker received message", e.data);
   switch (e.data.topic) {
     case "initArkive": {
       const { arkive, manifest } = e.data.data;
