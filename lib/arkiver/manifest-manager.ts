@@ -1,9 +1,9 @@
-import { ethers } from "../../../deps.ts";
-import { devLog } from "../../utils.ts";
+import { ethers } from "../../deps.ts";
+import { devLog } from "../utils.ts";
 import { ContractSource } from "./contract-source.ts";
 import { BlockHandler } from "./block-handler.ts";
-import { IManifest, BlockHandlerFn, EventHandler } from "../../types.ts";
-import { Arkive } from "../../types.ts";
+import { IManifest, BlockHandlerFn, EventHandler } from "../types.ts";
+import { Arkive } from "../types.ts";
 
 export class ManifestManager {
   private readonly manifest: IManifest;
@@ -21,7 +21,7 @@ export class ManifestManager {
   constructor(manifest: IManifest, arkiveData: Arkive) {
     this.manifest = manifest;
     this.arkiveData = arkiveData;
-    this.packagePath = `../../packages/${this.arkiveData.owner_id}/${this.arkiveData.name}/${this.arkiveData.version_number}`;
+    this.packagePath = `../packages/${this.arkiveData.user_id}/${this.arkiveData.name}/${this.arkiveData.version_number}`;
   }
 
   public async init() {

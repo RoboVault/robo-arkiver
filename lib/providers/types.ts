@@ -21,8 +21,11 @@ export interface EventHandlerStatusParams {
 
 export interface ArkiveProvider {
   getArkives(): Promise<Arkive[]>;
-  listenArkives(callback: (arkives: Arkive) => Promise<void>): void;
-  pullArkives(arkives: Arkive[]): void;
-  updateArkiveStatus(arkive: Arkive, status: string): void;
+  listenNewArkive(callback: (arkive: Arkive) => Promise<void>): void;
+  listenDeletedArkive(
+    callback: (arkive: Partial<Arkive>) => Promise<void>
+  ): void;
+  pullArkive(arkives: Arkive): Promise<void>;
+  updateArkiveStatus(arkive: Arkive, status: string): Promise<void>;
   close(): void;
 }

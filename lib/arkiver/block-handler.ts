@@ -1,9 +1,9 @@
-import { ethers, Point } from "../../../deps.ts";
-import { devLog, getEnv, logError } from "../../utils.ts";
-import { BlockHandlerFn } from "../../types.ts";
-import { StatusProvider } from "../../providers/types.ts";
-import { InfluxDBAdapter } from "../../providers/influxdb.ts";
-import { mockStatusProvider } from "../../providers/mock.ts";
+import { ethers, Point } from "../../deps.ts";
+import { devLog, getEnv, logError } from "../utils.ts";
+import { BlockHandlerFn } from "../types.ts";
+import { StatusProvider } from "../providers/types.ts";
+import { InfluxDBAdapter } from "../providers/influxdb.ts";
+import { mockStatusProvider } from "../providers/mock.ts";
 
 export class BlockHandler {
   private readonly chainName: string;

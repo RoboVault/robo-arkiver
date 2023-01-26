@@ -1,8 +1,7 @@
-import { SUPABASE_URL } from "./constants.ts";
 import { createClient, ethers, Point } from "../deps.ts";
 
 export const getSupabaseClient = () => {
-  return createClient(SUPABASE_URL, getEnv("SUPABASE_SERVICE_KEY"), {
+  return createClient(getEnv("SUPABASE_URL"), getEnv("SUPABASE_SERVICE_KEY"), {
     auth: { storage: localStorage },
   });
 };

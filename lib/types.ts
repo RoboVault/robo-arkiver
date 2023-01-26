@@ -3,7 +3,7 @@ export interface Arkive {
   id: number;
   version_number: number;
   status: string;
-  owner_id: string;
+  user_id: string;
   name: string;
 }
 
@@ -13,9 +13,10 @@ export type ArkiveMessageEvent =
   | ArkiveSyncedEvent;
 
 export interface NewArkiveMessageEvent {
-  topic: "newArkives";
+  topic: "initArkive";
   data: {
-    arkives: Arkive[];
+    arkive: Arkive;
+    manifest: IManifest;
   };
 }
 

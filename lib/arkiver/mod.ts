@@ -1,11 +1,30 @@
-import { IManifest } from "../../types.ts";
+import { ArkiveMessageEvent, IManifest } from "../types.ts";
 import { ManifestManager } from "./manifest-manager.ts";
-import { delay, logError } from "../../utils.ts";
+import { delay, devLog, logError } from "../utils.ts";
 import { ContractSource } from "./contract-source.ts";
 import { BlockHandler } from "./block-handler.ts";
-import { Arkive } from "../../types.ts";
+import { Arkive } from "../types.ts";
 
-export class Task extends EventTarget {
+declare const self: Worker;
+console.log("worker started");
+
+self.onmessage = (e: MessageEvent<ArkiveMessageEvent>) => {
+  console.log("worker received message", e.data);
+  switch (e.data.topic) {
+    case "initArkive": {
+      const { arkive, manifest } = e.data.data;
+      devLog("initializing arkive", arkive);
+      const arkiver = new Arkiver(manifest, arkive);
+      arkiver.addEventListener("synced", () => {
+        self.postMessage({ topic: "synced", data: { arkive } });
+      });
+      arkiver.run();
+      break;
+    }
+  }
+};
+
+export class Arkiver extends EventTarget {
   private manifestManager: ManifestManager;
   private running = true;
   private delayMs = 200;
