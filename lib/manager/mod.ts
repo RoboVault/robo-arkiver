@@ -27,11 +27,12 @@ export class ArkiveManager {
     await Promise.all(
       aggregatedArkives.map(async (arkive) => {
         await this.addNewArkive(arkive);
-      })
+      }),
     );
   }
 
   private async getArkives() {
+    devLog("fetching existing arkives");
     return await this.arkiveProvider.getArkives();
   }
 
@@ -40,6 +41,7 @@ export class ArkiveManager {
       devLog("new arkive", arkive);
       await this.addNewArkive(arkive);
     });
+    devLog("listening for new arkives");
   }
 
   private listenForDeletedArkives() {
@@ -52,6 +54,7 @@ export class ArkiveManager {
       await this.removeArkive(fullArkive.arkive);
       fullArkive.worker.terminate();
     });
+    devLog("listening for deleted arkives");
   }
 
   private aggregateArkives(arkives: Arkive[]) {
@@ -66,6 +69,7 @@ export class ArkiveManager {
         aggregatedMap.set(key, arkive);
       }
     }
+    devLog("aggregated arkives", [...aggregatedMap.values()]);
     return [...aggregatedMap.values()];
   }
 
@@ -74,15 +78,19 @@ export class ArkiveManager {
     await this.pullPackage(arkive);
     const worker = await this.spawnArkiverWorker(arkive);
     this.arkives = [...this.arkives, { arkive, worker }];
+    devLog("added new arkive", arkive);
   }
 
   private async removeArkive(arkive: Arkive) {
+    devLog("removing arkive", arkive);
     this.arkives = this.arkives.filter((a) => a.arkive.id !== arkive.id);
     await this.removePackage(arkive);
+    devLog("removed arkive", arkive);
   }
 
   private async spawnArkiverWorker(arkive: Arkive) {
-    const manifestPath = `../packages/${arkive.user_id}/${arkive.name}/${arkive.version_number}/manifest.config.ts`;
+    const manifestPath =
+      `../packages/${arkive.user_id}/${arkive.name}/${arkive.version_number}/manifest.config.ts`;
     const { manifest } = await import(manifestPath);
 
     const worker = new Worker(new URL("../arkiver/mod.ts", import.meta.url), {
@@ -107,7 +115,6 @@ export class ArkiveManager {
         },
       },
     });
-    // await delay(3[000);
     worker.onmessage = async (e: MessageEvent<ArkiveMessageEvent>) => {
       if (e.data.topic === "workerError") {
         logError(e.data.data.error, {
@@ -151,7 +158,7 @@ export class ArkiveManager {
       (a) =>
         a.arkive.user_id === arkive.user_id &&
         a.arkive.name === arkive.name &&
-        a.arkive.version_number < arkive.version_number
+        a.arkive.version_number < arkive.version_number,
     );
   }
 
@@ -159,7 +166,7 @@ export class ArkiveManager {
     const path = `${arkive.user_id}/${arkive.name}`;
     const localDir = new URL(
       `../packages/${path}/${arkive.version_number}`,
-      import.meta.url
+      import.meta.url,
     );
     await rm(localDir.pathname, { recursive: true });
   }

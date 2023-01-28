@@ -50,8 +50,11 @@ export class BlockHandler {
   private async checkIndexedBlockHeight() {
     const indexedBlockHeight = await this.statusProvider.getIndexedBlockHeight({
       type: "blockHandler",
-      chain: this.chainName,
-      blockHandler: this.blockHandlerName,
+      _blockHandler: this.blockHandlerName,
+      _chain: this.chainName,
+      _arkiveName: this.arkive.name,
+      _arkiveVersion: this.arkive.version_number.toString(),
+      _arkiveUserId: this.arkive.user_id,
     });
 
     devLog("indexedBlockHeight", indexedBlockHeight, this.blockHandlerName);
@@ -64,7 +67,7 @@ export class BlockHandler {
   public getDataPoints(
     currentBlockHeight: number,
     store: Record<string, unknown>,
-    callback: (points: Point[]) => void
+    callback: (points: Point[]) => void,
   ): void {
     if (this.startBlockHeight > currentBlockHeight) {
       return;
@@ -88,7 +91,7 @@ export class BlockHandler {
 
   private async fetchAndHandleBlocks(
     startBlockHeight: number,
-    store: Record<string, unknown>
+    store: Record<string, unknown>,
   ): Promise<Point[]> {
     try {
       const block = await this.provider.getBlock(startBlockHeight);

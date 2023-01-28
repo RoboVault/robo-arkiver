@@ -3,7 +3,7 @@ import {
   EventHandlerStatusParams,
   StatusProvider,
 } from "./types.ts";
-import { InfluxDB, type QueryApi, type FluxTableMetaData } from "../../deps.ts";
+import { type FluxTableMetaData, InfluxDB, type QueryApi } from "../../deps.ts";
 
 export interface queryOptions {
   measurement?: string;
@@ -29,45 +29,80 @@ export class InfluxDBAdapter implements StatusProvider {
   }
 
   public async getIndexedBlockHeight(
-    params: BlockHandlerStatusParams | EventHandlerStatusParams
+    params: BlockHandlerStatusParams | EventHandlerStatusParams,
   ): Promise<number> {
     if (params.type === "blockHandler") {
-      const { blockHandler, chain } = params;
+      const {
+        _arkiveName,
+        _arkiveUserId,
+        _arkiveVersion,
+        _blockHandler,
+        _chain,
+      } = params;
       const indexedBlockHeight = await this.getLastValue({
         field: "blockHeight",
         range: { start: new Date(0), end: new Date() },
         filters: {
-          chain,
-          blockHandler,
+          _arkiveName,
+          _arkiveUserId,
+          _arkiveVersion,
+          _blockHandler,
+          _chain,
         },
-        groupKeys: ["chain", "blockHandler"],
+        groupKeys: [
+          "_arkiveName",
+          "_arkiveUserId",
+          "_arkiveVersion",
+          "_blockHandler",
+          "_chain",
+        ],
       });
       return indexedBlockHeight || 0;
     } else {
-      const { address, chain, eventName } = params;
+      const {
+        _abi,
+        _address,
+        _arkiveName,
+        _arkiveUserId,
+        _arkiveVersion,
+        _chain,
+        _event,
+      } = params;
       const indexedBlockHeight = await this.getLastValue({
         field: "blockHeight",
         range: { start: new Date(0), end: new Date() },
         filters: {
-          chain,
-          contract: address,
-          eventName,
+          _abi,
+          _address,
+          _arkiveName,
+          _arkiveUserId,
+          _arkiveVersion,
+          _chain,
+          _event,
         },
-        groupKeys: ["chain", "contract", "eventName"],
+        groupKeys: [
+          "_abi",
+          "_address",
+          "_arkiveName",
+          "_arkiveUserId",
+          "_arkiveVersion",
+          "_chain",
+          "_event",
+        ],
       });
       return indexedBlockHeight || 0;
     }
   }
 
   public async getFirstValue(
-    options: queryOptions
+    options: queryOptions,
   ): Promise<number | undefined> {
     const res = await this.query(options, "|> first()");
     return res[0]?._value as number;
   }
 
   public async getLastValue(
-    options: queryOptions
+    options: queryOptions,
   ): Promise<number | undefined> {
     const res = await this.query(options, "|> last()");
     return res[0]?._value as number;
@@ -75,10 +110,11 @@ export class InfluxDBAdapter implements StatusProvider {
 
   public async query(
     options: queryOptions,
-    raw: string
+    raw: string,
   ): Promise<Record<string, unknown>[]> {
     let query = `from(bucket: "${this.bucket}")`;
-    const range = `|> range(start: ${options.range.start.toISOString()}, stop: ${options.range.end.toISOString()})`;
+    const range =
+      `|> range(start: ${options.range.start.toISOString()}, stop: ${options.range.end.toISOString()})`;
     const measurement = `${
       options.measurement
         ? `|> filter(fn: (r) => r._measurement == "${options.measurement}")`
@@ -86,9 +122,11 @@ export class InfluxDBAdapter implements StatusProvider {
     }`;
     const filters = `${
       options.filters
-        ? `|> filter(fn: (r) => ${Object.entries(options.filters)
+        ? `|> filter(fn: (r) => ${
+          Object.entries(options.filters)
             .map(([tag, value]) => `r.${tag} == "${value}"`)
-            .join(" and ")})`
+            .join(" and ")
+        })`
         : ""
     }`;
     const field = `|> filter(fn: (r) => r._field == "${options.field}")`;
@@ -99,7 +137,8 @@ export class InfluxDBAdapter implements StatusProvider {
     }`;
     const fnCall = raw ?? "";
 
-    query = `${query} ${range} ${measurement} ${filters} ${field} ${groupKeys} ${fnCall}`;
+    query =
+      `${query} ${range} ${measurement} ${filters} ${field} ${groupKeys} ${fnCall}`;
 
     const observer = {
       next(row: string[], tableMeta: FluxTableMetaData) {

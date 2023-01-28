@@ -53,16 +53,20 @@ export class ContractSource {
   private async checkIndexedBlockHeight() {
     const indexedBlockHeight = await this.statusProvider.getIndexedBlockHeight({
       type: "eventHandler",
-      address: this.contract.address,
-      chain: this.chainName,
-      eventName: this.eventQuery,
+      _abi: this.abiName,
+      _address: this.contract.address,
+      _event: this.eventQuery,
+      _chain: this.chainName,
+      _arkiveName: this.arkive.name,
+      _arkiveVersion: this.arkive.version_number.toString(),
+      _arkiveUserId: this.arkive.user_id,
     });
 
     devLog(
       "indexedBlockHeight",
       indexedBlockHeight,
       this.contract.address,
-      this.eventQuery
+      this.eventQuery,
     );
 
     if (indexedBlockHeight && indexedBlockHeight > this.startBlockHeight) {
@@ -73,7 +77,7 @@ export class ContractSource {
   public getDataPoints(
     currentBlockHeight: number,
     store: Record<string, unknown>,
-    callback: (points: Point[]) => void
+    callback: (points: Point[]) => void,
   ): void {
     const filterFn = this.contract.filters[this.eventQuery];
     if (!filterFn) {
@@ -84,7 +88,7 @@ export class ContractSource {
     const from = Math.min(this.startBlockHeight + 1, currentBlockHeight);
     const to = Math.min(
       currentBlockHeight,
-      this.startBlockHeight + this.blockRange
+      this.startBlockHeight + this.blockRange,
     );
 
     if (from === to) {
@@ -113,13 +117,13 @@ export class ContractSource {
     from: number,
     to: number,
     filter: ethers.EventFilter,
-    store: Record<string, unknown>
+    store: Record<string, unknown>,
   ): Promise<Point[]> {
     try {
       const events = await this.contract.queryFilter(filter, from, to);
 
       devLog(
-        `fetching data from ${this.abiName} ${this.eventQuery} ${this.contract.address} from ${from} to ${to}`
+        `fetching data from ${this.abiName} ${this.eventQuery} ${this.contract.address} from ${from} to ${to}`,
       );
 
       const points = (
@@ -151,7 +155,7 @@ export class ContractSource {
                 .intField("_logIndex", event.logIndex)
                 .timestamp(new Date(timestampMs));
             });
-          })
+          }),
         )
       ).flat();
 
