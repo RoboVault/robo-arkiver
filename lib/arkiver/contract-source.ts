@@ -1,5 +1,7 @@
 import { ethers, Point } from "@deps";
 import { devLog, getEnv, logError } from "../utils.ts";
+import { ethers, Point } from "../../deps.ts";
+import { devLog, getEnv, logError, timeout } from "../utils.ts";
 import { Arkive, EventHandler } from "../types.ts";
 import { StatusProvider } from "../providers/types.ts";
 import { InfluxDBAdapter } from "../providers/influxdb.ts";
@@ -129,7 +131,7 @@ export class ContractSource {
         await Promise.all(
           events.map(async (event) => {
             const timestampMs = (await event.getBlock()).timestamp * 1000;
-            const points = await this.eventHandler({
+            const pointsPromise = this.eventHandler({
               event,
               contract: this.contract,
               provider: this.contract
@@ -140,6 +142,7 @@ export class ContractSource {
               store,
               timestampMs,
             });
+            const points = await Promise.race([pointsPromise, timeout(10000)]);
             return points.map((point) => {
               return point
                 .tag("_chain", this.chainName)

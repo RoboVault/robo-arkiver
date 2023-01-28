@@ -74,3 +74,8 @@ export const logError = (error: Error, tags: Record<string, string>) => {
 export const toNumber = (n: ethers.BigNumber, decimals: number) => {
   return Number(ethers.utils.formatUnits(n, decimals));
 };
+
+export const timeout = async (ms: number) => {
+  await delay(ms);
+  throw new Error(`Timed out after ${ms}ms`);
+};
