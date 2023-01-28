@@ -65,6 +65,7 @@ export class ManifestManager {
               contract,
               blockRange: dataSource.chain.blockRange,
               eventHandler,
+              arkive: this.arkiveData,
             });
 
             await instance.init();
@@ -105,6 +106,7 @@ export class ManifestManager {
           blockInterval: blockHandler.blockInterval,
           handler: fn,
           blockHandlerName: name,
+          arkive: this.arkiveData,
         });
 
         await instance.init();

@@ -1,6 +1,6 @@
 import { ethers, Point } from "../../deps.ts";
 import { devLog, getEnv, logError } from "../utils.ts";
-import { EventHandler } from "../types.ts";
+import { Arkive, EventHandler } from "../types.ts";
 import { StatusProvider } from "../providers/types.ts";
 import { InfluxDBAdapter } from "../providers/influxdb.ts";
 import { mockStatusProvider } from "../providers/mock.ts";
@@ -14,6 +14,7 @@ export class ContractSource {
   private readonly blockRange: number;
   private readonly eventHandler: EventHandler;
   private readonly statusProvider: StatusProvider;
+  private readonly arkive: Arkive;
 
   constructor(params: {
     abiName: string;
@@ -23,6 +24,7 @@ export class ContractSource {
     contract: ethers.Contract;
     blockRange: number;
     eventHandler: EventHandler;
+    arkive: Arkive;
   }) {
     this.abiName = params.abiName;
     this.chainName = params.chainName;
@@ -41,6 +43,7 @@ export class ContractSource {
     } else {
       this.statusProvider = mockStatusProvider;
     }
+    this.arkive = params.arkive;
   }
 
   public async init() {
@@ -121,19 +124,34 @@ export class ContractSource {
 
       const points = (
         await Promise.all(
-          events.map(
-            async (event) =>
-              await this.eventHandler({
-                event,
-                contract: this.contract,
-                provider: this.contract
-                  .provider as ethers.providers.JsonRpcProvider,
-                chainName: this.chainName,
-                abiName: this.abiName,
-                eventQueryName: this.eventQuery,
-                store,
-              })
-          )
+          events.map(async (event) => {
+            const timestampMs = (await event.getBlock()).timestamp * 1000;
+            const points = await this.eventHandler({
+              event,
+              contract: this.contract,
+              provider: this.contract
+                .provider as ethers.providers.JsonRpcProvider,
+              chainName: this.chainName,
+              abiName: this.abiName,
+              eventQueryName: this.eventQuery,
+              store,
+              timestampMs,
+            });
+            return points.map((point) => {
+              return point
+                .tag("_chain", this.chainName)
+                .tag("_address", this.contract.address)
+                .tag("_event", this.eventQuery)
+                .tag("_abi", this.abiName)
+                .tag("_arkiveName", this.arkive.name)
+                .tag("_arkiveVersion", this.arkive.version_number.toString())
+                .tag("_arkiveUserId", this.arkive.user_id)
+                .stringField("_txHash", event.transactionHash)
+                .intField("_blockHeight", event.blockNumber)
+                .intField("_logIndex", event.logIndex)
+                .timestamp(new Date(timestampMs));
+            });
+          })
         )
       ).flat();
 

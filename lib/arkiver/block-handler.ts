@@ -1,6 +1,6 @@
 import { ethers, Point } from "../../deps.ts";
 import { devLog, getEnv, logError } from "../utils.ts";
-import { BlockHandlerFn } from "../types.ts";
+import { Arkive, BlockHandlerFn } from "../types.ts";
 import { StatusProvider } from "../providers/types.ts";
 import { InfluxDBAdapter } from "../providers/influxdb.ts";
 import { mockStatusProvider } from "../providers/mock.ts";
@@ -13,6 +13,7 @@ export class BlockHandler {
   private readonly blockHandlerName: string;
   private readonly provider: ethers.providers.JsonRpcProvider;
   private readonly statusProvider: StatusProvider;
+  private readonly arkive: Arkive;
 
   constructor(params: {
     chainName: string;
@@ -21,6 +22,7 @@ export class BlockHandler {
     handler: BlockHandlerFn;
     blockHandlerName: string;
     provider: ethers.providers.JsonRpcProvider;
+    arkive: Arkive;
   }) {
     this.chainName = params.chainName;
     this.startBlockHeight = params.startBlockHeight;
@@ -38,6 +40,7 @@ export class BlockHandler {
     } else {
       this.statusProvider = mockStatusProvider;
     }
+    this.arkive = params.arkive;
   }
 
   public async init() {
@@ -89,14 +92,25 @@ export class BlockHandler {
   ): Promise<Point[]> {
     try {
       const block = await this.provider.getBlock(startBlockHeight);
+      const timestampMs = block.timestamp * 1000;
       const points = await this.handler({
         block,
         store,
         blockHandlerName: this.blockHandlerName,
         chainName: this.chainName,
         provider: this.provider,
+        timestampMs,
       });
-      return points;
+      return points.map((point) => {
+        return point
+          .tag("_chain", this.chainName)
+          .tag("_blockHandler", this.blockHandlerName)
+          .tag("_arkiveName", this.arkive.name)
+          .tag("_arkiveVersion", this.arkive.version_number.toString())
+          .tag("_arkiveUserId", this.arkive.user_id)
+          .intField("_blockHeight", block.number)
+          .timestamp(new Date(timestampMs));
+      });
     } catch (e) {
       logError(e as Error, {
         blockHandlerName: this.blockHandlerName,
