@@ -1,6 +1,6 @@
 import { ethers, Point } from "../../deps.ts";
 import { devLog, getEnv, logError } from "../utils.ts";
-import { EventHandler } from "../types.ts";
+import { Arkive, EventHandler } from "../types.ts";
 import { StatusProvider } from "../providers/types.ts";
 import { InfluxDBAdapter } from "../providers/influxdb.ts";
 import { mockStatusProvider } from "../providers/mock.ts";
@@ -14,6 +14,7 @@ export class ContractSource {
   private readonly blockRange: number;
   private readonly eventHandler: EventHandler;
   private readonly statusProvider: StatusProvider;
+  private readonly arkive: Arkive;
 
   constructor(params: {
     abiName: string;
@@ -23,6 +24,7 @@ export class ContractSource {
     contract: ethers.Contract;
     blockRange: number;
     eventHandler: EventHandler;
+    arkive: Arkive;
   }) {
     this.abiName = params.abiName;
     this.chainName = params.chainName;
@@ -41,6 +43,7 @@ export class ContractSource {
     } else {
       this.statusProvider = mockStatusProvider;
     }
+    this.arkive = params.arkive;
   }
 
   public async init() {
@@ -50,16 +53,20 @@ export class ContractSource {
   private async checkIndexedBlockHeight() {
     const indexedBlockHeight = await this.statusProvider.getIndexedBlockHeight({
       type: "eventHandler",
-      address: this.contract.address,
-      chain: this.chainName,
-      eventName: this.eventQuery,
+      _abi: this.abiName,
+      _address: this.contract.address,
+      _event: this.eventQuery,
+      _chain: this.chainName,
+      _arkiveName: this.arkive.name,
+      _arkiveVersion: this.arkive.version_number.toString(),
+      _arkiveUserId: this.arkive.user_id,
     });
 
     devLog(
       "indexedBlockHeight",
       indexedBlockHeight,
       this.contract.address,
-      this.eventQuery
+      this.eventQuery,
     );
 
     if (indexedBlockHeight && indexedBlockHeight > this.startBlockHeight) {
@@ -70,7 +77,7 @@ export class ContractSource {
   public getDataPoints(
     currentBlockHeight: number,
     store: Record<string, unknown>,
-    callback: (points: Point[]) => void
+    callback: (points: Point[]) => void,
   ): void {
     const filterFn = this.contract.filters[this.eventQuery];
     if (!filterFn) {
@@ -81,7 +88,7 @@ export class ContractSource {
     const from = Math.min(this.startBlockHeight + 1, currentBlockHeight);
     const to = Math.min(
       currentBlockHeight,
-      this.startBlockHeight + this.blockRange
+      this.startBlockHeight + this.blockRange,
     );
 
     if (from === to) {
@@ -110,30 +117,45 @@ export class ContractSource {
     from: number,
     to: number,
     filter: ethers.EventFilter,
-    store: Record<string, unknown>
+    store: Record<string, unknown>,
   ): Promise<Point[]> {
     try {
       const events = await this.contract.queryFilter(filter, from, to);
 
       devLog(
-        `fetching data from ${this.abiName} ${this.eventQuery} ${this.contract.address} from ${from} to ${to}`
+        `fetching data from ${this.abiName} ${this.eventQuery} ${this.contract.address} from ${from} to ${to}`,
       );
 
       const points = (
         await Promise.all(
-          events.map(
-            async (event) =>
-              await this.eventHandler({
-                event,
-                contract: this.contract,
-                provider: this.contract
-                  .provider as ethers.providers.JsonRpcProvider,
-                chainName: this.chainName,
-                abiName: this.abiName,
-                eventQueryName: this.eventQuery,
-                store,
-              })
-          )
+          events.map(async (event) => {
+            const timestampMs = (await event.getBlock()).timestamp * 1000;
+            const points = await this.eventHandler({
+              event,
+              contract: this.contract,
+              provider: this.contract
+                .provider as ethers.providers.JsonRpcProvider,
+              chainName: this.chainName,
+              abiName: this.abiName,
+              eventQueryName: this.eventQuery,
+              store,
+              timestampMs,
+            });
+            return points.map((point) => {
+              return point
+                .tag("_chain", this.chainName)
+                .tag("_address", this.contract.address)
+                .tag("_event", this.eventQuery)
+                .tag("_abi", this.abiName)
+                .tag("_arkiveName", this.arkive.name)
+                .tag("_arkiveVersion", this.arkive.version_number.toString())
+                .tag("_arkiveUserId", this.arkive.user_id)
+                .stringField("_txHash", event.transactionHash)
+                .intField("_blockHeight", event.blockNumber)
+                .intField("_logIndex", event.logIndex)
+                .timestamp(new Date(timestampMs));
+            });
+          }),
         )
       ).flat();
 

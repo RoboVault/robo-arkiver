@@ -36,7 +36,7 @@ export const getEnv = (key: string, defaultValue?: string): string => {
 
 export const devLog = (...logs: unknown[]) => {
   if (getEnv("DENO_ENV") === "DEV") {
-    console.log(logs.map((log) => JSON.stringify(log)).join(" "));
+    console.log("%cDEV", "color: blue", ...logs);
   }
 };
 
@@ -48,7 +48,7 @@ export const error = (message: string) => {
 export const getFromStore = async (
   store: Record<string, unknown>,
   key: string,
-  getter: () => Promise<unknown>
+  getter: () => Promise<unknown>,
 ): Promise<unknown> => {
   if (store[key]) {
     return store[key];

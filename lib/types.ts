@@ -100,6 +100,7 @@ export interface BlockHandlerContext {
   provider: ethers.providers.JsonRpcProvider;
   chainName: string;
   store: Record<string, unknown>;
+  timestampMs: number;
 }
 
 /**
@@ -119,6 +120,7 @@ export interface EventHandlerContext {
   abiName: string;
   eventQueryName: string;
   store: Record<string, unknown>;
+  timestampMs: number;
 }
 
 export type EventHandler = (ctx: EventHandlerContext) => Promise<Point[]>;
