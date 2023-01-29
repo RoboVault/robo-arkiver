@@ -3,7 +3,7 @@ import {
   EventHandlerStatusParams,
   StatusProvider,
 } from "./types.ts";
-import { type FluxTableMetaData, InfluxDB, type QueryApi } from "../../deps.ts";
+import { type FluxTableMetaData, InfluxDB, type QueryApi } from "@deps";
 
 export interface queryOptions {
   measurement?: string;

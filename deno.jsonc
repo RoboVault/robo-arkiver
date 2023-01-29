@@ -2,5 +2,10 @@
   "tasks": {
     "dev": "DENO_ENV=DEV deno run -A --unstable --watch main.ts",
     "start": "DENO_ENV=PROD deno run -A --unstable main.ts"
+  },
+  "imports": {
+    "@deps": "./deps.ts",
+    "@types": "./lib/types.ts",
+    "@utils": "./lib/utils.ts"
   }
 }

@@ -1,4 +1,4 @@
-import { ethers, Point } from "../../deps.ts";
+import { ethers, Point } from "@deps";
 import { devLog, getEnv, logError } from "../utils.ts";
 import { Arkive, BlockHandlerFn } from "../types.ts";
 import { StatusProvider } from "../providers/types.ts";
@@ -53,7 +53,7 @@ export class BlockHandler {
       _blockHandler: this.blockHandlerName,
       _chain: this.chainName,
       _arkiveName: this.arkive.name,
-      _arkiveVersion: this.arkive.version_number.toString(),
+      _arkiveVersion: this.arkive.version,
       _arkiveUserId: this.arkive.user_id,
     });
 
@@ -109,7 +109,7 @@ export class BlockHandler {
           .tag("_chain", this.chainName)
           .tag("_blockHandler", this.blockHandlerName)
           .tag("_arkiveName", this.arkive.name)
-          .tag("_arkiveVersion", this.arkive.version_number.toString())
+          .tag("_arkiveVersion", this.arkive.version)
           .tag("_arkiveUserId", this.arkive.user_id)
           .intField("_blockHeight", block.number)
           .timestamp(new Date(timestampMs));

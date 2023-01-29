@@ -1,10 +1,11 @@
-import { ethers, Point } from "../deps.ts";
+import { ethers, Point } from "@deps";
 export interface Arkive {
   id: number;
-  version_number: number;
+  version: string;
   status: string;
   user_id: string;
   name: string;
+  public: boolean;
 }
 
 export type ArkiveMessageEvent =

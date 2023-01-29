@@ -1,5 +1,5 @@
 import { ArkiveProvider } from "./types.ts";
-import { RealtimeChannel, SupabaseClient } from "../../deps.ts";
+import { RealtimeChannel, SupabaseClient } from "@deps";
 import { devLog, getEnv, getSupabaseClient, rm, unpack } from "../utils.ts";
 import { Arkive } from "../types.ts";
 
@@ -36,7 +36,7 @@ export class SupabaseProvider implements ArkiveProvider {
         },
         async (payload) => {
           await callback(payload.new);
-        }
+        },
       )
       .subscribe();
 
@@ -44,7 +44,7 @@ export class SupabaseProvider implements ArkiveProvider {
   }
 
   public listenDeletedArkive(
-    callback: (arkive: Partial<Arkive>) => Promise<void>
+    callback: (arkive: Partial<Arkive>) => Promise<void>,
   ): void {
     const listener = this.supabase
       .channel("deleted-arkives")
@@ -57,7 +57,7 @@ export class SupabaseProvider implements ArkiveProvider {
         },
         async (payload) => {
           await callback(payload.old);
-        }
+        },
       )
       .subscribe();
 
@@ -69,18 +69,18 @@ export class SupabaseProvider implements ArkiveProvider {
 
     const { data, error } = await this.supabase.storage
       .from(getEnv("SUPABASE_ARKIVE_STORAGE"))
-      .download(`${path}/${arkive.version_number}.tar.gz`);
+      .download(`${path}/${arkive.version}.tar.gz`);
     if (error) {
       throw error;
     }
 
     const localDir = new URL(
-      `../packages/${path}/${arkive.version_number}`,
-      import.meta.url
+      `../packages/${path}/${arkive.version}`,
+      import.meta.url,
     );
     const localPath = new URL(
-      `../packages/${path}/${arkive.version_number}.tar.gz`,
-      import.meta.url
+      `../packages/${path}/${arkive.version}.tar.gz`,
+      import.meta.url,
     );
 
     await Deno.mkdir(localDir, { recursive: true });
@@ -91,7 +91,7 @@ export class SupabaseProvider implements ArkiveProvider {
 
   public async updateArkiveStatus(
     arkive: Arkive,
-    status: string
+    status: string,
   ): Promise<void> {
     const { error } = await this.supabase
       .from(getEnv("SUPABASE_ARKIVE_TABLE"))

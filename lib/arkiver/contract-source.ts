@@ -1,4 +1,4 @@
-import { ethers, Point } from "../../deps.ts";
+import { ethers, Point } from "@deps";
 import { devLog, getEnv, logError } from "../utils.ts";
 import { Arkive, EventHandler } from "../types.ts";
 import { StatusProvider } from "../providers/types.ts";
@@ -58,7 +58,7 @@ export class ContractSource {
       _event: this.eventQuery,
       _chain: this.chainName,
       _arkiveName: this.arkive.name,
-      _arkiveVersion: this.arkive.version_number.toString(),
+      _arkiveVersion: this.arkive.version,
       _arkiveUserId: this.arkive.user_id,
     });
 
@@ -148,7 +148,7 @@ export class ContractSource {
                 .tag("_event", this.eventQuery)
                 .tag("_abi", this.abiName)
                 .tag("_arkiveName", this.arkive.name)
-                .tag("_arkiveVersion", this.arkive.version_number.toString())
+                .tag("_arkiveVersion", this.arkive.version)
                 .tag("_arkiveUserId", this.arkive.user_id)
                 .stringField("_txHash", event.transactionHash)
                 .intField("_blockHeight", event.blockNumber)

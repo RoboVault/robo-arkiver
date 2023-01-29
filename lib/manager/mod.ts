@@ -23,9 +23,9 @@ export class ArkiveManager {
     this.listenForNewArkives();
     this.listenForDeletedArkives();
     //  a2. Aggregate arkives by owner and name and get the latest version
-    const aggregatedArkives = this.aggregateArkives(arkives);
+    // const aggregatedArkives = this.aggregateArkives(arkives);
     await Promise.all(
-      aggregatedArkives.map(async (arkive) => {
+      arkives.map(async (arkive) => {
         await this.addNewArkive(arkive);
       }),
     );
@@ -57,21 +57,20 @@ export class ArkiveManager {
     devLog("listening for deleted arkives");
   }
 
-  private aggregateArkives(arkives: Arkive[]) {
-    const aggregatedMap = new Map<string, Arkive>();
-    for (const arkive of arkives) {
-      const key = `${arkive.user_id}/${arkive.name}`;
-      const existingArkive = aggregatedMap.get(key);
-      if (
-        !existingArkive ||
-        existingArkive.version_number < arkive.version_number
-      ) {
-        aggregatedMap.set(key, arkive);
-      }
-    }
-    devLog("aggregated arkives", [...aggregatedMap.values()]);
-    return [...aggregatedMap.values()];
-  }
+  // private aggregateArkives(arkives: Arkive[]) {
+  //   const aggregatedMap = new Map<string, Arkive>();
+  //   for (const arkive of arkives) {
+  //     const key = `${arkive.user_id}/${arkive.name}`;
+  //     const existingArkive = aggregatedMap.get(key);
+  //     if (
+  //       !existingArkive ||
+  //       existingArkive.version_number < arkive.version_number
+  //     ) {
+  //       aggregatedMap.set(key, arkive);
+  //     }
+  //   }
+  //   return [...aggregatedMap.values()];
+  // }
 
   private async addNewArkive(arkive: Arkive) {
     devLog("adding new arkive", arkive);
@@ -90,7 +89,7 @@ export class ArkiveManager {
 
   private async spawnArkiverWorker(arkive: Arkive) {
     const manifestPath =
-      `../packages/${arkive.user_id}/${arkive.name}/${arkive.version_number}/manifest.config.ts`;
+      `../packages/${arkive.user_id}/${arkive.name}/${arkive.version}/manifest.config.ts`;
     const { manifest } = await import(manifestPath);
 
     const worker = new Worker(new URL("../arkiver/mod.ts", import.meta.url), {
@@ -158,14 +157,14 @@ export class ArkiveManager {
       (a) =>
         a.arkive.user_id === arkive.user_id &&
         a.arkive.name === arkive.name &&
-        a.arkive.version_number < arkive.version_number,
+        parseFloat(a.arkive.version) < parseFloat(arkive.version),
     );
   }
 
   private async removePackage(arkive: Arkive) {
     const path = `${arkive.user_id}/${arkive.name}`;
     const localDir = new URL(
-      `../packages/${path}/${arkive.version_number}`,
+      `../packages/${path}/${arkive.version}`,
       import.meta.url,
     );
     await rm(localDir.pathname, { recursive: true });

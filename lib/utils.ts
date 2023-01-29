@@ -1,4 +1,4 @@
-import { createClient, ethers, Point } from "../deps.ts";
+import { createClient, ethers, Point } from "@deps";
 
 export const getSupabaseClient = () => {
   return createClient(getEnv("SUPABASE_URL"), getEnv("SUPABASE_SERVICE_KEY"), {

@@ -1,8 +1,8 @@
-import { ethers } from "../../deps.ts";
+import { ethers } from "@deps";
 import { devLog } from "../utils.ts";
 import { ContractSource } from "./contract-source.ts";
 import { BlockHandler } from "./block-handler.ts";
-import { IManifest, BlockHandlerFn, EventHandler } from "../types.ts";
+import { BlockHandlerFn, EventHandler, IManifest } from "../types.ts";
 import { Arkive } from "../types.ts";
 
 export class ManifestManager {
@@ -21,7 +21,8 @@ export class ManifestManager {
   constructor(manifest: IManifest, arkiveData: Arkive) {
     this.manifest = manifest;
     this.arkiveData = arkiveData;
-    this.packagePath = `../packages/${this.arkiveData.user_id}/${this.arkiveData.name}/${this.arkiveData.version_number}`;
+    this.packagePath =
+      `../packages/${this.arkiveData.user_id}/${this.arkiveData.name}/${this.arkiveData.version}`;
   }
 
   public async init() {
@@ -43,7 +44,7 @@ export class ManifestManager {
           for (const eventQuery of contractSource.eventQueries) {
             const provider = this.getProvider(
               dataSource.chain.rpcUrl,
-              dataSource.chain.name
+              dataSource.chain.name,
             );
 
             const abi = await this.getAbi(contractSource.abiPath);
@@ -92,11 +93,11 @@ export class ManifestManager {
       for (const blockHandler of dataSource.blockHandlers) {
         const provider = this.getProvider(
           dataSource.chain.rpcUrl,
-          dataSource.chain.name
+          dataSource.chain.name,
         );
 
         const { name, fn } = await this.getBlockHandler(
-          blockHandler.handlerPath
+          blockHandler.handlerPath,
         );
 
         const instance = new BlockHandler({
@@ -131,7 +132,7 @@ export class ManifestManager {
   }
 
   private async getBlockHandler(
-    handlerPath: string
+    handlerPath: string,
   ): Promise<{ fn: BlockHandlerFn; name: string }> {
     const handler = (await import(`${this.packagePath}/${handlerPath}`))
       .default;
@@ -141,7 +142,7 @@ export class ManifestManager {
   }
 
   private async getAbi(
-    abiPath: string
+    abiPath: string,
   ): Promise<{ interface: ethers.ContractInterface; name: string }> {
     if (this.abiStore[abiPath]) {
       return this.abiStore[abiPath];
@@ -160,7 +161,7 @@ export class ManifestManager {
 
   private getProvider(
     rpcUrl: string,
-    chain: string
+    chain: string,
   ): ethers.providers.JsonRpcProvider {
     if (this.providerStore[chain]) {
       return this.providerStore[chain];
@@ -184,7 +185,7 @@ export class ManifestManager {
     this.contractStore[key] = new ethers.Contract(
       params.address,
       params.abi as ethers.ContractInterface,
-      params.provider
+      params.provider,
     );
     return this.contractStore[key];
   }
