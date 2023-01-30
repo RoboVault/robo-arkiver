@@ -1,32 +1,32 @@
-import { SupabaseClient } from "@deps";
-import { getEnv } from "../../../lib/utils.ts";
+import { SupabaseClient } from "../_shared/deps.ts";
+import { getEnv } from "../_shared/utils.ts";
 
 export const del = async (
   supabase: SupabaseClient,
-  params: { userId: string; name: string },
+  params: { id: string; userId: string },
 ) => {
-  const { userId, name } = params;
+  const { id, userId } = params;
   const delDbRes = await supabase
-    .from(getEnv("SUPABASE_ARKIVE_TABLE"))
+    .from(getEnv("ARKIVE_TABLE"))
     .delete()
-    .eq("user_id", userId)
-    .eq("name", name)
+    .eq("id", parseInt(id))
     .select();
+
   if (delDbRes.error) {
     throw delDbRes.error;
   }
 
   // delete from storage
   const readStorageRes = await supabase.storage
-    .from(getEnv("SUPABASE_ARKIVE_STORAGE"))
-    .list(`${userId}/${name}`);
+    .from(getEnv("ARKIVE_STORAGE"))
+    .list(`${userId}/${id}`);
 
   if (readStorageRes.error) {
     throw readStorageRes.error;
   }
 
   const deleteStorageRes = await supabase.storage
-    .from(getEnv("SUPABASE_ARKIVE_STORAGE"))
+    .from(getEnv("ARKIVE_STORAGE"))
     .remove(readStorageRes.data.map((f) => f.name));
 
   if (deleteStorageRes.error) {

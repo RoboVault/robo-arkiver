@@ -1,33 +1,54 @@
-import { SupabaseClient } from "@deps";
-import { Arkive } from "@types";
-import { getEnv } from "@utils";
+import { SupabaseClient } from "../_shared/deps.ts";
+import { getEnv } from "../_shared/utils.ts";
 import { HttpError } from "../_shared/http_error.ts";
 
 export async function get(
   supabase: SupabaseClient,
   params: {
-    userId: string | null;
+    username: string | null;
     name: string | null;
   },
 ) {
-  const { userId, name } = params;
+  const { username, name } = params;
 
-  const arkives = supabase
-    .from(getEnv("SUPABASE_ARKIVE_TABLE"))
-    .select<"*", Arkive>("*");
+  const query = supabase
+    .from(getEnv("ARKIVE_TABLE"))
+    .select("*, deployments(*)");
 
-  if (userId) {
-    arkives.eq("user_id", userId);
+  if (username) {
+    const profileRes = await supabase
+      .from(getEnv("PROFILE_TABLE"))
+      .select<"id", { id: string }>("id")
+      .eq("username", username)
+      .single();
+
+    if (profileRes.error) {
+      if (profileRes.error.code === "PGRST116") {
+        throw new HttpError(404, "Username Not Found");
+      }
+      throw profileRes.error;
+    }
+
+    const userId = profileRes.data.id;
+
+    query.eq("user_id", userId);
+
+    if (name) {
+      query.eq("name", name);
+    }
   }
-  if (name) {
-    arkives.eq("name", name);
-  }
-  const { data, error } = await arkives;
+
+  const { data, error } = await query;
+
   if (error) {
     throw error;
   }
+
   if (data.length > 0) {
     return data;
   }
-  throw new HttpError(404, "Not Found");
+
+  if (username && name) throw new HttpError(404, "Arkive Not Found");
+
+  return data;
 }

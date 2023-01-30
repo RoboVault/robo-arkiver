@@ -1,9 +1,6 @@
 import { serve } from "https://deno.land/std@0.131.0/http/server.ts";
-import {
-  createClient,
-  SupabaseClient,
-} from "https://esm.sh/@supabase/supabase-js@2.5.0";
-import { getEnv } from "@utils";
+import { createClient, SupabaseClient } from "../_shared/deps.ts";
+import { getEnv } from "../_shared/utils.ts";
 import { HttpError } from "../_shared/http_error.ts";
 import { get } from "./get.ts";
 import { post } from "./post.ts";
@@ -18,13 +15,11 @@ const corsHeaders = {
 
 async function handle(req: Request, supabase: SupabaseClient) {
   const url = new URL(req.url);
-  const urlPattern = new URLPattern({ pathname: "/arkives/:userId/:name" });
   switch (req.method) {
     case "GET": {
-      const matcher = urlPattern.exec(url);
-      const userId = matcher?.pathname.groups.userId ?? null;
-      const name = matcher?.pathname.groups.name ?? null;
-      const data = await get(supabase, { userId, name });
+      const username = url.searchParams.get("username");
+      const name = url.searchParams.get("name");
+      const data = await get(supabase, { username, name });
       return data;
     }
     case "POST": {
@@ -39,27 +34,34 @@ async function handle(req: Request, supabase: SupabaseClient) {
       return data;
     }
     case "PATCH": {
-      const matcher = urlPattern.exec(url);
-      const userId = matcher?.pathname.groups.userId;
-      const name = matcher?.pathname.groups.name;
-      if (!userId || !name) {
-        throw new HttpError(400, "Bad Request");
-      }
+      const urlPattern = new URLPattern({
+        pathname: "/arkives/:id",
+      });
+
+      if (!urlPattern.test(url)) throw new HttpError(400, "Bad Request");
+      const id = urlPattern.exec(url)!.pathname.groups.id;
+
       const formData = await req.formData();
       const params = Object.fromEntries(formData.entries());
-      params.userId = userId;
-      params.name = name;
-      const data = await patch(supabase, params);
+
+      const data = await patch(supabase, { id, ...params });
       return data;
     }
     case "DELETE": {
+      const urlPattern = new URLPattern({
+        pathname: "/arkives/:id",
+      });
+      if (!urlPattern.test(url)) throw new HttpError(400, "Bad Request");
       const matcher = urlPattern.exec(url);
-      const userId = matcher?.pathname.groups.userId;
-      const name = matcher?.pathname.groups.name;
-      if (!userId || !name) {
-        throw new HttpError(400, "Bad Request");
+      const id = matcher!.pathname.groups.id;
+
+      const userIdRes = await supabase.auth.getUser();
+      if (userIdRes.error) {
+        throw userIdRes.error;
       }
-      const data = await del(supabase, { userId, name });
+      const userId = userIdRes.data.user.id;
+
+      const data = await del(supabase, { id, userId });
       return data;
     }
     default:
@@ -67,7 +69,6 @@ async function handle(req: Request, supabase: SupabaseClient) {
   }
 }
 
-console.log(`HTTP webserver running. Access it at: http://localhost:8080/`);
 serve(async (req) => {
   // This is needed if you're planning to invoke your function from a browser.
   if (req.method === "OPTIONS") {
@@ -110,4 +111,4 @@ serve(async (req) => {
       status: 400,
     });
   }
-}, { port: 8080 });
+});
