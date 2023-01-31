@@ -1,9 +1,9 @@
-import { ArkiveMessageEvent, IManifest } from "../types.ts";
+import { ArkiveMessageEvent, IManifest } from "@types";
 import { ManifestManager } from "./manifest-manager.ts";
-import { delay, devLog, logError } from "../utils.ts";
+import { delay, devLog, logError } from "@utils";
 import { ContractSource } from "./contract-source.ts";
 import { BlockHandler } from "./block-handler.ts";
-import { Arkive } from "../types.ts";
+import { Arkive } from "@types";
 
 declare const self: Worker;
 devLog("worker started");
@@ -64,7 +64,7 @@ export class Arkiver extends EventTarget {
   private checkIsLive(
     contractSources: ContractSource[],
     blockHandlers: BlockHandler[],
-    blockHeights: Record<string, number>
+    blockHeights: Record<string, number>,
   ) {
     return (
       contractSources.every((contractSource) =>
@@ -79,14 +79,17 @@ export class Arkiver extends EventTarget {
   private processContractSources(
     store: Record<string, unknown>,
     blockHeights: Record<string, number>,
-    contractSources: ContractSource[]
+    contractSources: ContractSource[],
   ) {
     try {
       // get data Points for each contract source and log them
       contractSources.forEach((contractSource) => {
         const currentBlockHeight = blockHeights[contractSource.chain];
-        contractSource.getDataPoints(currentBlockHeight, store, (dataPoints) =>
-          dataPoints.forEach((point) => console.log(point.toLineProtocol()))
+        contractSource.getDataPoints(
+          currentBlockHeight,
+          store,
+          (dataPoints) =>
+            dataPoints.forEach((point) => console.log(point.toLineProtocol())),
         );
       });
     } catch (e) {
@@ -97,14 +100,17 @@ export class Arkiver extends EventTarget {
   private processBlockHandlers(
     store: Record<string, unknown>,
     blockHeights: Record<string, number>,
-    blockHandlers: BlockHandler[]
+    blockHandlers: BlockHandler[],
   ) {
     try {
       // get data Points for each block handler and log them
       blockHandlers.forEach((blockHandler) => {
         const currentBlockHeight = blockHeights[blockHandler.chain];
-        blockHandler.getDataPoints(currentBlockHeight, store, (dataPoints) =>
-          dataPoints.forEach((point) => console.log(point.toLineProtocol()))
+        blockHandler.getDataPoints(
+          currentBlockHeight,
+          store,
+          (dataPoints) =>
+            dataPoints.forEach((point) => console.log(point.toLineProtocol())),
         );
       });
     } catch (e) {

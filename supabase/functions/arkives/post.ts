@@ -134,19 +134,6 @@ const createDeployment = async (
   pkg: File,
   isPublic: string | undefined,
 ) => {
-  // upload package to storage
-  const path = `${userId}/${name}/1_0`;
-  const uploadRes = await supabase.storage
-    .from(getEnv("ARKIVE_STORAGE"))
-    .upload(`${path}.tar.gz`, pkg, {
-      contentType: "application/gzip",
-      upsert: true,
-    });
-
-  if (uploadRes.error) {
-    throw uploadRes.error;
-  }
-
   // insert new row to arkive table
   const insertArkiveRes = await supabase
     .from(getEnv("ARKIVE_TABLE"))
@@ -159,6 +146,19 @@ const createDeployment = async (
 
   if (insertArkiveRes.error) {
     throw insertArkiveRes.error;
+  }
+
+  // upload package to storage
+  const path = `${userId}/${insertArkiveRes.data[0].id}/1_0`;
+  const uploadRes = await supabase.storage
+    .from(getEnv("ARKIVE_STORAGE"))
+    .upload(`${path}.tar.gz`, pkg, {
+      contentType: "application/gzip",
+      upsert: true,
+    });
+
+  if (uploadRes.error) {
+    throw uploadRes.error;
   }
 
   // insert new deployment into db

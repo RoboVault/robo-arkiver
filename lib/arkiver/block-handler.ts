@@ -52,9 +52,8 @@ export class BlockHandler {
       type: "blockHandler",
       _blockHandler: this.blockHandlerName,
       _chain: this.chainName,
-      _arkiveName: this.arkive.name,
-      _arkiveVersion: this.arkive.version,
-      _arkiveUserId: this.arkive.user_id,
+      _arkiveVersion: this.arkive.deployment.major_version.toString(),
+      _arkiveId: this.arkive.id.toString(),
     });
 
     devLog("indexedBlockHeight", indexedBlockHeight, this.blockHandlerName);
@@ -108,9 +107,11 @@ export class BlockHandler {
         return point
           .tag("_chain", this.chainName)
           .tag("_blockHandler", this.blockHandlerName)
-          .tag("_arkiveName", this.arkive.name)
-          .tag("_arkiveVersion", this.arkive.version)
-          .tag("_arkiveUserId", this.arkive.user_id)
+          .tag(
+            "_arkiveVersion",
+            this.arkive.deployment.major_version.toString(),
+          )
+          .tag("_arkiveId", this.arkive.id.toString())
           .intField("_blockHeight", block.number)
           .timestamp(new Date(timestampMs));
       });

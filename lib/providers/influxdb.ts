@@ -33,8 +33,7 @@ export class InfluxDBAdapter implements StatusProvider {
   ): Promise<number> {
     if (params.type === "blockHandler") {
       const {
-        _arkiveName,
-        _arkiveUserId,
+        _arkiveId,
         _arkiveVersion,
         _blockHandler,
         _chain,
@@ -43,15 +42,13 @@ export class InfluxDBAdapter implements StatusProvider {
         field: "blockHeight",
         range: { start: new Date(0), end: new Date() },
         filters: {
-          _arkiveName,
-          _arkiveUserId,
+          _arkiveId,
           _arkiveVersion,
           _blockHandler,
           _chain,
         },
         groupKeys: [
-          "_arkiveName",
-          "_arkiveUserId",
+          "_arkiveId",
           "_arkiveVersion",
           "_blockHandler",
           "_chain",
@@ -62,8 +59,7 @@ export class InfluxDBAdapter implements StatusProvider {
       const {
         _abi,
         _address,
-        _arkiveName,
-        _arkiveUserId,
+        _arkiveId,
         _arkiveVersion,
         _chain,
         _event,
@@ -74,8 +70,7 @@ export class InfluxDBAdapter implements StatusProvider {
         filters: {
           _abi,
           _address,
-          _arkiveName,
-          _arkiveUserId,
+          _arkiveId,
           _arkiveVersion,
           _chain,
           _event,
@@ -83,8 +78,7 @@ export class InfluxDBAdapter implements StatusProvider {
         groupKeys: [
           "_abi",
           "_address",
-          "_arkiveName",
-          "_arkiveUserId",
+          "_arkiveId",
           "_arkiveVersion",
           "_chain",
           "_event",

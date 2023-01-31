@@ -5,6 +5,7 @@ export interface Arkive {
   name: string;
   public: boolean;
   created_at: string;
+  deployment: Omit<Deployment, "arkive">;
 }
 
 export interface Deployment {
@@ -13,8 +14,9 @@ export interface Deployment {
   major_version: number;
   minor_version: number;
   created_at: string;
-  status: "pending" | "synced" | "error" | "syncing";
+  status: "pending" | "synced" | "error" | "syncing" | "retired";
   file_path: string;
+  arkive: Omit<Arkive, "deployment">;
 }
 
 export type ArkiveMessageEvent =

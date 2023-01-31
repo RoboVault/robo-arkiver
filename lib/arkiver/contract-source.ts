@@ -57,9 +57,8 @@ export class ContractSource {
       _address: this.contract.address,
       _event: this.eventQuery,
       _chain: this.chainName,
-      _arkiveName: this.arkive.name,
-      _arkiveVersion: this.arkive.version,
-      _arkiveUserId: this.arkive.user_id,
+      _arkiveId: this.arkive.id.toString(),
+      _arkiveVersion: this.arkive.deployment.major_version.toString(),
     });
 
     devLog(
@@ -147,9 +146,11 @@ export class ContractSource {
                 .tag("_address", this.contract.address)
                 .tag("_event", this.eventQuery)
                 .tag("_abi", this.abiName)
-                .tag("_arkiveName", this.arkive.name)
-                .tag("_arkiveVersion", this.arkive.version)
-                .tag("_arkiveUserId", this.arkive.user_id)
+                .tag(
+                  "_arkiveVersion",
+                  this.arkive.deployment.major_version.toString(),
+                )
+                .tag("_arkiveId", this.arkive.id.toString())
                 .stringField("_txHash", event.transactionHash)
                 .intField("_blockHeight", event.blockNumber)
                 .intField("_logIndex", event.logIndex)
