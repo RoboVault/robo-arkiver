@@ -17,18 +17,22 @@ export class ArkiveManager {
   }
 
   public async init() {
-    //  a1. Get all arkives from supabase
-    const arkives = await this.getArkives();
-    //  b1. Subscribe to new inserts and deletes in arkive table
-    this.listenNewArkives();
-    this.listenForDeletedArkives();
-    //  a2. Aggregate arkives by owner and name and get the latest version
-    // const aggregatedArkives = this.aggregateArkives(arkives);
-    await Promise.all(
-      arkives.map(async (arkive) => {
-        await this.addNewArkive(arkive);
-      }),
-    );
+    try {
+      //  a1. Get all arkives from supabase
+      const arkives = await this.getArkives();
+      //  b1. Subscribe to new inserts and deletes in arkive table
+      this.listenNewArkives();
+      this.listenForDeletedArkives();
+      //  a2. Aggregate arkives by owner and name and get the latest version
+      // const aggregatedArkives = this.aggregateArkives(arkives);
+      await Promise.all(
+        arkives.map(async (arkive) => {
+          await this.addNewArkive(arkive);
+        }),
+      );
+    } catch (e) {
+      logError(e, { source: "ArkiveManager.init" });
+    }
   }
 
   private async getArkives() {
@@ -45,6 +49,10 @@ export class ArkiveManager {
       const sameMajor = previousArkives.filter(
         (a) =>
           a.arkive.deployment.major_version === arkive.deployment.major_version,
+      );
+      this.arkives = this.arkives.filter(
+        (a) =>
+          a.arkive.deployment.major_version !== arkive.deployment.major_version,
       );
 
       await Promise.all(sameMajor.map(async (arkive) => {
@@ -74,6 +82,7 @@ export class ArkiveManager {
     devLog("added new arkive", arkive);
   }
 
+  // this is called when an arkive is deleted by the user which means the record is no longer in the tables
   private async removeAllArkives(id: number) {
     devLog("removing arkives", id);
     const deletedArkives = this.arkives.filter((a) => a.arkive.id === id);
@@ -85,7 +94,10 @@ export class ArkiveManager {
     devLog("removed arkives", id);
   }
 
+  // this is called in two places: when a new minor version is added (listenNewArkives)
+  // and when a new major version has fully synced (worker.onmessage)
   private async removeArkive(arkive: { arkive: Arkive; worker: Worker }) {
+    devLog("removing arkive", arkive);
     await this.removePackage(arkive.arkive);
     await this.updateDeploymentStatus(
       arkive.arkive,
@@ -104,10 +116,10 @@ export class ArkiveManager {
       deno: {
         permissions: {
           env: [
-            "INFLUXDB_URL",
-            "INFLUXDB_TOKEN",
-            "INFLUXDB_ORG",
-            "INFLUXDB_BUCKET",
+            "INFLUX_HOST",
+            "INFLUX_TOKEN",
+            "INFLUX_ORG",
+            "INFLUX_BUCKET",
             "DENO_ENV",
             "NODE_ENV",
           ],
@@ -136,9 +148,15 @@ export class ArkiveManager {
               previousVersion.arkive.deployment.major_version <
                 arkive.deployment.major_version
             ) {
+              devLog("removing old major version", previousVersion.arkive);
               await this.removeArkive(previousVersion);
+              devLog("removed old major version", previousVersion.arkive);
             }
           }
+          await this.updateDeploymentStatus(
+            e.data.data.arkive,
+            "synced",
+          );
         } catch (error) {
           logError(error, {
             source: "worker-arkive-synced-" + e.data.data.arkive.id,
@@ -183,6 +201,7 @@ export class ArkiveManager {
       `../packages/${path}/${arkive.deployment.major_version}_${arkive.deployment.minor_version}`,
       import.meta.url,
     );
+    devLog("removing package", localDir.pathname);
     await rm(localDir.pathname, { recursive: true });
   }
 

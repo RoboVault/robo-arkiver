@@ -32,10 +32,10 @@ export class BlockHandler {
     this.provider = params.provider;
     if (getEnv("DENO_ENV") === "PROD") {
       this.statusProvider = new InfluxDBAdapter({
-        url: getEnv("INFLUXDB_URL"),
-        token: getEnv("INFLUXDB_TOKEN"),
-        bucket: getEnv("INFLUXDB_BUCKET"),
-        org: getEnv("INFLUXDB_ORG"),
+        url: getEnv("INFLUX_HOST"),
+        token: getEnv("INFLUX_TOKEN"),
+        bucket: getEnv("INFLUX_BUCKET"),
+        org: getEnv("INFLUX_ORG"),
       });
     } else {
       this.statusProvider = mockStatusProvider;

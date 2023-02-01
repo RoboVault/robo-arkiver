@@ -36,23 +36,29 @@ export class Arkiver extends EventTarget {
   }
 
   public async run() {
-    await this.manifestManager.init();
-    const store = {};
-    while (this.running) {
-      const blockHeights = await this.manifestManager.getCurrentBlockHeights();
-      const contractSources = await this.manifestManager.getContractSources();
-      const blockHandlers = await this.manifestManager.getBlockHandlers();
-      this.processContractSources(store, blockHeights, contractSources);
-      this.processBlockHandlers(store, blockHeights, blockHandlers);
-      if (
-        !this.isLive &&
-        this.checkIsLive(contractSources, blockHandlers, blockHeights)
-      ) {
-        this.delayMs = 2000;
-        this.isLive = true;
-        this.dispatchEvent(new Event("synced"));
+    try {
+      await this.manifestManager.init();
+      const store = {};
+      let blockHeights: Record<string, number> = {};
+      while (this.running) {
+        blockHeights = await this.manifestManager
+          .getCurrentBlockHeights() ?? blockHeights;
+        const contractSources = await this.manifestManager.getContractSources();
+        const blockHandlers = await this.manifestManager.getBlockHandlers();
+        this.processContractSources(store, blockHeights, contractSources);
+        this.processBlockHandlers(store, blockHeights, blockHandlers);
+        if (
+          !this.isLive &&
+          this.checkIsLive(contractSources, blockHandlers, blockHeights)
+        ) {
+          this.delayMs = 2000;
+          this.isLive = true;
+          this.dispatchEvent(new Event("synced"));
+        }
+        await delay(this.delayMs);
       }
-      await delay(this.delayMs);
+    } catch (e) {
+      logError(e, { source: "Arkiver.run" });
     }
   }
 
@@ -85,6 +91,7 @@ export class Arkiver extends EventTarget {
       // get data Points for each contract source and log them
       contractSources.forEach((contractSource) => {
         const currentBlockHeight = blockHeights[contractSource.chain];
+        if (!currentBlockHeight) return;
         contractSource.getDataPoints(
           currentBlockHeight,
           store,

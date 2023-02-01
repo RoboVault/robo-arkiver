@@ -31,23 +31,35 @@ export class SupabaseProvider implements ArkiveProvider {
       throw arkivesRes.error;
     }
 
-    const arkives: Arkive[] = arkivesRes.data.map((arkive) => {
-      // get highest deployment major_version and minor_version
-      const deployment = arkive.deployments.reduce((prev, curr) => {
+    const arkives: Arkive[] = arkivesRes.data.flatMap((arkive) => {
+      // get highest deployment minor_version(s)
+      const deployments = arkive.deployments.reduce((prev, curr) => {
+        if (curr.status === "retired") {
+          return prev;
+        }
+
+        const highestPrev = prev[curr.major_version];
+
         if (
-          curr.major_version > prev.major_version ||
-          (curr.major_version === prev.major_version &&
-            curr.minor_version > prev.minor_version)
+          (!highestPrev || highestPrev.minor_version < curr.minor_version)
         ) {
-          return curr;
+          return {
+            ...prev,
+            [curr.major_version]: curr,
+          };
         } else {
           return prev;
         }
-      });
-      return {
-        ...arkive,
+      }, {} as Record<number, Deployment>);
+
+      return Object.values(deployments).map((deployment) => ({
+        id: arkive.id,
+        name: arkive.name,
+        user_id: arkive.user_id,
+        public: arkive.public,
+        created_at: arkive.created_at,
         deployment,
-      };
+      }));
     });
 
     return arkives;

@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "dev": "DENO_ENV=DEV deno run -A --unstable --watch main.ts",
+    "dev": "DENO_ENV=DEV deno run -A --unstable main.ts",
     "start": "DENO_ENV=PROD deno run -A --unstable main.ts"
   },
   "imports": {

@@ -1,5 +1,5 @@
 import { ethers } from "@deps";
-import { devLog } from "@utils";
+import { devLog, logError } from "@utils";
 import { ContractSource } from "./contract-source.ts";
 import { BlockHandler } from "./block-handler.ts";
 import { BlockHandlerFn, EventHandler, IManifest } from "@types";
@@ -42,36 +42,42 @@ export class ManifestManager {
       for (const contractSource of dataSource.contracts) {
         for (const source of contractSource.sources) {
           for (const eventQuery of contractSource.eventQueries) {
-            const provider = this.getProvider(
-              dataSource.chain.rpcUrl,
-              dataSource.chain.name,
-            );
+            try {
+              const provider = this.getProvider(
+                dataSource.chain.rpcUrl,
+                dataSource.chain.name,
+              );
 
-            const abi = await this.getAbi(contractSource.abiPath);
+              const abi = await this.getAbi(contractSource.abiPath);
 
-            const eventHandler = await this.getEventHandler(eventQuery.handler);
+              const eventHandler = await this.getEventHandler(
+                eventQuery.handler,
+              );
 
-            const contract = this.getContract({
-              abi: abi.interface,
-              address: source.address,
-              provider,
-              chain: dataSource.chain.name,
-            });
+              const contract = this.getContract({
+                abi: abi.interface,
+                address: source.address,
+                provider,
+                chain: dataSource.chain.name,
+              });
 
-            const instance = new ContractSource({
-              abiName: abi.name,
-              chainName: dataSource.chain.name,
-              startBlockHeight: source.startBlockHeight - 1,
-              eventQuery: eventQuery.name,
-              contract,
-              blockRange: dataSource.chain.blockRange,
-              eventHandler,
-              arkive: this.arkiveData,
-            });
+              const instance = new ContractSource({
+                abiName: abi.name,
+                chainName: dataSource.chain.name,
+                startBlockHeight: source.startBlockHeight - 1,
+                eventQuery: eventQuery.name,
+                contract,
+                blockRange: dataSource.chain.blockRange,
+                eventHandler,
+                arkive: this.arkiveData,
+              });
 
-            await instance.init();
+              await instance.init();
 
-            this.contractSources.push(instance);
+              this.contractSources.push(instance);
+            } catch (e) {
+              logError(e, { source: "ManifestManager.getContractSources" });
+            }
           }
         }
       }
@@ -119,11 +125,18 @@ export class ManifestManager {
     return this.blockHandlers;
   }
 
-  public async getCurrentBlockHeights(): Promise<Record<string, number>> {
+  public async getCurrentBlockHeights(): Promise<
+    Record<string, number> | null
+  > {
     const blockHeights: Record<string, number> = {};
 
     for (const [chain, provider] of Object.entries(this.providerStore)) {
-      blockHeights[chain] = await provider.getBlockNumber();
+      try {
+        blockHeights[chain] = await provider.getBlockNumber();
+      } catch (e) {
+        logError(e, { source: "ManifestManager.getCurrentBlockHeights" });
+        return null;
+      }
     }
 
     devLog(`current block heights: ${JSON.stringify(blockHeights)}`);

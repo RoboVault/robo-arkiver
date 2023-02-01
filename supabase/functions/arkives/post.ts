@@ -79,10 +79,20 @@ const updateDeployment = async (
 
   // get new version number
   const { major_version, minor_version } = arkive.deployments.reduce(
-    (acc, cur) => ({
-      major_version: Math.max(acc.major_version, cur.major_version),
-      minor_version: Math.max(acc.minor_version, cur.minor_version),
-    }),
+    (acc, cur) => {
+      let minor_version: number;
+      if (acc.major_version === cur.major_version) {
+        minor_version = Math.max(acc.minor_version, cur.minor_version);
+      } else if (acc.major_version < cur.major_version) {
+        minor_version = cur.minor_version;
+      } else {
+        minor_version = acc.minor_version;
+      }
+      return {
+        major_version: Math.max(acc.major_version, cur.major_version),
+        minor_version,
+      };
+    },
     { major_version: 0, minor_version: 0 },
   );
   const newVersion = update === "minor"
