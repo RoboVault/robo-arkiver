@@ -1,8 +1,6 @@
 import { ethers, Point } from "@deps";
-import { devLog, getEnv, logError } from "../utils.ts";
-import { ethers, Point } from "../../deps.ts";
-import { devLog, getEnv, logError, timeout } from "../utils.ts";
-import { Arkive, EventHandler } from "../types.ts";
+import { devLog, getEnv, logError, timeout } from "@utils";
+import { Arkive, EventHandler, Filter } from "@types";
 import { StatusProvider } from "../providers/types.ts";
 import { InfluxDBAdapter } from "../providers/influxdb.ts";
 import { mockStatusProvider } from "../providers/mock.ts";
@@ -17,12 +15,14 @@ export class ContractSource {
   private readonly eventHandler: EventHandler;
   private readonly statusProvider: StatusProvider;
   private readonly arkive: Arkive;
+  private readonly filter?: Filter;
 
   constructor(params: {
     abiName: string;
     chainName: string;
     startBlockHeight: number;
     eventQuery: string;
+    filter?: Filter;
     contract: ethers.Contract;
     blockRange: number;
     eventHandler: EventHandler;
@@ -32,6 +32,7 @@ export class ContractSource {
     this.chainName = params.chainName;
     this.startBlockHeight = params.startBlockHeight;
     this.eventQuery = params.eventQuery;
+    this.filter = params.filter;
     this.contract = params.contract;
     this.blockRange = params.blockRange;
     this.eventHandler = params.eventHandler;
@@ -84,7 +85,7 @@ export class ContractSource {
     if (!filterFn) {
       throw new Error(`Event query ${this.eventQuery} not found`);
     }
-    const filter = filterFn();
+    const filter = filterFn(this.filter);
 
     const from = Math.min(this.startBlockHeight + 1, currentBlockHeight);
     const to = Math.min(

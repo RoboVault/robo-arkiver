@@ -88,8 +88,11 @@ export interface IContractSource {
   eventQueries: {
     name: string;
     handler: string;
+    filter?: Filter;
   }[];
 }
+
+export type Filter = [(string | null), (string | null), (string | null)];
 
 /**
  * @interface IBlockHandler

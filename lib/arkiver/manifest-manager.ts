@@ -66,6 +66,7 @@ export class ManifestManager {
                 chainName: dataSource.chain.name,
                 startBlockHeight: source.startBlockHeight - 1,
                 eventQuery: eventQuery.name,
+                filter: eventQuery.filter,
                 contract,
                 blockRange: dataSource.chain.blockRange,
                 eventHandler,
