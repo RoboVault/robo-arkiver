@@ -71,8 +71,8 @@ export const logError = (error: Error, tags: Record<string, string>) => {
   console.log(errorPoint.toLineProtocol());
 };
 
-export const toNumber = (n: ethers.BigNumber, decimals: number) => {
-  return Number(ethers.utils.formatUnits(n, decimals));
+export const toNumber = (n: ethers.BigNumberish, decimals: number) => {
+  return Number(ethers.formatUnits(n, decimals));
 };
 
 export const timeout = async (ms: number) => {

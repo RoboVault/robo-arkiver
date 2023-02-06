@@ -11,7 +11,7 @@ export class BlockHandler {
   private readonly blockInterval: number;
   private readonly handler: BlockHandlerFn;
   private readonly blockHandlerName: string;
-  private readonly provider: ethers.providers.JsonRpcProvider;
+  private readonly provider: ethers.JsonRpcProvider;
   private readonly statusProvider: StatusProvider;
   private readonly arkive: Arkive;
 
@@ -21,7 +21,7 @@ export class BlockHandler {
     blockInterval: number;
     handler: BlockHandlerFn;
     blockHandlerName: string;
-    provider: ethers.providers.JsonRpcProvider;
+    provider: ethers.JsonRpcProvider;
     arkive: Arkive;
   }) {
     this.chainName = params.chainName;
@@ -73,6 +73,9 @@ export class BlockHandler {
     }
     try {
       this.fetchAndHandleBlocks(this.startBlockHeight, store).then((data) => {
+        if (!data) {
+          return; // don't increment startBlockHeight
+        }
         callback(data);
       });
     } catch (e) {
@@ -91,9 +94,15 @@ export class BlockHandler {
   private async fetchAndHandleBlocks(
     startBlockHeight: number,
     store: Record<string, unknown>,
-  ): Promise<Point[]> {
+  ): Promise<Point[] | null> {
     try {
-      const block = await this.provider.getBlock(startBlockHeight);
+      const block = await this.provider.getBlock(
+        startBlockHeight,
+        true,
+      );
+      if (!block) {
+        return null;
+      }
       const timestampMs = block.timestamp * 1000;
       const points = await this.handler({
         block,

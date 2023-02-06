@@ -11,9 +11,9 @@ export class ManifestManager {
   private blockHandlers: BlockHandler[] = [];
   private abiStore: Record<
     string,
-    { name: string; interface: ethers.ContractInterface }
+    { name: string; interface: ethers.InterfaceAbi }
   > = {};
-  private providerStore: Record<string, ethers.providers.JsonRpcProvider> = {};
+  private providerStore: Record<string, ethers.JsonRpcProvider> = {};
   private contractStore: Record<string, ethers.Contract> = {};
   private arkiveData: Arkive;
   private packagePath: string;
@@ -60,6 +60,12 @@ export class ManifestManager {
                 provider,
                 chain: dataSource.chain.name,
               });
+
+              let startBlockHeight = source.startBlockHeight;
+              if (startBlockHeight === -1) {
+                startBlockHeight = contract.deploymentTransaction()!
+                  .blockNumber!;
+              }
 
               const instance = new ContractSource({
                 abiName: abi.name,
@@ -157,7 +163,7 @@ export class ManifestManager {
 
   private async getAbi(
     abiPath: string,
-  ): Promise<{ interface: ethers.ContractInterface; name: string }> {
+  ): Promise<{ interface: ethers.InterfaceAbi; name: string }> {
     if (this.abiStore[abiPath]) {
       return this.abiStore[abiPath];
     }
@@ -176,20 +182,20 @@ export class ManifestManager {
   private getProvider(
     rpcUrl: string,
     chain: string,
-  ): ethers.providers.JsonRpcProvider {
+  ): ethers.JsonRpcProvider {
     if (this.providerStore[chain]) {
       return this.providerStore[chain];
     }
 
-    this.providerStore[chain] = new ethers.providers.JsonRpcProvider(rpcUrl);
+    this.providerStore[chain] = new ethers.JsonRpcProvider(rpcUrl);
     return this.providerStore[chain];
   }
 
   private getContract(params: {
     chain: string;
     address: string;
-    abi: ethers.ContractInterface;
-    provider: ethers.providers.JsonRpcProvider;
+    abi: ethers.InterfaceAbi;
+    provider: ethers.JsonRpcProvider;
   }): ethers.Contract {
     const key = `${params.address}-${params.chain}`;
     if (this.contractStore[key]) {
@@ -198,7 +204,7 @@ export class ManifestManager {
 
     this.contractStore[key] = new ethers.Contract(
       params.address,
-      params.abi as ethers.ContractInterface,
+      params.abi as ethers.InterfaceAbi,
       params.provider,
     );
     return this.contractStore[key];

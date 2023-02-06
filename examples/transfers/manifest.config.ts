@@ -11,19 +11,26 @@ export const manifest: IManifest = {
   dataSources: [
     {
       chain: avalanche,
+      blockHandlers: [
+        {
+          blockInterval: 1,
+          handlerPath: "handlers/nativeTransfer.ts",
+          startBlockHeight: 0,
+        },
+      ],
       contracts: [
         {
           abiPath: "abis/erc20.json",
           sources: [
             {
-              address: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
-              startBlockHeight: 25681956,
-            }, // USDC
+              address: "",
+              startBlockHeight: -1,
+            },
           ],
           eventQueries: [
             {
+              handler: "handlers/ERC20Transfer.ts",
               name: "Transfer",
-              handler: "handlers/transfer.ts",
             },
           ],
         },

@@ -1,5 +1,5 @@
 import { StatusProvider } from "./types.ts";
 
 export const mockStatusProvider: StatusProvider = {
-  getIndexedBlockHeight: async () => await 0,
+  getIndexedBlockHeight: () => Promise.resolve(0),
 };

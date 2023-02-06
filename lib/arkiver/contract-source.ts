@@ -57,7 +57,7 @@ export class ContractSource {
     const indexedBlockHeight = await this.statusProvider.getIndexedBlockHeight({
       type: "eventHandler",
       _abi: this.abiName,
-      _address: this.contract.address,
+      _address: this.contract.target.toString(),
       _event: this.eventQuery,
       _chain: this.chainName,
       _arkiveId: this.arkive.id.toString(),
@@ -67,7 +67,7 @@ export class ContractSource {
     devLog(
       "indexedBlockHeight",
       indexedBlockHeight,
-      this.contract.address,
+      this.contract.target.toString(),
       this.eventQuery,
     );
 
@@ -105,7 +105,7 @@ export class ContractSource {
       logError(e as Error, {
         abiName: this.abiName,
         eventQuery: this.eventQuery,
-        contractAddress: this.contract.address,
+        contractAddress: this.contract.target.toString(),
         source: "ContractSource.getDataPoints",
       });
     }
@@ -118,14 +118,14 @@ export class ContractSource {
   private async fetchAndHandleEvents(
     from: number,
     to: number,
-    filter: ethers.EventFilter,
+    filter: ethers.DeferredTopicFilter,
     store: Record<string, unknown>,
   ): Promise<Point[]> {
     try {
       const events = await this.contract.queryFilter(filter, from, to);
 
       devLog(
-        `fetching data from ${this.abiName} ${this.eventQuery} ${this.contract.address} from ${from} to ${to}`,
+        `fetching data from ${this.abiName} ${this.eventQuery} ${this.contract.target.toString()} from ${from} to ${to}`,
       );
 
       const points = (
@@ -135,8 +135,6 @@ export class ContractSource {
             const pointsPromise = this.eventHandler({
               event,
               contract: this.contract,
-              provider: this.contract
-                .provider as ethers.providers.JsonRpcProvider,
               chainName: this.chainName,
               abiName: this.abiName,
               eventQueryName: this.eventQuery,
@@ -147,7 +145,7 @@ export class ContractSource {
             return points.map((point) => {
               return point
                 .tag("_chain", this.chainName)
-                .tag("_address", this.contract.address)
+                .tag("_address", this.contract.target.toString())
                 .tag("_event", this.eventQuery)
                 .tag("_abi", this.abiName)
                 .tag(
@@ -157,7 +155,7 @@ export class ContractSource {
                 .tag("_arkiveId", this.arkive.id.toString())
                 .stringField("_txHash", event.transactionHash)
                 .intField("_blockHeight", event.blockNumber)
-                .intField("_logIndex", event.logIndex)
+                .intField("_logIndex", event.index)
                 .timestamp(new Date(timestampMs));
             });
           }),
@@ -169,7 +167,7 @@ export class ContractSource {
       logError(e as Error, {
         abiName: this.abiName,
         eventQuery: this.eventQuery,
-        contractAddress: this.contract.address,
+        contractAddress: this.contract.target.toString(),
         source: "ContractSource.fetchAndHandleEvents",
       });
       return [];

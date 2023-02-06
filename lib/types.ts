@@ -110,9 +110,9 @@ export interface IBlockHandler {
 export type BlockHandlerFn = (ctx: BlockHandlerContext) => Promise<Point[]>;
 
 export interface BlockHandlerContext {
-  block: ethers.providers.Block;
+  block: ethers.Block;
   blockHandlerName: string;
-  provider: ethers.providers.JsonRpcProvider;
+  provider: ethers.JsonRpcProvider;
   chainName: string;
   store: Record<string, unknown>;
   timestampMs: number;
@@ -128,8 +128,7 @@ export interface IManifest {
 }
 
 export interface EventHandlerContext {
-  event: ethers.Event;
-  provider: ethers.providers.JsonRpcProvider;
+  event: ethers.EventLog | ethers.Log;
   contract: ethers.Contract;
   chainName: string;
   abiName: string;
