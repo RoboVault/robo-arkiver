@@ -13,12 +13,8 @@ export const manifest: IManifest = {
       chain: avalanche,
       contracts: [
         {
-          abiPath: "abis/qiToken.json",
+          abiPath: "abis/qiERC20.json",
           sources: [
-            {
-              address: "0x5C0401e81Bc07Ca70fAD469b451682c0d747Ef1c", // qiAVAX
-              startBlockHeight: 3046672,
-            },
             {
               address: "0xF362feA9659cf036792c9cb02f8ff8198E21B4cB", // qisAVAX
               startBlockHeight: 13995148,
@@ -30,6 +26,41 @@ export const manifest: IManifest = {
             {
               address: "0xB715808a78F6041E46d61Cb123C9B4A27056AE9C", //qiUSDC
               startBlockHeight: 13319519,
+            },
+          ],
+          eventQueries: [
+            {
+              handler: "handlers/mint.ts",
+              name: "Mint",
+            },
+            {
+              handler: "handlers/redeem.ts",
+              name: "Redeem",
+            },
+            {
+              handler: "handlers/borrow.ts",
+              name: "Borrow",
+            },
+            {
+              handler: "handlers/repay.ts",
+              name: "RepayBorrow",
+            },
+            {
+              handler: "handlers/liquidate.ts",
+              name: "LiquidateBorrow",
+            },
+            {
+              handler: "handlers/transfer.ts",
+              name: "Transfer",
+            },
+          ],
+        },
+        {
+          abiPath: "abis/qiAvax.json",
+          sources: [
+            {
+              address: "0x5C0401e81Bc07Ca70fAD469b451682c0d747Ef1c", // qiAVAX
+              startBlockHeight: 3046672,
             },
           ],
           eventQueries: [

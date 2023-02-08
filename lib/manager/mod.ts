@@ -111,28 +111,31 @@ export class ArkiveManager {
       `../packages/${arkive.user_id}/${arkive.id}/${arkive.deployment.major_version}_${arkive.deployment.minor_version}/manifest.config.ts`;
     const { manifest } = await import(manifestPath);
 
-    const worker = new Worker(new URL("../arkiver/mod.ts", import.meta.url), {
-      type: "module",
-      deno: {
-        permissions: {
-          env: [
-            "INFLUX_HOST",
-            "INFLUX_TOKEN",
-            "INFLUX_ORG",
-            "INFLUX_BUCKET",
-            "DENO_ENV",
-            "NODE_ENV",
-          ],
-          hrtime: false,
-          net: true,
-          ffi: false,
-          read: true,
-          run: false,
-          sys: false,
-          write: false,
+    const worker = new Worker(
+      new URL("../arkiver/worker.ts", import.meta.url),
+      {
+        type: "module",
+        deno: {
+          permissions: {
+            env: [
+              "INFLUX_HOST",
+              "INFLUX_TOKEN",
+              "INFLUX_ORG",
+              "INFLUX_BUCKET",
+              "DENO_ENV",
+              "NODE_ENV",
+            ],
+            hrtime: false,
+            net: true,
+            ffi: false,
+            read: true,
+            run: false,
+            sys: false,
+            write: false,
+          },
         },
       },
-    });
+    );
 
     worker.onmessage = async (e: MessageEvent<ArkiveMessageEvent>) => {
       if (e.data.topic === "workerError") {
