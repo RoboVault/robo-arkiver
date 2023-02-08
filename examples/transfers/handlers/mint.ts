@@ -95,7 +95,7 @@ const handler: EventHandler = async ({
       .tag("symbol", symbol)
       .floatField(
         "exchangeRate",
-        mintAmountFloat / depositAmount,
+        depositAmount / mintAmountFloat,
       ),
   ];
 };
