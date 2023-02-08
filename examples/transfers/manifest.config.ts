@@ -11,25 +11,50 @@ export const manifest: IManifest = {
   dataSources: [
     {
       chain: avalanche,
-      blockHandlers: [
-        {
-          blockInterval: 1,
-          handlerPath: "handlers/nativeTransfer.ts",
-          startBlockHeight: 0,
-        },
-      ],
       contracts: [
         {
-          abiPath: "abis/erc20.json",
+          abiPath: "abis/qiToken.json",
           sources: [
             {
-              address: "",
-              startBlockHeight: -1,
+              address: "0x5C0401e81Bc07Ca70fAD469b451682c0d747Ef1c", // qiAVAX
+              startBlockHeight: 3046672,
+            },
+            {
+              address: "0xF362feA9659cf036792c9cb02f8ff8198E21B4cB", // qisAVAX
+              startBlockHeight: 13995148,
+            },
+            {
+              address: "0x89a415b3D20098E6A6C8f7a59001C67BD3129821", // qiBTC.b
+              startBlockHeight: 16578216,
+            },
+            {
+              address: "0xB715808a78F6041E46d61Cb123C9B4A27056AE9C", //qiUSDC
+              startBlockHeight: 13319519,
             },
           ],
           eventQueries: [
             {
-              handler: "handlers/ERC20Transfer.ts",
+              handler: "handlers/mint.ts",
+              name: "Mint",
+            },
+            {
+              handler: "handlers/redeem.ts",
+              name: "Redeem",
+            },
+            {
+              handler: "handlers/borrow.ts",
+              name: "Borrow",
+            },
+            {
+              handler: "handlers/repay.ts",
+              name: "RepayBorrow",
+            },
+            {
+              handler: "handlers/liquidate.ts",
+              name: "LiquidateBorrow",
+            },
+            {
+              handler: "handlers/transfer.ts",
               name: "Transfer",
             },
           ],

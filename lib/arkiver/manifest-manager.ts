@@ -61,12 +61,6 @@ export class ManifestManager {
                 chain: dataSource.chain.name,
               });
 
-              let startBlockHeight = source.startBlockHeight;
-              if (startBlockHeight === -1) {
-                startBlockHeight = contract.deploymentTransaction()!
-                  .blockNumber!;
-              }
-
               const instance = new ContractSource({
                 abiName: abi.name,
                 chainName: dataSource.chain.name,
