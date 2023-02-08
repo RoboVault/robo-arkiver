@@ -16,6 +16,7 @@ export class ContractSource {
   private readonly statusProvider: StatusProvider;
   private readonly arkive: Arkive;
   private readonly filter?: Filter;
+  private readonly provider: ethers.JsonRpcProvider;
 
   constructor(params: {
     abiName: string;
@@ -24,6 +25,7 @@ export class ContractSource {
     eventQuery: string;
     filter?: Filter;
     contract: ethers.Contract;
+    provider: ethers.JsonRpcProvider;
     blockRange: number;
     eventHandler: EventHandler;
     arkive: Arkive;
@@ -34,6 +36,7 @@ export class ContractSource {
     this.eventQuery = params.eventQuery;
     this.filter = params.filter;
     this.contract = params.contract;
+    this.provider = params.provider;
     this.blockRange = params.blockRange;
     this.eventHandler = params.eventHandler;
     if (getEnv("DENO_ENV") === "PROD") {
@@ -140,6 +143,7 @@ export class ContractSource {
               eventQueryName: this.eventQuery,
               store,
               timestampMs,
+              provider: this.provider,
             });
             const points = await Promise.race([pointsPromise, timeout(10000)]);
             return points.map((point) => {

@@ -7,7 +7,7 @@ import {
   logError,
   rm,
   unpack,
-} from "../utils.ts";
+} from "@utils";
 import { Arkive, Deployment } from "@types";
 
 interface RawArkive extends Omit<Arkive, "deployment"> {

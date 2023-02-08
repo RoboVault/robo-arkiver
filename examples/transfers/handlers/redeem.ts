@@ -1,47 +1,46 @@
 import { Point } from "https://esm.sh/@influxdata/influxdb-client@1.33.0";
-import { ethers } from "https://esm.sh/ethers@6.0.2";
-import {
-  types,
-  utils,
-} from "https://deno.land/x/robo_arkiver@v0.0.3/lib/mod.ts";
+import { ethers } from "npm:ethers@6.0.2";
+import { EventHandler } from "@types";
+import { error, getFromStore } from "@utils";
 
-const handler: types.EventHandler = async ({
+const handler: EventHandler = async ({
   contract,
   event,
   store,
 }) => {
   if (!(event instanceof ethers.EventLog)) {
-    return utils.error(`Event args are missing: ${event}`);
+    return error(`Event args are missing: ${event}`);
   }
 
   const [redeemer, redeemAmount, redeemTokens] = event.args;
+  const address = contract.target.toString();
 
-  const decimals = (await utils.getFromStore(
+  const decimals = (await getFromStore(
     store,
-    `${contract.address}-decimals`,
+    `${address}-decimals`,
     contract.decimals,
   )) as number;
 
-  const symbol = await utils.getFromStore(
+  const symbol = await getFromStore(
     store,
-    `${contract.address}-symbol`,
+    `${address}-symbol`,
     contract.symbol,
   ) as string;
 
-  const underlying = await utils.getFromStore(
+  const underlying = await getFromStore(
     store,
-    `${contract.address}-underlying`,
+    `${address}-underlying`,
     async () => {
-      if (!contract.underlying) {
+      if (!contract.interface.getFunction("underlying")) {
         return "AVAX";
       }
       return await contract.underlying();
     },
   ) as string;
 
-  const underlyingDecimals = await utils.getFromStore(
+  const underlyingDecimals = await getFromStore(
     store,
-    `${contract.address}-underlyingDecimals`,
+    `${address}-underlyingDecimals`,
     async () => {
       if (underlying === "AVAX") {
         return 18;
@@ -53,9 +52,9 @@ const handler: types.EventHandler = async ({
     },
   );
 
-  const underlyingSymbol = await utils.getFromStore(
+  const underlyingSymbol = await getFromStore(
     store,
-    `${contract.address}-underlyingSymbol`,
+    `${address}-underlyingSymbol`,
     async () => {
       if (underlying === "AVAX") {
         return "AVAX";

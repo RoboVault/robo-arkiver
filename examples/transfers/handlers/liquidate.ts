@@ -1,35 +1,34 @@
 import { Point } from "https://esm.sh/@influxdata/influxdb-client@1.33.0";
-import { ethers } from "https://esm.sh/ethers@6.0.2";
-import {
-  types,
-  utils,
-} from "https://deno.land/x/robo_arkiver@v0.0.3/lib/mod.ts";
+import { ethers } from "npm:ethers@6.0.2";
+import { EventHandler } from "@types";
+import { error, getFromStore } from "@utils";
 
-const handler: types.EventHandler = async ({
+const handler: EventHandler = async ({
   contract,
   event,
   store,
 }) => {
   if (!(event instanceof ethers.EventLog)) {
-    return utils.error(`Event args are missing: ${event}`);
+    return error(`Event args are missing: ${event}`);
   }
 
   const [liquidator, borrower, repayAmount, qiTokenCollateral, seizeAmount] =
     event.args;
+  const address = contract.target.toString();
 
   // ---------REPAY UNDERLYING---------
-  const underlying = await utils.getFromStore(
+  const underlying = await getFromStore(
     store,
-    `${contract.address}-underlying`,
+    `${address}-underlying`,
     async () => {
-      if (!contract.underlying) {
+      if (!contract.interface.getFunction("underlying")) {
         return "AVAX";
       }
       return await contract.underlying();
     },
   ) as string;
 
-  const underlyingDecimals = await utils.getFromStore(
+  const underlyingDecimals = await getFromStore(
     store,
     `${underlying}-decimals`,
     async () => {
@@ -38,12 +37,12 @@ const handler: types.EventHandler = async ({
       }
       const underlyingContract = new ethers.Contract(underlying, [
         "function decimals() view returns (uint8)",
-      ], contract.runner!.provider);
+      ], contract.runner);
       return await underlyingContract.decimals();
     },
   );
 
-  const underlyingSymbol = await utils.getFromStore(
+  const underlyingSymbol = await getFromStore(
     store,
     `${underlying}-symbol`,
     async () => {
@@ -52,7 +51,7 @@ const handler: types.EventHandler = async ({
       }
       const underlyingContract = new ethers.Contract(underlying, [
         "function symbol() view returns (string)",
-      ], contract.runner!.provider);
+      ], contract.runner);
       return await underlyingContract.symbol();
     },
   );
@@ -62,15 +61,15 @@ const handler: types.EventHandler = async ({
   const qiTokenCollateralContract = new ethers.Contract(qiTokenCollateral, [
     "function symbol() view returns (string)",
     "function decimals() view returns (uint8)",
-  ], contract.runner!.provider);
+  ], contract.runner);
 
-  const qiTokenCollateralSymbol = await utils.getFromStore(
+  const qiTokenCollateralSymbol = await getFromStore(
     store,
     `${qiTokenCollateral}-symbol`,
     qiTokenCollateralContract.symbol,
   ) as string;
 
-  const qiTokenCollateralDecimals = await utils.getFromStore(
+  const qiTokenCollateralDecimals = await getFromStore(
     store,
     `${qiTokenCollateral}-decimals`,
     qiTokenCollateralContract.decimals,

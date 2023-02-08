@@ -1,24 +1,30 @@
 import { Point } from "https://esm.sh/@influxdata/influxdb-client@1.33.0";
-import { ethers } from "https://esm.sh/ethers@6.0.2";
-import {
-  types,
-  utils,
-} from "https://deno.land/x/robo_arkiver@v0.0.3/lib/mod.ts";
+import { ethers } from "npm:ethers@6.0.2";
+import { EventHandler } from "@types";
+import { error, getFromStore } from "@utils";
 
-const handler: types.EventHandler = async ({
+const handler: EventHandler = async ({
   contract,
   event,
   store,
 }) => {
   if (!(event instanceof ethers.EventLog)) {
-    return utils.error(`Event args are missing: ${event}`);
+    return error(`Event args are missing: ${event}`);
   }
 
   const [from, to, value] = event.args;
+  const address = contract.target.toString();
 
-  const decimals = (await utils.getFromStore(
+  if (
+    (<string> from).toLowerCase() === address.toLowerCase() ||
+    (<string> to).toLowerCase() === address.toLowerCase()
+  ) {
+    return [];
+  }
+
+  const decimals = (await getFromStore(
     store,
-    `${contract.address}-decimals`,
+    `${address}-decimals`,
     contract.decimals,
   )) as number;
 

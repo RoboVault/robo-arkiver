@@ -135,6 +135,7 @@ export interface EventHandlerContext {
   eventQueryName: string;
   store: Record<string, unknown>;
   timestampMs: number;
+  provider: ethers.JsonRpcProvider;
 }
 
 export type EventHandler = (ctx: EventHandlerContext) => Promise<Point[]>;

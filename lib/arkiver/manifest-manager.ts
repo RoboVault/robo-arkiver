@@ -67,6 +67,7 @@ export class ManifestManager {
                 startBlockHeight: source.startBlockHeight - 1,
                 eventQuery: eventQuery.name,
                 filter: eventQuery.filter,
+                provider,
                 contract,
                 blockRange: dataSource.chain.blockRange,
                 eventHandler,
@@ -198,7 +199,7 @@ export class ManifestManager {
 
     this.contractStore[key] = new ethers.Contract(
       params.address,
-      params.abi as ethers.InterfaceAbi,
+      params.abi,
       params.provider,
     );
     return this.contractStore[key];
