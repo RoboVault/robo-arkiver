@@ -90,6 +90,25 @@ export const manifest: IManifest = {
             },
           ],
         },
+        {
+          abiPath: "abis/chainlinkAggregator.json",
+          eventQueries: [
+            {
+              handler: "handlers/price.ts",
+              name: "AnswerUpdated",
+            },
+          ],
+          sources: [
+            {
+              address: "0x154baB1FC1D87fF641EeD0E9Bc0f8a50D880D2B6", // BTC/USD,
+              startBlockHeight: 16578216,
+            },
+            {
+              address: "0x9450A29eF091B625e976cE66f2A5818e20791999", // AVAX/USD
+              startBlockHeight: 3046672,
+            },
+          ],
+        },
       ],
     },
   ],

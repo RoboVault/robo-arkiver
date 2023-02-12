@@ -1,20 +1,25 @@
 import { Point } from "https://esm.sh/@influxdata/influxdb-client@1.33.0";
 import { ethers } from "npm:ethers@6.0.2";
 import { EventHandler } from "@types";
-import { error, getFromStore } from "@utils";
+import { getFromStore } from "@utils";
 
 const handler: EventHandler = async ({
   contract,
   event,
   store,
-  provider,
 }) => {
   if (!(event instanceof ethers.EventLog)) {
-    return error(`Event args are missing: ${event}`);
+    return [];
   }
 
-  const [repayer, borrower, repayAmount] = event.args;
+  const [redeemer, redeemAmount, redeemTokens] = event.args;
   const address = contract.target.toString();
+
+  const decimals = (await getFromStore(
+    store,
+    `${address}-decimals`,
+    contract.decimals,
+  )) as number;
 
   const symbol = await getFromStore(
     store,
@@ -42,7 +47,7 @@ const handler: EventHandler = async ({
       }
       const underlyingContract = new ethers.Contract(underlying, [
         "function decimals() view returns (uint8)",
-      ], provider);
+      ], contract.runner!.provider);
       return await underlyingContract.decimals();
     },
   );
@@ -56,26 +61,40 @@ const handler: EventHandler = async ({
       }
       const underlyingContract = new ethers.Contract(underlying, [
         "function symbol() view returns (string)",
-      ], provider);
+      ], contract.runner!.provider);
       return await underlyingContract.symbol();
     },
   );
 
-  const formattedRepayAmount = ethers.formatUnits(
-    repayAmount,
+  const withdrawAmount = parseFloat(ethers.formatUnits(
+    redeemAmount,
     underlyingDecimals as number,
-  );
+  ));
+
+  const redeemAmountFloat = parseFloat(ethers.formatUnits(
+    redeemTokens,
+    decimals as number,
+  ));
 
   return [
-    new Point("repay")
-      .tag("repayer", repayer)
-      .tag("borrower", borrower)
+    new Point("withdraw")
+      .tag("withdrawer", redeemer)
       .tag("underlying", underlying)
       .tag("underlyingSymbol", underlyingSymbol as string)
       .tag("symbol", symbol)
       .floatField(
-        "amount",
-        parseFloat(formattedRepayAmount),
+        "withdrawAmount",
+        withdrawAmount,
+      )
+      .floatField(
+        "redeemAmount",
+        redeemAmount,
+      ),
+    new Point("exchange_rate")
+      .tag("symbol", symbol)
+      .floatField(
+        "exchangeRate",
+        withdrawAmount / redeemAmountFloat,
       ),
   ];
 };

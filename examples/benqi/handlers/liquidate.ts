@@ -1,7 +1,7 @@
 import { Point } from "https://esm.sh/@influxdata/influxdb-client@1.33.0";
 import { ethers } from "npm:ethers@6.0.2";
 import { EventHandler } from "@types";
-import { error, getFromStore } from "@utils";
+import { getFromStore } from "@utils";
 
 const handler: EventHandler = async ({
   contract,
@@ -9,7 +9,7 @@ const handler: EventHandler = async ({
   store,
 }) => {
   if (!(event instanceof ethers.EventLog)) {
-    return error(`Event args are missing: ${event}`);
+    return [];
   }
 
   const [liquidator, borrower, repayAmount, qiTokenCollateral, seizeAmount] =
