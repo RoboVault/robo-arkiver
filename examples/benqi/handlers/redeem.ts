@@ -76,7 +76,11 @@ const handler: EventHandler = async ({
     decimals as number,
   ));
 
-  return [
+  const exchangeRate = withdrawAmount / redeemAmountFloat;
+
+  const points: Point[] = [];
+
+  points.push(
     new Point("withdraw")
       .tag("withdrawer", redeemer)
       .tag("underlying", underlying)
@@ -90,13 +94,19 @@ const handler: EventHandler = async ({
         "redeemAmount",
         redeemAmount,
       ),
-    new Point("exchange_rate")
-      .tag("symbol", symbol)
-      .floatField(
-        "exchangeRate",
-        withdrawAmount / redeemAmountFloat,
-      ),
-  ];
+  );
+  if (isFinite(exchangeRate)) {
+    points.push(
+      new Point("exchange_rate")
+        .tag("symbol", symbol)
+        .floatField(
+          "exchangeRate",
+          withdrawAmount / redeemAmountFloat,
+        ),
+    );
+  }
+
+  return points;
 };
 
 export default handler;
