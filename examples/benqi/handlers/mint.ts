@@ -77,7 +77,11 @@ const handler: EventHandler = async ({
     decimals as number,
   ));
 
-  return [
+  const exchangeRate = depositAmount / mintAmountFloat;
+
+  const points: Point[] = [];
+
+  points.push(
     new Point("deposit")
       .tag("depositor", minter)
       .tag("underlying", underlying)
@@ -91,13 +95,18 @@ const handler: EventHandler = async ({
         "mintAmount",
         mintAmountFloat,
       ),
-    new Point("exchange_rate")
-      .tag("symbol", symbol)
-      .floatField(
-        "exchangeRate",
-        depositAmount / mintAmountFloat,
-      ),
-  ];
+  );
+  if (isFinite(exchangeRate)) {
+    points.push(
+      new Point("exchange_rate")
+        .tag("symbol", symbol)
+        .floatField(
+          "exchangeRate",
+          exchangeRate,
+        ),
+    );
+  }
+  return points;
 };
 
 export default handler;
