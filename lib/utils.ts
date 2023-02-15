@@ -58,7 +58,7 @@ export const getFromStore = async (
 };
 
 export const logError = (error: Error, tags: Record<string, string>) => {
-  const errorPoint = new Point("eth-logger-errors")
+  const errorPoint = new Point("arkiver_error")
     .stringField("message", error.message)
     .stringField("stack", error.stack || "")
     .intField("error", 1)

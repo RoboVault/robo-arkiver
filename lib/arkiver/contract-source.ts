@@ -157,9 +157,9 @@ export class ContractSource {
                   this.arkive.deployment.major_version.toString(),
                 )
                 .tag("_arkiveId", this.arkive.id.toString())
+                .tag("_logIndex", event.index.toString())
                 .stringField("_txHash", event.transactionHash)
                 .intField("_blockHeight", event.blockNumber)
-                .intField("_logIndex", event.index)
                 .timestamp(new Date(timestampMs));
             });
           }),
