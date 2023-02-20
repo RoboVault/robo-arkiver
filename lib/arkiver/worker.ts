@@ -5,7 +5,7 @@ import { Arkiver } from "./arkiver.ts";
 declare const self: Worker;
 devLog("worker started");
 
-self.onmessage = (e: MessageEvent<ArkiveMessageEvent>) => {
+self.onmessage = async (e: MessageEvent<ArkiveMessageEvent>) => {
   devLog("worker received message", e.data);
   switch (e.data.topic) {
     case "initArkive": {
@@ -15,7 +15,8 @@ self.onmessage = (e: MessageEvent<ArkiveMessageEvent>) => {
       arkiver.addEventListener("synced", () => {
         self.postMessage({ topic: "synced", data: { arkive } });
       });
-      arkiver.run();
+      await arkiver.init();
+      await arkiver.run();
       break;
     }
   }

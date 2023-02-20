@@ -159,6 +159,10 @@ export const manifest: IManifest = {
               address: "0x4bc3BeBb7eB60155f8b38771D9926d9A23dad5B5", // QI/USD (phase 2)
               startBlockHeight: 15036335,
             },
+            {
+              address: "0x2223338267fF42814d53aE1c02979164b0528fA4", // Calculated SAVAX/USD
+              startBlockHeight: 13995148,
+            },
           ],
         },
       ],

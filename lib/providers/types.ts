@@ -2,24 +2,12 @@ import { Arkive } from "@types";
 
 export interface StatusProvider {
   getIndexedBlockHeight(
-    params: BlockHandlerStatusParams | EventHandlerStatusParams,
+    params: IndexedBlockHeightParams,
   ): Promise<number>;
 }
 
-export interface BlockHandlerStatusParams {
-  type: "blockHandler";
+export interface IndexedBlockHeightParams {
   _chain: string;
-  _blockHandler: string;
-  _arkiveVersion: string;
-  _arkiveId: string;
-}
-
-export interface EventHandlerStatusParams {
-  type: "eventHandler";
-  _chain: string;
-  _event: string;
-  _address: string;
-  _abi: string;
   _arkiveVersion: string;
   _arkiveId: string;
 }

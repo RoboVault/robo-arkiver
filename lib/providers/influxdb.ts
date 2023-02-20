@@ -1,8 +1,4 @@
-import {
-  BlockHandlerStatusParams,
-  EventHandlerStatusParams,
-  StatusProvider,
-} from "./types.ts";
+import { IndexedBlockHeightParams, StatusProvider } from "./types.ts";
 import { type FluxTableMetaData, InfluxDB, type QueryApi } from "@deps";
 
 export interface queryOptions {
@@ -29,63 +25,28 @@ export class InfluxDBAdapter implements StatusProvider {
   }
 
   public async getIndexedBlockHeight(
-    params: BlockHandlerStatusParams | EventHandlerStatusParams,
+    params: IndexedBlockHeightParams,
   ): Promise<number> {
-    if (params.type === "blockHandler") {
-      const {
-        _arkiveId,
-        _arkiveVersion,
-        _blockHandler,
-        _chain,
-      } = params;
-      const indexedBlockHeight = await this.getLastValue({
-        field: "blockHeight",
-        range: { start: new Date(0), end: new Date() },
-        filters: {
-          _arkiveId,
-          _arkiveVersion,
-          _blockHandler,
-          _chain,
-        },
-        groupKeys: [
-          "_arkiveId",
-          "_arkiveVersion",
-          "_blockHandler",
-          "_chain",
-        ],
-      });
-      return indexedBlockHeight || 0;
-    } else {
-      const {
-        _abi,
-        _address,
+    const {
+      _arkiveId,
+      _arkiveVersion,
+      _chain,
+    } = params;
+    const indexedBlockHeight = await this.getLastValue({
+      field: "blockHeight",
+      range: { start: new Date(0), end: new Date() },
+      filters: {
         _arkiveId,
         _arkiveVersion,
         _chain,
-        _event,
-      } = params;
-      const indexedBlockHeight = await this.getLastValue({
-        field: "blockHeight",
-        range: { start: new Date(0), end: new Date() },
-        filters: {
-          _abi,
-          _address,
-          _arkiveId,
-          _arkiveVersion,
-          _chain,
-          _event,
-        },
-        groupKeys: [
-          "_abi",
-          "_address",
-          "_arkiveId",
-          "_arkiveVersion",
-          "_chain",
-          "_event",
-        ],
-      });
-      return indexedBlockHeight || 0;
-    }
+      },
+      groupKeys: [
+        "_arkiveId",
+        "_arkiveVersion",
+        "_chain",
+      ],
+    });
+    return indexedBlockHeight || 0;
   }
 
   public async getFirstValue(

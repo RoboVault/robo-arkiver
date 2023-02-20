@@ -1,19 +1,14 @@
 import { ethers, Point } from "@deps";
-import { devLog, getEnv, logError, timeout } from "@utils";
+import { devLog, logError, timeout } from "@utils";
 import { Arkive, EventHandler, Filter } from "@types";
-import { StatusProvider } from "../providers/types.ts";
-import { InfluxDBAdapter } from "../providers/influxdb.ts";
-import { mockStatusProvider } from "../providers/mock.ts";
 
 export class ContractSource {
   private readonly abiName: string;
   private readonly chainName: string;
-  private startBlockHeight: number;
+  public startBlockHeight: number;
   private readonly eventQuery: string;
   private readonly contract: ethers.Contract;
-  private readonly blockRange: number;
   private readonly eventHandler: EventHandler;
-  private readonly statusProvider: StatusProvider;
   private readonly arkive: Arkive;
   private readonly filter?: Filter;
   private readonly provider: ethers.JsonRpcProvider;
@@ -37,50 +32,13 @@ export class ContractSource {
     this.filter = params.filter;
     this.contract = params.contract;
     this.provider = params.provider;
-    this.blockRange = params.blockRange;
     this.eventHandler = params.eventHandler;
-    if (getEnv("DENO_ENV") === "PROD") {
-      this.statusProvider = new InfluxDBAdapter({
-        url: getEnv("INFLUX_HOST"),
-        token: getEnv("INFLUX_TOKEN"),
-        bucket: getEnv("INFLUX_BUCKET"),
-        org: getEnv("INFLUX_ORG"),
-      });
-    } else {
-      this.statusProvider = mockStatusProvider;
-    }
     this.arkive = params.arkive;
   }
 
-  public async init() {
-    await this.checkIndexedBlockHeight();
-  }
-
-  private async checkIndexedBlockHeight() {
-    const indexedBlockHeight = await this.statusProvider.getIndexedBlockHeight({
-      type: "eventHandler",
-      _abi: this.abiName,
-      _address: this.contract.target.toString(),
-      _event: this.eventQuery,
-      _chain: this.chainName,
-      _arkiveId: this.arkive.id.toString(),
-      _arkiveVersion: this.arkive.deployment.major_version.toString(),
-    });
-
-    devLog(
-      "indexedBlockHeight",
-      indexedBlockHeight,
-      this.contract.target.toString(),
-      this.eventQuery,
-    );
-
-    if (indexedBlockHeight && indexedBlockHeight > this.startBlockHeight) {
-      this.startBlockHeight = indexedBlockHeight;
-    }
-  }
-
   public getDataPoints(
-    currentBlockHeight: number,
+    from: number,
+    to: number,
     store: Record<string, unknown>,
     callback: (points: Point[]) => void,
   ): void {
@@ -90,16 +48,6 @@ export class ContractSource {
     }
     const filter = filterFn(this.filter);
 
-    const from = Math.min(this.startBlockHeight + 1, currentBlockHeight);
-    const to = Math.min(
-      currentBlockHeight,
-      this.startBlockHeight + this.blockRange,
-    );
-
-    if (from === to) {
-      return;
-    }
-    this.startBlockHeight = to;
     try {
       this.fetchAndHandleEvents(from, to, filter, store).then((data) => {
         callback(data);
