@@ -6,6 +6,7 @@
   "imports": {
     "@deps": "./deps.ts",
     "@types": "./lib/types.ts",
-    "@utils": "./lib/utils.ts"
+    "@utils": "./lib/utils.ts",
+    "@arkiver": "./lib/mod.ts"
   }
 }

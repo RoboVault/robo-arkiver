@@ -29,12 +29,13 @@ export class Arkiver extends EventTarget {
   private readonly statusProvider: StatusProvider;
   private blockRanges = new Map<string, number>();
 
-  constructor(manifest: IManifest, arkiveData: Arkive) {
+  constructor(manifest: IManifest, arkiveData: Arkive, directory?: string) {
     super();
     this.manifest = manifest;
     this.arkiveData = arkiveData;
-    this.packagePath =
-      `../packages/${this.arkiveData.user_id}/${this.arkiveData.id}/${this.arkiveData.deployment.major_version}_${this.arkiveData.deployment.minor_version}`;
+    this.packagePath = directory
+      ? directory
+      : `../packages/${this.arkiveData.user_id}/${this.arkiveData.id}/${this.arkiveData.deployment.major_version}_${this.arkiveData.deployment.minor_version}`;
     if (getEnv("DENO_ENV") === "PROD") {
       this.statusProvider = new InfluxDBAdapter({
         url: getEnv("INFLUX_HOST"),
