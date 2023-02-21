@@ -1,23 +1,15 @@
-import type { IManifest } from "https://deno.land/x/robo_arkiver@v0.0.2/lib/types.ts";
-
-const avalanche = {
-  name: "avalanche",
-  rpcUrl:
-    "https://nd-043-363-211.p2pify.com/de88dadc15eed48dcd89c22c53bd0d28/ext/bc/C/rpc",
-  blockRange: 3000,
-};
+import type { IManifest } from "@types";
 
 export const manifest: IManifest = {
-  dataSources: [
-    {
-      chain: avalanche,
+  dataSources: {
+    avalanche: {
       contracts: [
         {
           abiPath: "abis/qiERC20.json",
           sources: [
             {
               address: "0xF362feA9659cf036792c9cb02f8ff8198E21B4cB", // qisAVAX
-              startBlockHeight: 13995148,
+              startBlockHeight: 26530000,
             },
             // {
             //   address: "0x89a415b3D20098E6A6C8f7a59001C67BD3129821", // qiBTC.b
@@ -25,7 +17,7 @@ export const manifest: IManifest = {
             // },
             {
               address: "0xB715808a78F6041E46d61Cb123C9B4A27056AE9C", //qiUSDCn
-              startBlockHeight: 13319519,
+              startBlockHeight: 26520000,
             },
             // {
             //   address: "0xe194c4c5aC32a3C9ffDb358d9Bfd523a0B6d1568", // qiBTC
@@ -167,5 +159,5 @@ export const manifest: IManifest = {
         // },
       ],
     },
-  ],
+  },
 };

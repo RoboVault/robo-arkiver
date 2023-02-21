@@ -1,5 +1,6 @@
 import { Command } from "./cli/deps.ts";
 import { deploy, login, logout, remove, signup, start } from "./cli/mod.ts";
+import "https://deno.land/std@0.177.0/dotenv/load.ts";
 
 if (import.meta.main) {
   const command = new Command()

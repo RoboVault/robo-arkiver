@@ -55,7 +55,6 @@ export interface ArkiveSyncedEvent {
  * @property {IBlockHandler[]} blockHandlers - The block handlers to monitor
  */
 export interface IDataSource {
-  chain: IChain;
   contracts?: IContractSource[];
   blockHandlers?: IBlockHandler[];
 }
@@ -124,18 +123,17 @@ export interface BlockHandlerContext {
  * @property {IDataSource[]} dataSources - The data sources
  */
 export interface IManifest {
-  dataSources: IDataSource[];
+  dataSources: {
+    avalanche?: IDataSource;
+  };
 }
 
 export interface EventHandlerContext {
-  event: ethers.EventLog | ethers.Log;
+  event: ethers.EventLog;
   contract: ethers.Contract;
-  chainName: string;
-  abiName: string;
-  eventQueryName: string;
+  eventName: string;
   store: Record<string, unknown>;
-  timestampMs: number;
   provider: ethers.JsonRpcProvider;
 }
 
-export type EventHandler = (ctx: EventHandlerContext) => Promise<Point[]>;
+export type EventHandler = (ctx: EventHandlerContext) => Promise<void>;

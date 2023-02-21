@@ -79,3 +79,11 @@ export const timeout = async (ms: number) => {
   await delay(ms);
   throw new Error(`Timed out after ${ms}ms`);
 };
+
+export const getRpcUrl = (chain: string) => {
+  const rpcUrl = getEnv(`${chain.toUpperCase()}_RPC_URL`);
+  if (!rpcUrl) {
+    throw new Error(`Missing RPC URL for chain ${chain}`);
+  }
+  return rpcUrl;
+};

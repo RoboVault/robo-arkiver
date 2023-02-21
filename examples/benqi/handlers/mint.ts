@@ -1,7 +1,7 @@
-import { Point } from "https://esm.sh/@influxdata/influxdb-client@1.33.0";
-import { ethers } from "npm:ethers@6.0.2";
+import { ethers } from "npm:ethers@6.0.3";
 import { EventHandler } from "@types";
 import { getFromStore } from "@utils";
+import { logger } from "@deps";
 
 const handler: EventHandler = async ({
   contract,
@@ -9,11 +9,7 @@ const handler: EventHandler = async ({
   store,
   provider,
 }) => {
-  if (!(event instanceof ethers.EventLog)) {
-    return [];
-  }
-
-  const [minter, mintAmount, mintTokens] = event.args;
+  const [_minter, mintAmount, mintTokens] = event.args;
   const address = contract.target.toString();
 
   const decimals = (await getFromStore(
@@ -79,34 +75,9 @@ const handler: EventHandler = async ({
 
   const exchangeRate = depositAmount / mintAmountFloat;
 
-  const points: Point[] = [];
-
-  points.push(
-    new Point("deposit")
-      .tag("depositor", minter)
-      .tag("underlying", underlying)
-      .tag("underlyingSymbol", underlyingSymbol as string)
-      .tag("symbol", symbol)
-      .floatField(
-        "depositAmount",
-        depositAmount,
-      )
-      .floatField(
-        "mintAmount",
-        mintAmountFloat,
-      ),
+  logger.debug(
+    `Deposit ${depositAmount} ${underlyingSymbol} for ${mintAmountFloat} ${symbol} at ${exchangeRate} ${underlyingSymbol}/${symbol}`,
   );
-  if (isFinite(exchangeRate)) {
-    points.push(
-      new Point("exchange_rate")
-        .tag("symbol", symbol)
-        .floatField(
-          "exchangeRate",
-          exchangeRate,
-        ),
-    );
-  }
-  return points;
 };
 
 export default handler;

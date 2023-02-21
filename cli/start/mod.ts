@@ -25,6 +25,5 @@ export const action = async (_: void, directory: string) => {
     user_id: "user",
   }, join(Deno.cwd(), directory));
 
-  await arkiver.init();
   await arkiver.run();
 };
