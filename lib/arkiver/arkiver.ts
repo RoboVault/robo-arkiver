@@ -38,6 +38,7 @@ export class Arkiver extends EventTarget {
         contracts: source.contracts ?? [],
         packagePath: this.packagePath,
         rpcUrl: getRpcUrl(chain),
+        blockSources: source.blockHandlers ?? [],
       });
       await dataSource.run();
       this.sources.push(dataSource);

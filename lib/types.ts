@@ -106,15 +106,12 @@ export interface IBlockHandler {
   blockInterval: number;
 }
 
-export type BlockHandlerFn = (ctx: BlockHandlerContext) => Promise<Point[]>;
+export type BlockHandlerFn = (ctx: BlockHandlerContext) => Promise<void>;
 
 export interface BlockHandlerContext {
   block: ethers.Block;
-  blockHandlerName: string;
   provider: ethers.JsonRpcProvider;
-  chainName: string;
   store: Record<string, unknown>;
-  timestampMs: number;
 }
 
 /**
