@@ -1,31 +1,29 @@
 import { ethers } from "npm:ethers@6.0.3";
 import { EventHandler } from "@types";
-import { getFromStore } from "@utils";
-import { logger } from "@deps";
+import { Point } from "@deps";
+import { writeTvlChange } from "../shared.ts";
 
 const handler: EventHandler = async ({
   contract,
   event,
   store,
   provider,
+  db,
 }) => {
-  const [_minter, mintAmount, mintTokens] = event.args;
+  const [minter, depositAmountRaw, mintAmountRaw] = event.args;
   const address = contract.target.toString();
 
-  const decimals = (await getFromStore(
-    store,
-    `${address}-decimals`,
-    contract.decimals,
-  )) as number;
-
-  const symbol = await getFromStore(
-    store,
+  const symbol = await store.retrieve(
     `${address}-symbol`,
     contract.symbol,
   ) as string;
 
-  const underlying = await getFromStore(
-    store,
+  const decimals = (await store.retrieve(
+    `${address}-decimals`,
+    contract.decimals,
+  )) as number;
+
+  const underlying = await store.retrieve(
     `${address}-underlying`,
     async () => {
       if (!contract.interface.getFunction("underlying")) {
@@ -35,8 +33,7 @@ const handler: EventHandler = async ({
     },
   ) as string;
 
-  const underlyingDecimals = await getFromStore(
-    store,
+  const underlyingDecimals = await store.retrieve(
     `${address}-underlyingDecimals`,
     async () => {
       if (underlying === "AVAX") {
@@ -49,35 +46,35 @@ const handler: EventHandler = async ({
     },
   );
 
-  const underlyingSymbol = await getFromStore(
-    store,
-    `${address}-underlyingSymbol`,
-    async () => {
-      if (underlying === "AVAX") {
-        return "AVAX";
-      }
-      const underlyingContract = new ethers.Contract(underlying, [
-        "function symbol() view returns (string)",
-      ], provider);
-      return await underlyingContract.symbol();
-    },
-  );
-
   const depositAmount = parseFloat(ethers.formatUnits(
-    mintAmount,
+    depositAmountRaw,
     underlyingDecimals as number,
   ));
 
-  const mintAmountFloat = parseFloat(ethers.formatUnits(
-    mintTokens,
-    decimals as number,
+  const mintAmount = parseFloat(ethers.formatUnits(
+    mintAmountRaw,
+    decimals,
   ));
 
-  const exchangeRate = depositAmount / mintAmountFloat;
+  const exchangeRate = depositAmount / mintAmount;
 
-  logger.debug(
-    `Deposit ${depositAmount} ${underlyingSymbol} for ${mintAmountFloat} ${symbol} at ${exchangeRate} ${underlyingSymbol}/${symbol}`,
-  );
+  const timestamp = (await event.getBlock()).timestamp;
+
+  await writeTvlChange(db, minter, symbol, depositAmount, timestamp);
+
+  db.writer.writePoints([
+    new Point("deposit")
+      .tag("symbol", symbol)
+      .tag("underlying", underlying)
+      .tag("depositor", minter)
+      .floatField("amount", depositAmount)
+      .floatField("mintAmount", mintAmount)
+      .timestamp(timestamp),
+    new Point("exchange_rate")
+      .tag("symbol", symbol)
+      .floatField("exchangeRate", exchangeRate)
+      .timestamp(timestamp),
+  ]);
 };
 
 export default handler;

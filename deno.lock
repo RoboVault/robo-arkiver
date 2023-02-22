@@ -1,6 +1,10 @@
 {
   "version": "2",
   "remote": {
+    "https://cdn.skypack.dev/-/@influxdata/influxdb-client-apis@v1.33.1-Vhk9X8totRnvesbZH5zs/dist=es2019,mode=imports/optimized/@influxdata/influxdb-client-apis.js": "c747c45bd23c81010f4ff21c9078e14cef080e5a2fdec64a6acf948a7400f33f",
+    "https://cdn.skypack.dev/-/@influxdata/influxdb-client-browser@v1.33.1-m7gFQbLUWfNROWckEuxc/dist=es2019,mode=imports/optimized/@influxdata/influxdb-client-browser.js": "3875805feffa71b03670a10f0f4815e0e4420e61ce9cc47ed1483ecb86873934",
+    "https://cdn.skypack.dev/-/@influxdata/influxdb-client-browser@v1.33.1-m7gFQbLUWfNROWckEuxc/dist=es2019,mode=types/dist/index.d.ts": "332f064bd084584121036cbcc2b77d00745ff31707a40521fd611ebf64e8a28d",
+    "https://cdn.skypack.dev/@influxdata/influxdb-client-browser?dts": "a7b4ca3a2e5f86e78b6b55cd1bbb54473b871f9d2ed227c42201b1684a506050",
     "https://deno.land/std@0.170.0/_util/asserts.ts": "d0844e9b62510f89ce1f9878b046f6a57bf88f208a10304aab50efcb48365272",
     "https://deno.land/std@0.170.0/_util/os.ts": "8a33345f74990e627b9dfe2de9b040004b08ea5146c7c9e8fe9a29070d193934",
     "https://deno.land/std@0.170.0/encoding/base64.ts": "8605e018e49211efc767686f6f687827d7f5fd5217163e981d8d693105640d7a",

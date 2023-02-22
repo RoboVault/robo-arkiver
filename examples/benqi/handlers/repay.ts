@@ -1,29 +1,23 @@
-import { Point } from "https://esm.sh/@influxdata/influxdb-client@1.33.0";
-import { ethers } from "npm:ethers@6.0.2";
+import { ethers, Point } from "../deps.ts";
 import { EventHandler } from "@types";
-import { getFromStore } from "@utils";
+import { writeTvlChange } from "../shared.ts";
 
 const handler: EventHandler = async ({
   contract,
   event,
   store,
   provider,
+  db,
 }) => {
-  if (!(event instanceof ethers.EventLog)) {
-    return [];
-  }
-
   const [repayer, borrower, repayAmount] = event.args;
   const address = contract.target.toString();
 
-  const symbol = await getFromStore(
-    store,
+  const symbol = await store.retrieve(
     `${address}-symbol`,
     contract.symbol,
   ) as string;
 
-  const underlying = await getFromStore(
-    store,
+  const underlying = await store.retrieve(
     `${address}-underlying`,
     async () => {
       if (!contract.interface.getFunction("underlying")) {
@@ -33,8 +27,7 @@ const handler: EventHandler = async ({
     },
   ) as string;
 
-  const underlyingDecimals = await getFromStore(
-    store,
+  const underlyingDecimals = await store.retrieve(
     `${address}-underlyingDecimals`,
     async () => {
       if (underlying === "AVAX") {
@@ -47,37 +40,27 @@ const handler: EventHandler = async ({
     },
   );
 
-  const underlyingSymbol = await getFromStore(
-    store,
-    `${address}-underlyingSymbol`,
-    async () => {
-      if (underlying === "AVAX") {
-        return "AVAX";
-      }
-      const underlyingContract = new ethers.Contract(underlying, [
-        "function symbol() view returns (string)",
-      ], provider);
-      return await underlyingContract.symbol();
-    },
-  );
-
-  const formattedRepayAmount = ethers.formatUnits(
+  const formattedRepayAmount = parseFloat(ethers.formatUnits(
     repayAmount,
     underlyingDecimals as number,
-  );
+  ));
 
-  return [
+  const timestamp = (await event.getBlock()).timestamp;
+
+  await writeTvlChange(db, borrower, symbol, formattedRepayAmount, timestamp);
+
+  db.writer.writePoint(
     new Point("repay")
       .tag("repayer", repayer)
       .tag("borrower", borrower)
       .tag("underlying", underlying)
-      .tag("underlyingSymbol", underlyingSymbol as string)
       .tag("symbol", symbol)
       .floatField(
         "amount",
-        parseFloat(formattedRepayAmount),
-      ),
-  ];
+        formattedRepayAmount,
+      )
+      .timestamp(timestamp),
+  );
 };
 
 export default handler;

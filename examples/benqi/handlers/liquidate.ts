@@ -1,24 +1,18 @@
-import { Point } from "https://esm.sh/@influxdata/influxdb-client@1.33.0";
-import { ethers } from "npm:ethers@6.0.2";
+import { ethers, Point } from "../deps.ts";
 import { EventHandler } from "@types";
-import { getFromStore } from "@utils";
 
 const handler: EventHandler = async ({
   contract,
   event,
   store,
+  db,
 }) => {
-  if (!(event instanceof ethers.EventLog)) {
-    return [];
-  }
-
   const [liquidator, borrower, repayAmount, qiTokenCollateral, seizeAmount] =
     event.args;
   const address = contract.target.toString();
 
   // ---------REPAY UNDERLYING---------
-  const underlying = await getFromStore(
-    store,
+  const underlying = await store.retrieve(
     `${address}-underlying`,
     async () => {
       if (!contract.interface.getFunction("underlying")) {
@@ -28,8 +22,7 @@ const handler: EventHandler = async ({
     },
   ) as string;
 
-  const underlyingDecimals = await getFromStore(
-    store,
+  const underlyingDecimals = await store.retrieve(
     `${underlying}-decimals`,
     async () => {
       if (underlying === "AVAX") {
@@ -42,8 +35,7 @@ const handler: EventHandler = async ({
     },
   );
 
-  const underlyingSymbol = await getFromStore(
-    store,
+  const underlyingSymbol = await store.retrieve(
     `${underlying}-symbol`,
     async () => {
       if (underlying === "AVAX") {
@@ -63,14 +55,12 @@ const handler: EventHandler = async ({
     "function decimals() view returns (uint8)",
   ], contract.runner);
 
-  const qiTokenCollateralSymbol = await getFromStore(
-    store,
+  const qiTokenCollateralSymbol = await store.retrieve(
     `${qiTokenCollateral}-symbol`,
     qiTokenCollateralContract.symbol,
   ) as string;
 
-  const qiTokenCollateralDecimals = await getFromStore(
-    store,
+  const qiTokenCollateralDecimals = await store.retrieve(
     `${qiTokenCollateral}-decimals`,
     qiTokenCollateralContract.decimals,
   ) as number;
@@ -85,7 +75,9 @@ const handler: EventHandler = async ({
     qiTokenCollateralDecimals as number,
   );
 
-  return [
+  const timestamp = (await event.getBlock()).timestamp;
+
+  db.writer.writePoint(
     new Point("liquidate")
       .tag("liquidator", liquidator)
       .tag("borrower", borrower)
@@ -100,8 +92,9 @@ const handler: EventHandler = async ({
       .floatField(
         "seizeAmount", // amount of QiToken collateral being seized
         parseFloat(formattedSeizeAmount),
-      ),
-  ];
+      )
+      .timestamp(timestamp),
+  );
 };
 
 export default handler;

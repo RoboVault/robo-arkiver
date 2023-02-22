@@ -1,4 +1,5 @@
-import { ethers, Point } from "@deps";
+import { ethers, QueryApi, WriteApi } from "@deps";
+import { Store } from "./arkiver/store.ts";
 export interface Arkive {
   id: number;
   user_id: string;
@@ -111,7 +112,11 @@ export type BlockHandlerFn = (ctx: BlockHandlerContext) => Promise<void>;
 export interface BlockHandlerContext {
   block: ethers.Block;
   provider: ethers.JsonRpcProvider;
-  store: Record<string, unknown>;
+  store: Store;
+  db: {
+    writer: WriteApi;
+    reader: QueryApi;
+  };
 }
 
 /**
@@ -129,8 +134,12 @@ export interface EventHandlerContext {
   event: ethers.EventLog;
   contract: ethers.Contract;
   eventName: string;
-  store: Record<string, unknown>;
+  store: Store;
   provider: ethers.JsonRpcProvider;
+  db: {
+    writer: WriteApi;
+    reader: QueryApi;
+  };
 }
 
 export type EventHandler = (ctx: EventHandlerContext) => Promise<void>;

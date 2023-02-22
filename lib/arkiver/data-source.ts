@@ -1,9 +1,10 @@
-import { ethers, logger } from "@deps";
+import { ethers, join, logger, QueryApi, WriteApi } from "@deps";
 import { InfluxDBAdapter } from "../providers/influxdb.ts";
 import { mockStatusProvider } from "../providers/mock.ts";
 import { StatusProvider } from "../providers/types.ts";
 import { BlockHandlerFn, EventHandler, IBlockHandler } from "@types";
 import { delay, getEnv } from "@utils";
+import { Store } from "./store.ts";
 
 interface RawContracts {
   sources: {
@@ -82,6 +83,11 @@ export class DataSource {
   private queueDelay = 500;
   private fetchInterval = 500;
   private maxStagingDelay = 1000;
+  private db: {
+    writer: WriteApi;
+    reader: QueryApi;
+  };
+  private readonly store = new Store();
 
   constructor(
     params: {
@@ -93,6 +99,10 @@ export class DataSource {
       arkiveId: number;
       arkiveVersion: number;
       blockSources: IBlockHandler[];
+      db: {
+        writer: WriteApi;
+        reader: QueryApi;
+      };
     },
   ) {
     this.chain = params.chain;
@@ -104,6 +114,7 @@ export class DataSource {
     this.provider = new ethers.JsonRpcProvider(this.rpcUrl);
     this.arkiveId = params.arkiveId;
     this.arkiveVersion = params.arkiveVersion;
+    this.db = params.db;
     if (getEnv("DENO_ENV") === "PROD") {
       this.statusProvider = new InfluxDBAdapter({
         url: getEnv("INFLUX_HOST"),
@@ -199,15 +210,13 @@ export class DataSource {
       return;
     }
 
-    logger.info(`Fetching logs ${topics} from addresses: ${addresses}`);
-
     const nextFromBlock = toBlock + 1;
 
     this.provider.getLogs({
       fromBlock,
       toBlock,
       address: addresses,
-      topics,
+      topics: [topics],
     }).then((logs) => {
       logger.info(
         `Fetched ${logs.length} logs from block ${fromBlock} to ${toBlock}...`,
@@ -285,7 +294,6 @@ export class DataSource {
   }
 
   private async runProcessorLoop() {
-    const store: Record<string, unknown> = {};
     while (this.eventLoops.processor) {
       const logs = this.stagingLogsQueue.get(this.processedBlockHeight);
       const logsPending = this.stagingQueuePending.logs.get(
@@ -354,7 +362,15 @@ export class DataSource {
             event,
             eventName: fragment.name,
             provider: this.provider,
-            store,
+            store: this.store,
+            db: {
+              reader: this.db.reader,
+              writer: this.db.writer.useDefaultTags({
+                arkiveId: this.arkiveId.toString(),
+                arkiveVersion: this.arkiveVersion.toString(),
+                chain: this.chain,
+              }),
+            },
           });
         } else {
           const block = logOrBlock as {
@@ -367,16 +383,28 @@ export class DataSource {
             await handler({
               block: block.block,
               provider: this.provider,
-              store,
+              store: this.store,
+              db: {
+                reader: this.db.reader,
+                writer: this.db.writer.useDefaultTags({
+                  arkiveId: this.arkiveId.toString(),
+                  arkiveVersion: this.arkiveVersion.toString(),
+                  chain: this.chain,
+                }),
+              },
             });
           }
         }
+
+        // make sure everything is written to the db
+        await this.db.writer.flush();
       }
 
       this.stagingLogsQueue.delete(this.processedBlockHeight);
       this.stagingBlocksQueue.delete(this.processedBlockHeight);
       this.stagingQueuePending.logs.delete(this.processedBlockHeight);
       this.stagingQueuePending.blocks.delete(this.processedBlockHeight);
+      logger.warning(`Processed block ${this.processedBlockHeight}...`);
 
       this.processedBlockHeight = logs?.nextFromBlock ??
         blocks!.nextFromBlock;
@@ -386,9 +414,9 @@ export class DataSource {
   private async checkIndexedBlockHeights() {
     const indexedBlockHeight = await this.statusProvider
       .getIndexedBlockHeight({
-        _chain: this.chain,
-        _arkiveId: this.arkiveId.toString(),
-        _arkiveVersion: this.arkiveVersion.toString(),
+        chain: this.chain,
+        arkiveId: this.arkiveId.toString(),
+        arkiveVersion: this.arkiveVersion.toString(),
       });
 
     logger.info(
@@ -464,8 +492,9 @@ export class DataSource {
 
         normalized.topics.push(event.topicHash);
 
-        const handlerFn =
-          (await import(`${this.packagePath}/${handler}`)).default;
+        const path = join(this.packagePath, handler);
+        logger.info(`Loading handler ${path}...`);
+        const handlerFn = (await import(path)).default;
         if (typeof handlerFn !== "function") {
           throw new Error(`Handler ${handler} is not a function`);
         }

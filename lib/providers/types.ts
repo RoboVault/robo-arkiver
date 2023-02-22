@@ -7,9 +7,9 @@ export interface StatusProvider {
 }
 
 export interface IndexedBlockHeightParams {
-  _chain: string;
-  _arkiveVersion: string;
-  _arkiveId: string;
+  chain: string;
+  arkiveVersion: string;
+  arkiveId: string;
 }
 
 export interface ArkiveProvider {

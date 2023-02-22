@@ -1,34 +1,27 @@
-import { Point } from "https://esm.sh/@influxdata/influxdb-client@1.33.0";
-import { ethers } from "npm:ethers@6.0.2";
+import { ethers, Point } from "../deps.ts";
 import { EventHandler } from "@types";
-import { getFromStore } from "@utils";
+import { writeTvlChange } from "../shared.ts";
 
 const handler: EventHandler = async ({
   contract,
   event,
   store,
+  db,
 }) => {
-  if (!(event instanceof ethers.EventLog)) {
-    return [];
-  }
-
   const [redeemer, redeemAmount, redeemTokens] = event.args;
   const address = contract.target.toString();
 
-  const decimals = (await getFromStore(
-    store,
+  const decimals = (await store.retrieve(
     `${address}-decimals`,
     contract.decimals,
   )) as number;
 
-  const symbol = await getFromStore(
-    store,
+  const symbol = await store.retrieve(
     `${address}-symbol`,
     contract.symbol,
   ) as string;
 
-  const underlying = await getFromStore(
-    store,
+  const underlying = await store.retrieve(
     `${address}-underlying`,
     async () => {
       if (!contract.interface.getFunction("underlying")) {
@@ -38,8 +31,7 @@ const handler: EventHandler = async ({
     },
   ) as string;
 
-  const underlyingDecimals = await getFromStore(
-    store,
+  const underlyingDecimals = await store.retrieve(
     `${address}-underlyingDecimals`,
     async () => {
       if (underlying === "AVAX") {
@@ -49,20 +41,6 @@ const handler: EventHandler = async ({
         "function decimals() view returns (uint8)",
       ], contract.runner!.provider);
       return await underlyingContract.decimals();
-    },
-  );
-
-  const underlyingSymbol = await getFromStore(
-    store,
-    `${address}-underlyingSymbol`,
-    async () => {
-      if (underlying === "AVAX") {
-        return "AVAX";
-      }
-      const underlyingContract = new ethers.Contract(underlying, [
-        "function symbol() view returns (string)",
-      ], contract.runner!.provider);
-      return await underlyingContract.symbol();
     },
   );
 
@@ -76,16 +54,15 @@ const handler: EventHandler = async ({
     decimals as number,
   ));
 
-  const exchangeRate = withdrawAmount / redeemAmountFloat;
+  const timestamp = (await event.getBlock()).timestamp;
 
-  const points: Point[] = [];
+  await writeTvlChange(db, redeemer, symbol, -redeemAmountFloat, timestamp);
 
-  points.push(
+  db.writer.writePoint(
     new Point("withdraw")
       .tag("withdrawer", redeemer)
-      .tag("underlying", underlying)
-      .tag("underlyingSymbol", underlyingSymbol as string)
       .tag("symbol", symbol)
+      .tag("underlying", underlying)
       .floatField(
         "withdrawAmount",
         withdrawAmount,
@@ -93,20 +70,9 @@ const handler: EventHandler = async ({
       .floatField(
         "redeemAmount",
         redeemAmount,
-      ),
+      )
+      .timestamp(timestamp),
   );
-  if (isFinite(exchangeRate)) {
-    points.push(
-      new Point("exchange_rate")
-        .tag("symbol", symbol)
-        .floatField(
-          "exchangeRate",
-          withdrawAmount / redeemAmountFloat,
-        ),
-    );
-  }
-
-  return points;
 };
 
 export default handler;

@@ -28,22 +28,22 @@ export class InfluxDBAdapter implements StatusProvider {
     params: IndexedBlockHeightParams,
   ): Promise<number> {
     const {
-      _arkiveId,
-      _arkiveVersion,
-      _chain,
+      arkiveId,
+      arkiveVersion,
+      chain,
     } = params;
     const indexedBlockHeight = await this.getLastValue({
       field: "blockHeight",
       range: { start: new Date(0), end: new Date() },
       filters: {
-        _arkiveId,
-        _arkiveVersion,
-        _chain,
+        arkiveId,
+        arkiveVersion,
+        chain,
       },
       groupKeys: [
-        "_arkiveId",
-        "_arkiveVersion",
-        "_chain",
+        "arkiveId",
+        "arkiveVersion",
+        "chain",
       ],
     });
     return indexedBlockHeight || 0;

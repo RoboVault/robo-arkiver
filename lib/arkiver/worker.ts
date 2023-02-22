@@ -15,7 +15,6 @@ self.onmessage = async (e: MessageEvent<ArkiveMessageEvent>) => {
       arkiver.addEventListener("synced", () => {
         self.postMessage({ topic: "synced", data: { arkive } });
       });
-      await arkiver.init();
       await arkiver.run();
       break;
     }

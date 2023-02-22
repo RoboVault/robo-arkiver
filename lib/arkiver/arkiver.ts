@@ -1,7 +1,7 @@
 import { IManifest } from "@types";
 import { Arkive } from "@types";
-import { getRpcUrl } from "@utils";
-import { logger } from "@deps";
+import { getEnv, getRpcUrl } from "@utils";
+import { InfluxDB, logger } from "@deps";
 import { DataSource } from "./data-source.ts";
 
 export class Arkiver extends EventTarget {
@@ -10,6 +10,8 @@ export class Arkiver extends EventTarget {
   private sources: DataSource[] = [];
   private packagePath: string;
 
+  private readonly db: InfluxDB;
+
   constructor(manifest: IManifest, arkiveData: Arkive, directory?: string) {
     super();
     this.manifest = manifest;
@@ -17,6 +19,10 @@ export class Arkiver extends EventTarget {
     this.packagePath = directory
       ? directory
       : `../packages/${this.arkiveData.user_id}/${this.arkiveData.id}/${this.arkiveData.deployment.major_version}_${this.arkiveData.deployment.minor_version}`;
+    this.db = new InfluxDB({
+      url: getEnv("INFLUXDB_URL"),
+      token: getEnv("INFLUXDB_TOKEN"),
+    });
   }
 
   public async run() {
@@ -39,6 +45,14 @@ export class Arkiver extends EventTarget {
         packagePath: this.packagePath,
         rpcUrl: getRpcUrl(chain),
         blockSources: source.blockHandlers ?? [],
+        db: {
+          writer: this.db.getWriteApi(
+            getEnv("INFLUXDB_ORG"),
+            getEnv("INFLUXDB_BUCKET"),
+            "s",
+          ),
+          reader: this.db.getQueryApi(getEnv("INFLUXDB_ORG")),
+        },
       });
       await dataSource.run();
       this.sources.push(dataSource);
