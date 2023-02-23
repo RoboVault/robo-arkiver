@@ -1,6 +1,6 @@
 import { ethers } from "npm:ethers@6.0.3";
 import { EventHandler } from "@types";
-import { Point } from "@deps";
+import { logger, Point } from "@deps";
 import { setAndForget, writeTvlChange } from "../shared.ts";
 
 const handler: EventHandler = async ({
@@ -57,19 +57,6 @@ const handler: EventHandler = async ({
   ));
 
   const exchangeRate = depositAmount / mintAmount;
-  const erPoint = new Point("exchange_rate")
-    .tag("symbol", symbol)
-    .floatField("value", exchangeRate)
-    .intField("blockHeight", event.blockNumber)
-    .timestamp(event.blockNumber * 2);
-
-  setAndForget({
-    key: `${symbol}-exchangeRate`,
-    value: exchangeRate,
-    db,
-    points: [erPoint],
-    store,
-  });
 
   const timestamp = event.blockNumber * 2;
 
@@ -93,6 +80,26 @@ const handler: EventHandler = async ({
       .intField("blockHeight", event.blockNumber)
       .timestamp(timestamp),
   ]);
+
+  if (!isFinite(exchangeRate)) {
+    logger.warning(
+      `Exchange rate for ${symbol} is not finite: ${depositAmount} / ${mintAmount} = ${exchangeRate}`,
+    );
+    return;
+  }
+  const erPoint = new Point("exchange_rate")
+    .tag("symbol", symbol)
+    .floatField("value", exchangeRate)
+    .intField("blockHeight", event.blockNumber)
+    .timestamp(event.blockNumber * 2);
+
+  setAndForget({
+    key: `${symbol}-exchangeRate`,
+    value: exchangeRate,
+    db,
+    points: [erPoint],
+    store,
+  });
 };
 
 export default handler;
