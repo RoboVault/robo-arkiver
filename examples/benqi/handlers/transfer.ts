@@ -1,6 +1,7 @@
 import { ethers, Point } from "../deps.ts";
 import { EventHandler } from "@types";
-import { getAccountTvl, getPrice } from "../shared.ts";
+import { getAccountTvl, getPrice, setAccountTvl } from "../shared.ts";
+import { logger } from "../../../lib/deps.ts";
 
 const handler: EventHandler = async ({
   contract,
@@ -30,14 +31,24 @@ const handler: EventHandler = async ({
 
   const formattedValue = parseFloat(ethers.formatUnits(value, decimals));
 
-  const exchangeRateQ = await db.reader.collectRows<{ _value: number }>(`
+  const exchangeRate = await store.retrieve(
+    `${symbol}-exchangeRate`,
+    async () => {
+      const res = await db.reader.collectRows<{ _value: number }>(`
     from(bucket: "arkiver")
-      |> range(start: -24h)
+      |> range(start: 0)
       |> filter(fn: (r) => r._measurement == "exchange_rate" and r.symbol == "${symbol}")
-      |> median()
+      |> last()
   `);
 
-  const exchangeRate = exchangeRateQ[0]?._value;
+      const rate = res[0]?._value;
+      if (rate === undefined) {
+        logger.error(`exchangeRate undefined: ${symbol}`);
+        return 0;
+      }
+      return rate;
+    },
+  ) as number;
 
   db.writer.writePoints([
     new Point("transfers")
@@ -50,40 +61,54 @@ const handler: EventHandler = async ({
     return;
   }
 
-  const priceUsd = await getPrice(db, symbol);
+  const priceUsd = await getPrice(db, store, symbol);
 
-  const senderTvl = await getAccountTvl(db, from, symbol);
+  const senderTvl = await getAccountTvl(db, store, from, symbol);
   const newSenderTvl = senderTvl - formattedValue * exchangeRate;
   const newSenderTvlUsd = newSenderTvl * priceUsd;
 
-  const receiverTvl = await getAccountTvl(db, to, symbol);
+  const receiverTvl = await getAccountTvl(db, store, to, symbol);
   const newReceiverTvl = receiverTvl + formattedValue * exchangeRate;
   const newReceiverTvlUsd = newReceiverTvl * priceUsd;
 
-  const timestamp = (await event.getBlock()).timestamp;
+  const timestamp = event.blockNumber * 2;
 
-  db.writer.writePoints([
-    new Point("tvl")
-      .tag("account", from)
-      .tag("symbol", symbol)
-      .floatField("amount", newSenderTvl)
-      .timestamp(timestamp),
-    new Point("tvl")
-      .tag("account", from)
-      .tag("symbol", "usd")
-      .floatField("amount", newSenderTvlUsd)
-      .timestamp(timestamp),
-    new Point("tvl")
-      .tag("account", to)
-      .tag("symbol", symbol)
-      .floatField("amount", newReceiverTvl)
-      .timestamp(timestamp),
-    new Point("tvl")
-      .tag("account", to)
-      .tag("symbol", "usd")
-      .floatField("amount", newReceiverTvlUsd)
-      .timestamp(timestamp),
-  ]);
+  setAccountTvl({
+    db,
+    store,
+    account: from,
+    symbol,
+    amount: newSenderTvl,
+    blockHeight: event.blockNumber,
+    timestamp,
+  });
+  setAccountTvl({
+    db,
+    store,
+    account: from,
+    symbol: "usd",
+    amount: newSenderTvlUsd,
+    blockHeight: event.blockNumber,
+    timestamp,
+  });
+  setAccountTvl({
+    db,
+    store,
+    account: to,
+    symbol,
+    amount: newReceiverTvl,
+    blockHeight: event.blockNumber,
+    timestamp,
+  });
+  setAccountTvl({
+    db,
+    store,
+    account: to,
+    symbol: "usd",
+    amount: newReceiverTvlUsd,
+    blockHeight: event.blockNumber,
+    timestamp,
+  });
 };
 
 export default handler;

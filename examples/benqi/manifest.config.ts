@@ -129,31 +129,31 @@ export const manifest: IManifest = {
           sources: [
             {
               address: "0x154baB1FC1D87fF641EeD0E9Bc0f8a50D880D2B6", // BTC/USD,
-              startBlockHeight: 16572216,
+              startBlockHeight: 3043690,
             },
             {
               address: "0x9450A29eF091B625e976cE66f2A5818e20791999", // AVAX/USD
-              startBlockHeight: 3040672,
+              startBlockHeight: 3043672,
             },
             {
               address: "0xEfaa69f461E0aaf0be1798b01371Daf14AC55eA8", // ETH/USD
-              startBlockHeight: 3040701,
+              startBlockHeight: 3043701,
             },
             {
               address: "0xA2e5d3254F7d6E8C051Afb7F2aeea0dABf21F750", // LINK/USD
-              startBlockHeight: 3040723,
+              startBlockHeight: 3043723,
             },
             {
               address: "0xB6f7e0129439829a3679BD06102fDCAA41ebeE5e", // QI/USD (phase 1)
-              startBlockHeight: 4402541,
+              startBlockHeight: 4405541,
             },
             {
               address: "0x4bc3BeBb7eB60155f8b38771D9926d9A23dad5B5", // QI/USD (phase 2)
-              startBlockHeight: 15030335,
+              startBlockHeight: 15033335,
             },
             {
               address: "0x2223338267fF42814d53aE1c02979164b0528fA4", // Calculated SAVAX/USD
-              startBlockHeight: 13989148,
+              startBlockHeight: 13992148,
             },
           ],
         },

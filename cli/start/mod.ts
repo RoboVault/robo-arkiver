@@ -2,7 +2,7 @@ import { join } from "https://deno.land/std@0.177.0/path/mod.ts";
 import { Arkiver } from "@arkiver";
 
 export const action = async (_: void, directory: string) => {
-  Deno.env.set("DENO_ENV", "DEV");
+  Deno.env.set("DENO_ENV", "PROD");
   const dir = join(Deno.cwd(), directory, "manifest.config.ts");
   console.log(dir);
 

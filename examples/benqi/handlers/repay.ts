@@ -45,9 +45,17 @@ const handler: EventHandler = async ({
     underlyingDecimals as number,
   ));
 
-  const timestamp = (await event.getBlock()).timestamp;
+  const timestamp = event.blockNumber * 2;
 
-  await writeTvlChange(db, borrower, symbol, formattedRepayAmount, timestamp);
+  await writeTvlChange({
+    db,
+    store,
+    account: borrower,
+    symbol,
+    amount: formattedRepayAmount,
+    timestamp,
+    blockHeight: event.blockNumber,
+  });
 
   db.writer.writePoint(
     new Point("repay")
@@ -59,6 +67,7 @@ const handler: EventHandler = async ({
         "amount",
         formattedRepayAmount,
       )
+      .intField("blockHeight", event.blockNumber)
       .timestamp(timestamp),
   );
 };

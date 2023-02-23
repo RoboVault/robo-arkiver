@@ -45,15 +45,24 @@ const handler: EventHandler = async ({
     underlyingDecimals as number,
   ));
 
-  const timestamp = (await event.getBlock()).timestamp;
+  const timestamp = event.blockNumber * 2;
 
-  await writeTvlChange(db, borrower, symbol, -formattedBorrowAmount, timestamp);
+  await writeTvlChange({
+    db,
+    store,
+    account: borrower,
+    symbol,
+    amount: -formattedBorrowAmount,
+    timestamp,
+    blockHeight: event.blockNumber,
+  });
 
   db.writer.writePoint(
     new Point("borrow")
       .tag("borrower", borrower)
       .tag("symbol", symbol)
       .floatField("amount", formattedBorrowAmount)
+      .intField("blockHeight", event.blockNumber)
       .timestamp(timestamp),
   );
 };

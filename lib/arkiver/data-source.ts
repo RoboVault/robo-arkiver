@@ -81,7 +81,7 @@ export class DataSource {
   private maxStageSize = 100;
   private liveDelay = 2000;
   private queueDelay = 500;
-  private fetchInterval = 500;
+  private fetchInterval = 2000;
   private maxStagingDelay = 1000;
   private db: {
     writer: WriteApi;
@@ -114,15 +114,24 @@ export class DataSource {
     this.provider = new ethers.JsonRpcProvider(this.rpcUrl);
     this.arkiveId = params.arkiveId;
     this.arkiveVersion = params.arkiveVersion;
-    this.db = params.db;
+    this.db = {
+      writer: params.db.writer.useDefaultTags({
+        chain: this.chain,
+        arkiveId: this.arkiveId.toString(),
+        arkiveVersion: this.arkiveVersion.toString(),
+      }),
+      reader: params.db.reader,
+    };
     if (getEnv("DENO_ENV") === "PROD") {
+      logger.info("Using InfluxDB status provider...");
       this.statusProvider = new InfluxDBAdapter({
-        url: getEnv("INFLUX_HOST"),
-        token: getEnv("INFLUX_TOKEN"),
-        bucket: getEnv("INFLUX_BUCKET"),
-        org: getEnv("INFLUX_ORG"),
+        url: getEnv("INFLUXDB_URL"),
+        token: getEnv("INFLUXDB_TOKEN"),
+        bucket: getEnv("INFLUXDB_BUCKET"),
+        org: getEnv("INFLUXDB_ORG"),
       });
     } else {
+      logger.info("Using mock status provider...");
       this.statusProvider = mockStatusProvider;
     }
   }
@@ -363,14 +372,7 @@ export class DataSource {
             eventName: fragment.name,
             provider: this.provider,
             store: this.store,
-            db: {
-              reader: this.db.reader,
-              writer: this.db.writer.useDefaultTags({
-                arkiveId: this.arkiveId.toString(),
-                arkiveVersion: this.arkiveVersion.toString(),
-                chain: this.chain,
-              }),
-            },
+            db: this.db,
           });
         } else {
           const block = logOrBlock as {
@@ -384,27 +386,17 @@ export class DataSource {
               block: block.block,
               provider: this.provider,
               store: this.store,
-              db: {
-                reader: this.db.reader,
-                writer: this.db.writer.useDefaultTags({
-                  arkiveId: this.arkiveId.toString(),
-                  arkiveVersion: this.arkiveVersion.toString(),
-                  chain: this.chain,
-                }),
-              },
+              db: this.db,
             });
           }
         }
-
-        // make sure everything is written to the db
-        await this.db.writer.flush();
       }
 
       this.stagingLogsQueue.delete(this.processedBlockHeight);
       this.stagingBlocksQueue.delete(this.processedBlockHeight);
       this.stagingQueuePending.logs.delete(this.processedBlockHeight);
       this.stagingQueuePending.blocks.delete(this.processedBlockHeight);
-      logger.warning(`Processed block ${this.processedBlockHeight}...`);
+      logger.info(`Processed block ${this.processedBlockHeight}...`);
 
       this.processedBlockHeight = logs?.nextFromBlock ??
         blocks!.nextFromBlock;

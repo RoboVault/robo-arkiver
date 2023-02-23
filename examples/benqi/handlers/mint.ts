@@ -1,7 +1,7 @@
 import { ethers } from "npm:ethers@6.0.3";
 import { EventHandler } from "@types";
 import { Point } from "@deps";
-import { writeTvlChange } from "../shared.ts";
+import { setAndForget, writeTvlChange } from "../shared.ts";
 
 const handler: EventHandler = async ({
   contract,
@@ -57,10 +57,31 @@ const handler: EventHandler = async ({
   ));
 
   const exchangeRate = depositAmount / mintAmount;
+  const erPoint = new Point("exchange_rate")
+    .tag("symbol", symbol)
+    .floatField("value", exchangeRate)
+    .intField("blockHeight", event.blockNumber)
+    .timestamp(event.blockNumber * 2);
 
-  const timestamp = (await event.getBlock()).timestamp;
+  setAndForget({
+    key: `${symbol}-exchangeRate`,
+    value: exchangeRate,
+    db,
+    points: [erPoint],
+    store,
+  });
 
-  await writeTvlChange(db, minter, symbol, depositAmount, timestamp);
+  const timestamp = event.blockNumber * 2;
+
+  await writeTvlChange({
+    db,
+    store,
+    account: minter,
+    symbol,
+    amount: depositAmount,
+    timestamp,
+    blockHeight: event.blockNumber,
+  });
 
   db.writer.writePoints([
     new Point("deposit")
@@ -69,10 +90,7 @@ const handler: EventHandler = async ({
       .tag("depositor", minter)
       .floatField("amount", depositAmount)
       .floatField("mintAmount", mintAmount)
-      .timestamp(timestamp),
-    new Point("exchange_rate")
-      .tag("symbol", symbol)
-      .floatField("exchangeRate", exchangeRate)
+      .intField("blockHeight", event.blockNumber)
       .timestamp(timestamp),
   ]);
 };

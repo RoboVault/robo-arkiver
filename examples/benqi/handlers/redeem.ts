@@ -1,6 +1,7 @@
 import { ethers, Point } from "../deps.ts";
 import { EventHandler } from "@types";
-import { writeTvlChange } from "../shared.ts";
+import { setAndForget, writeTvlChange } from "../shared.ts";
+import { logger } from "../../../lib/deps.ts";
 
 const handler: EventHandler = async ({
   contract,
@@ -54,9 +55,19 @@ const handler: EventHandler = async ({
     decimals as number,
   ));
 
-  const timestamp = (await event.getBlock()).timestamp;
+  const exchangeRate = withdrawAmount / redeemAmountFloat;
 
-  await writeTvlChange(db, redeemer, symbol, -redeemAmountFloat, timestamp);
+  const timestamp = event.blockNumber * 2;
+
+  await writeTvlChange({
+    db,
+    store,
+    account: redeemer,
+    symbol,
+    amount: -redeemAmountFloat,
+    timestamp,
+    blockHeight: event.blockNumber,
+  });
 
   db.writer.writePoint(
     new Point("withdraw")
@@ -71,8 +82,30 @@ const handler: EventHandler = async ({
         "redeemAmount",
         redeemAmount,
       )
+      .intField("blockHeight", event.blockNumber)
       .timestamp(timestamp),
   );
+
+  if (!isFinite(exchangeRate)) {
+    logger.warning(
+      `Exchange rate for ${symbol} is not finite: ${withdrawAmount} / ${redeemAmount} = ${exchangeRate}`,
+    );
+    return;
+  }
+
+  const erPoint = new Point("exchange_rate")
+    .tag("symbol", symbol)
+    .floatField("value", exchangeRate)
+    .intField("blockHeight", event.blockNumber)
+    .timestamp(event.blockNumber * 2);
+
+  setAndForget({
+    key: `${symbol}-exchangeRate`,
+    value: exchangeRate,
+    db,
+    points: [erPoint],
+    store,
+  });
 };
 
 export default handler;

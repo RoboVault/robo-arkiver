@@ -75,7 +75,7 @@ const handler: EventHandler = async ({
     qiTokenCollateralDecimals as number,
   );
 
-  const timestamp = (await event.getBlock()).timestamp;
+  const timestamp = event.blockNumber * 2;
 
   db.writer.writePoint(
     new Point("liquidate")
@@ -93,6 +93,7 @@ const handler: EventHandler = async ({
         "seizeAmount", // amount of QiToken collateral being seized
         parseFloat(formattedSeizeAmount),
       )
+      .intField("blockHeight", event.blockNumber)
       .timestamp(timestamp),
   );
 };

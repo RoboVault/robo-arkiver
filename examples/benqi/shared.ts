@@ -1,3 +1,4 @@
+import { Store } from "../../lib/arkiver/store.ts";
 import { logger, Point } from "../../lib/deps.ts";
 import { QueryApi, WriteApi } from "./deps.ts";
 
@@ -25,101 +26,198 @@ const pairs = {
   "qiUSDTn": "USD",
 } as Record<string, string>;
 
-export const getPrice = async (db: { reader: QueryApi }, symbol: string) => {
+export const getPrice = async (
+  db: { reader: QueryApi },
+  store: Store,
+  symbol: string,
+) => {
   const pair = symbolToPair(symbol);
   let priceUsd = pair === "USD" ? 1 : 0;
 
   if (priceUsd === 0) {
-    const res = await db.reader.collectRows<{ _value: number }>(`
-    from(bucket: "arkiver")
-      |> range(start: 0)
-      |> filter(fn: (r) => r._measurement == "price" and r._field == "usd" and r.pair == "${pair}")
-      |> last()
-  `);
-    if (!res[0]) {
-      logger.error(`No price found for ${pair}`);
-    } else {
-      priceUsd = res[0]._value;
-    }
+    const stored = await store.retrieve(pair, async () => {
+      const res = await db.reader.collectRows<{ _value: number }>(`
+      from(bucket: "arkiver")
+        |> range(start: 0)
+        |> filter(fn: (r) => r._measurement == "price" and r._field == "price" and r.pair == "${pair}")
+        |> last()
+    `);
+      if (!res[0]) {
+        logger.error(`No price found for ${pair}`);
+      } else {
+        return res[0]._value;
+      }
+    }) as number;
+
+    priceUsd = stored;
   }
 
   return priceUsd;
 };
 
+export const setPrice = (
+  db: { writer: WriteApi },
+  store: Store,
+  pair: string,
+  price: number,
+  blockHeight: number,
+) => {
+  store.set(pair, price);
+
+  const point = new Point("price")
+    .tag("pair", pair)
+    .floatField("price", price)
+    .intField("blockHeight", blockHeight)
+    .timestamp(0);
+
+  db.writer.writePoint(point);
+};
+
 export const getAccountTvl = async (
   db: { reader: QueryApi },
+  store: Store,
   account: string,
   symbol: string,
 ) => {
-  const res = await db.reader.collectRows<{ _value: number }>(`
-    from(bucket: "arkiver")
-      |> range(start: 0)
-      |> filter(fn: (r) => r._measurement == "tvl" and r._field == "amount" and r.account == "${account}" and r.symbol == "${symbol}")
-      |> last()
-  `);
+  const tvl = await store.retrieve(`${account}-tvl-${symbol}`, async () => {
+    const res = await db.reader.collectRows<{ _value: number }>(`
+      from(bucket: "arkiver")
+        |> range(start: 0)
+        |> filter(fn: (r) => r._measurement == "tvl" and r._field == "amount" and r.account == "${account}" and r.symbol == "${symbol}")
+        |> last()
+    `);
 
-  return res[0]?._value || 0;
+    return res[0]?._value || 0;
+  });
+  return tvl as number;
+};
+
+export const setAccountTvl = (
+  params: {
+    db: { writer: WriteApi };
+    store: Store;
+    account: string;
+    symbol: string;
+    amount: number;
+    blockHeight: number;
+    timestamp: number;
+    noSetStore?: boolean;
+  },
+) => {
+  const {
+    db,
+    store,
+    account,
+    symbol,
+    amount,
+    blockHeight,
+    timestamp,
+    noSetStore,
+  } = params;
+
+  if (!noSetStore) store.set(`${account}-tvl-${symbol}`, amount);
+
+  const point = new Point("tvl")
+    .tag("account", account)
+    .tag("symbol", symbol)
+    .floatField("amount", amount)
+    .intField("blockHeight", blockHeight)
+    .timestamp(timestamp);
+
+  db.writer.writePoint(point);
 };
 
 export const writeTvlChange = async (
-  db: { writer: WriteApi; reader: QueryApi },
-  account: string,
-  symbol: string,
-  amount: number,
-  timestamp: number,
+  params: {
+    db: { writer: WriteApi; reader: QueryApi };
+    store: Store;
+    account: string;
+    symbol: string;
+    amount: number;
+    timestamp: number;
+    blockHeight: number;
+  },
 ) => {
-  const priceUsd = await getPrice(db, symbol);
+  const { db, store, account, symbol, amount, timestamp, blockHeight } = params;
 
-  const amountUsd = amount * priceUsd;
+  const priceUsd = await getPrice(db, store, symbol);
 
-  const accountTvl = await getAccountTvl(db, account, symbol);
+  const accountTvl = await getAccountTvl(db, store, account, symbol);
   const newAccountTvl = accountTvl + amount;
   const newAccountTvlUsd = newAccountTvl * priceUsd;
 
-  const tokenTvl = await getAccountTvl(db, symbol, symbol);
+  const tokenTvl = await getAccountTvl(db, store, symbol, symbol);
   const newTokenTvl = tokenTvl + amount;
   const newTokenTvlUsd = newTokenTvl * priceUsd;
 
-  const totalTvl = await getAccountTvl(db, "total", "usd");
+  const amountUsd = amount * priceUsd;
+  const totalTvl = await getAccountTvl(db, store, "total", "usd");
   const newTotalTvl = totalTvl + amountUsd;
 
-  const accountPoints = [
-    new Point("tvl")
-      .tag("account", account)
-      .tag("symbol", symbol)
-      .floatField("amount", newAccountTvl)
-      .timestamp(timestamp),
-    new Point("tvl")
-      .tag("account", account)
-      .tag("symbol", "usd")
-      .floatField("amount", newAccountTvlUsd)
-      .timestamp(timestamp),
-  ];
+  setAccountTvl({
+    db,
+    store,
+    account,
+    symbol,
+    amount: newAccountTvl,
+    blockHeight,
+    timestamp,
+  });
+  setAccountTvl({
+    db,
+    store,
+    account,
+    symbol: "usd",
+    amount: newAccountTvlUsd,
+    blockHeight,
+    timestamp,
+    noSetStore: true,
+  });
 
-  const tokenPoints = [
-    new Point("tvl")
-      .tag("account", symbol)
-      .tag("symbol", symbol)
-      .floatField("amount", newTokenTvl)
-      .timestamp(timestamp),
-    new Point("tvl")
-      .tag("account", symbol)
-      .tag("symbol", "usd")
-      .floatField("amount", newTokenTvlUsd)
-      .timestamp(timestamp),
-  ];
+  setAccountTvl({
+    db,
+    store,
+    account: symbol,
+    symbol,
+    amount: newTokenTvl,
+    blockHeight,
+    timestamp,
+  });
+  setAccountTvl({
+    db,
+    store,
+    account: symbol,
+    symbol: "usd",
+    amount: newTokenTvlUsd,
+    blockHeight,
+    timestamp,
+    noSetStore: true,
+  });
 
-  const totalPoints = new Point("tvl")
-    .tag("account", "total")
-    .tag("symbol", "usd")
-    .floatField("amount", newTotalTvl)
-    .timestamp(timestamp);
+  setAccountTvl({
+    db,
+    store,
+    account: "total",
+    symbol: "usd",
+    amount: newTotalTvl,
+    blockHeight,
+    timestamp,
+  });
+};
 
-  db.writer.writePoints(
-    [
-      ...accountPoints,
-      ...tokenPoints,
-      totalPoints,
-    ],
-  );
+export const setAndForget = (
+  params: {
+    key: string;
+    store: Store;
+    // deno-lint-ignore no-explicit-any
+    value: any;
+    db: { writer: WriteApi };
+    points: Point[];
+  },
+) => {
+  const { key, store, value, db, points } = params;
+
+  store.set(key, value);
+
+  db.writer.writePoints(points);
 };
