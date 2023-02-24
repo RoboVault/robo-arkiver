@@ -124,6 +124,7 @@ export class ArkiveManager {
               "INFLUXDB_BUCKET",
               "DENO_ENV",
               "NODE_ENV",
+              "AVALANCHE_RPC_URL",
             ],
             hrtime: false,
             net: true,

@@ -1,7 +1,7 @@
-import { ethers } from "npm:ethers@6.0.3";
+import { ethers } from "../deps.ts";
 import { EventHandler } from "@types";
 import { logger, Point } from "@deps";
-import { setAndForget, writeTvlChange } from "../shared.ts";
+import { writeTvlChange } from "../shared.ts";
 
 const handler: EventHandler = async ({
   contract,
@@ -58,7 +58,7 @@ const handler: EventHandler = async ({
 
   const exchangeRate = depositAmount / mintAmount;
 
-  const timestamp = (await event.getBlock()).timestamp;
+  const timestamp = async () => (await event.getBlock()).timestamp;
 
   await writeTvlChange({
     db,
@@ -70,16 +70,18 @@ const handler: EventHandler = async ({
     blockHeight: event.blockNumber,
   });
 
-  db.writer.writePoints([
-    new Point("deposit")
-      .tag("symbol", symbol)
-      .tag("underlying", underlying)
-      .tag("depositor", minter)
-      .floatField("amount", depositAmount)
-      .floatField("mintAmount", mintAmount)
-      .intField("blockHeight", event.blockNumber)
-      .timestamp(timestamp),
-  ]);
+  timestamp().then((timestamp) => {
+    db.writer.writePoints([
+      new Point("deposit")
+        .tag("symbol", symbol)
+        .tag("underlying", underlying)
+        .tag("depositor", minter)
+        .floatField("amount", depositAmount)
+        .floatField("mintAmount", mintAmount)
+        .intField("blockHeight", event.blockNumber)
+        .timestamp(timestamp),
+    ]);
+  });
 
   if (!isFinite(exchangeRate)) {
     logger.warning(
@@ -87,19 +89,17 @@ const handler: EventHandler = async ({
     );
     return;
   }
-  const erPoint = new Point("exchange_rate")
-    .tag("symbol", symbol)
-    .floatField("value", exchangeRate)
-    .intField("blockHeight", event.blockNumber)
-    .timestamp(timestamp);
 
-  setAndForget({
-    key: `${symbol}-exchangeRate`,
-    value: exchangeRate,
-    db,
-    points: [erPoint],
-    store,
+  timestamp().then((timestamp) => {
+    const erPoint = new Point("exchange_rate")
+      .tag("symbol", symbol)
+      .floatField("value", exchangeRate)
+      .intField("blockHeight", event.blockNumber)
+      .timestamp(timestamp);
+    db.writer.writePoint(erPoint);
   });
+
+  store.set(`${symbol}-exchangeRate`, exchangeRate);
 };
 
 export default handler;

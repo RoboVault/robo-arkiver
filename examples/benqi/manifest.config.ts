@@ -158,18 +158,6 @@ export const manifest: IManifest = {
           ],
         },
       ],
-      // blockHandlers: [
-      //   {
-      //     blockInterval: 300,
-      //     handlerPath: "handlers/block-300.ts",
-      //     startBlockHeight: 26520000,
-      //   },
-      //   {
-      //     blockInterval: 500,
-      //     handlerPath: "handlers/block-500.ts",
-      //     startBlockHeight: 26530000,
-      //   },
-      // ],
     },
   },
 };

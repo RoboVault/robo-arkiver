@@ -100,7 +100,7 @@ export const setAccountTvl = (
     symbol: string;
     amount: number;
     blockHeight: number;
-    timestamp: number;
+    timestamp: () => Promise<number>;
     noSetStore?: boolean;
   },
 ) => {
@@ -117,14 +117,16 @@ export const setAccountTvl = (
 
   if (!noSetStore) store.set(`${account}-tvl-${symbol}`, amount);
 
-  const point = new Point("tvl")
-    .tag("account", account)
-    .tag("symbol", symbol)
-    .floatField("amount", amount)
-    .intField("blockHeight", blockHeight)
-    .timestamp(timestamp);
+  timestamp().then((timestamp) => {
+    const point = new Point("tvl")
+      .tag("account", account)
+      .tag("symbol", symbol)
+      .floatField("amount", amount)
+      .intField("blockHeight", blockHeight)
+      .timestamp(timestamp);
 
-  db.writer.writePoint(point);
+    db.writer.writePoint(point);
+  });
 };
 
 export const writeTvlChange = async (
@@ -134,7 +136,7 @@ export const writeTvlChange = async (
     account: string;
     symbol: string;
     amount: number;
-    timestamp: number;
+    timestamp: () => Promise<number>;
     blockHeight: number;
   },
 ) => {

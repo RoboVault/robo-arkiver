@@ -45,7 +45,7 @@ const handler: EventHandler = async ({
     underlyingDecimals as number,
   ));
 
-  const timestamp = (await event.getBlock()).timestamp;
+  const timestamp = async () => (await event.getBlock()).timestamp;
 
   await writeTvlChange({
     db,
@@ -57,19 +57,21 @@ const handler: EventHandler = async ({
     blockHeight: event.blockNumber,
   });
 
-  db.writer.writePoint(
-    new Point("repay")
-      .tag("repayer", repayer)
-      .tag("borrower", borrower)
-      .tag("underlying", underlying)
-      .tag("symbol", symbol)
-      .floatField(
-        "amount",
-        formattedRepayAmount,
-      )
-      .intField("blockHeight", event.blockNumber)
-      .timestamp(timestamp),
-  );
+  timestamp().then((timestamp) => {
+    db.writer.writePoint(
+      new Point("repay")
+        .tag("repayer", repayer)
+        .tag("borrower", borrower)
+        .tag("underlying", underlying)
+        .tag("symbol", symbol)
+        .floatField(
+          "amount",
+          formattedRepayAmount,
+        )
+        .intField("blockHeight", event.blockNumber)
+        .timestamp(timestamp),
+    );
+  });
 };
 
 export default handler;
