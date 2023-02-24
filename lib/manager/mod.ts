@@ -118,10 +118,10 @@ export class ArkiveManager {
         deno: {
           permissions: {
             env: [
-              "INFLUX_HOST",
-              "INFLUX_TOKEN",
-              "INFLUX_ORG",
-              "INFLUX_BUCKET",
+              "INFLUXDB_URL",
+              "INFLUXDB_TOKEN",
+              "INFLUXDB_ORG",
+              "INFLUXDB_BUCKET",
               "DENO_ENV",
               "NODE_ENV",
             ],
