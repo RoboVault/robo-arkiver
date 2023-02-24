@@ -45,7 +45,7 @@ const handler: EventHandler = async ({
     underlyingDecimals as number,
   ));
 
-  const timestamp = event.blockNumber * 2;
+  const timestamp = (await event.getBlock()).timestamp;
 
   await writeTvlChange({
     db,

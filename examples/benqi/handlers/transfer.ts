@@ -71,7 +71,7 @@ const handler: EventHandler = async ({
   const newReceiverTvl = receiverTvl + formattedValue * exchangeRate;
   const newReceiverTvlUsd = newReceiverTvl * priceUsd;
 
-  const timestamp = event.blockNumber * 2;
+  const timestamp = (await event.getBlock()).timestamp;
 
   setAccountTvl({
     db,

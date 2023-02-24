@@ -58,7 +58,7 @@ const handler: EventHandler = async ({
 
   const exchangeRate = depositAmount / mintAmount;
 
-  const timestamp = event.blockNumber * 2;
+  const timestamp = (await event.getBlock()).timestamp;
 
   await writeTvlChange({
     db,
@@ -91,7 +91,7 @@ const handler: EventHandler = async ({
     .tag("symbol", symbol)
     .floatField("value", exchangeRate)
     .intField("blockHeight", event.blockNumber)
-    .timestamp(event.blockNumber * 2);
+    .timestamp(timestamp);
 
   setAndForget({
     key: `${symbol}-exchangeRate`,

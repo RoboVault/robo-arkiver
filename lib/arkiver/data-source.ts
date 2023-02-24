@@ -81,7 +81,7 @@ export class DataSource {
   private maxStageSize = 100;
   private liveDelay = 2000;
   private queueDelay = 500;
-  private fetchInterval = 2000;
+  private fetchInterval = 500;
   private maxStagingDelay = 1000;
   private db: {
     writer: WriteApi;

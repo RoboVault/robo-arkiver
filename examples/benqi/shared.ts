@@ -34,23 +34,23 @@ export const getPrice = async (
   const pair = symbolToPair(symbol);
   let priceUsd = pair === "USD" ? 1 : 0;
 
-  if (priceUsd === 0) {
-    const stored = await store.retrieve(pair, async () => {
-      const res = await db.reader.collectRows<{ _value: number }>(`
+  if (priceUsd === 1) return priceUsd;
+
+  const stored = await store.retrieve(pair, async () => {
+    const res = await db.reader.collectRows<{ _value: number }>(`
       from(bucket: "arkiver")
         |> range(start: 0)
         |> filter(fn: (r) => r._measurement == "price" and r._field == "price" and r.pair == "${pair}")
         |> last()
     `);
-      if (!res[0]) {
-        logger.error(`No price found for ${pair}`);
-      } else {
-        return res[0]._value;
-      }
-    }) as number;
+    if (!res[0]) {
+      logger.error(`No price found for ${pair}`);
+    } else {
+      return res[0]._value;
+    }
+  }) as number;
 
-    priceUsd = stored;
-  }
+  priceUsd = stored;
 
   return priceUsd;
 };
@@ -141,16 +141,17 @@ export const writeTvlChange = async (
   const { db, store, account, symbol, amount, timestamp, blockHeight } = params;
 
   const priceUsd = await getPrice(db, store, symbol);
+  const amountUsd = amount * priceUsd;
 
   const accountTvl = await getAccountTvl(db, store, account, symbol);
+  const accountTvlUsd = await getAccountTvl(db, store, account, "usd");
   const newAccountTvl = accountTvl + amount;
-  const newAccountTvlUsd = newAccountTvl * priceUsd;
+  const newAccountTvlUsd = accountTvlUsd + amountUsd;
 
   const tokenTvl = await getAccountTvl(db, store, symbol, symbol);
   const newTokenTvl = tokenTvl + amount;
   const newTokenTvlUsd = newTokenTvl * priceUsd;
 
-  const amountUsd = amount * priceUsd;
   const totalTvl = await getAccountTvl(db, store, "total", "usd");
   const newTotalTvl = totalTvl + amountUsd;
 
@@ -171,7 +172,6 @@ export const writeTvlChange = async (
     amount: newAccountTvlUsd,
     blockHeight,
     timestamp,
-    noSetStore: true,
   });
 
   setAccountTvl({

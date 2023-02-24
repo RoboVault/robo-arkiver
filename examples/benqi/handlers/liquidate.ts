@@ -75,7 +75,7 @@ const handler: EventHandler = async ({
     qiTokenCollateralDecimals as number,
   );
 
-  const timestamp = event.blockNumber * 2;
+  const timestamp = (await event.getBlock()).timestamp;
 
   db.writer.writePoint(
     new Point("liquidate")
