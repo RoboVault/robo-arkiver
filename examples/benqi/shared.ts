@@ -1,6 +1,4 @@
-import { Store } from "../../lib/arkiver/store.ts";
-import { logger, Point } from "../../lib/deps.ts";
-import { QueryApi, WriteApi } from "./deps.ts";
+import { logger, Point, QueryApi, Store, WriteApi } from "./deps.ts";
 
 export const symbolToPair = (symbol: string) => {
   const pair = pairs[symbol];
