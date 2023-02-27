@@ -1,5 +1,4 @@
-import { ethers, Point } from "../deps.ts";
-import { EventHandler } from "@types";
+import { ethers, EventHandler, Point } from "../deps.ts";
 import { writeTvlChange } from "../shared.ts";
 
 const handler: EventHandler = async ({

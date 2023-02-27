@@ -74,6 +74,7 @@ export class DataSource {
     logs: new Map(),
     blocks: new Map(),
   }; // track if some logs or blocks are pending to be processed
+  private readonly retryBlocks: Map<number, number> = new Map(); // blocks to retry
   private eventLoops = {
     fetcher: true,
     processor: true,
@@ -159,6 +160,11 @@ export class DataSource {
 
   private async runFetcherLoop() {
     while (this.eventLoops.fetcher) {
+      for (const [retryFrom, retryTo] of this.retryBlocks) {
+        this.fetchLogs(retryFrom, retryTo);
+        this.fetchBlocks(retryFrom, retryTo);
+      }
+
       if (
         this.stagingLogsQueue.size > this.maxStageSize ||
         this.stagingBlocksQueue.size > this.maxStageSize
@@ -231,6 +237,12 @@ export class DataSource {
         `Fetched ${logs.length} logs from block ${fromBlock} to ${toBlock}...`,
       );
       this.stagingLogsQueue.set(fromBlock, { logs, nextFromBlock });
+      this.retryBlocks.delete(fromBlock);
+    }).catch((e) => {
+      logger.error(
+        `Error fetching logs from block ${fromBlock} to ${toBlock} for ${this.chain}: ${e}, retrying...`,
+      );
+      this.retryBlocks.set(fromBlock, toBlock);
     });
 
     this.stagingQueuePending.logs.set(fromBlock, true);
@@ -297,6 +309,12 @@ export class DataSource {
           nextFromBlock,
         },
       );
+      this.retryBlocks.delete(fromBlock);
+    }).catch((e) => {
+      logger.error(
+        `Error fetching blocks from block ${fromBlock} to ${toBlock} for ${this.chain}: ${e}, retrying...`,
+      );
+      this.retryBlocks.set(fromBlock, toBlock);
     });
 
     this.stagingQueuePending.blocks.set(fromBlock, true);
@@ -362,18 +380,35 @@ export class DataSource {
             logger.error(`No event found for log ${log}`);
             continue;
           }
-          await handler.handler({
-            contract: new ethers.Contract(
-              log.address,
-              handler.interface.fragments,
-              this.provider,
-            ),
-            event,
-            eventName: fragment.name,
-            provider: this.provider,
-            store: this.store,
-            db: this.db,
-          });
+          try {
+            await handler.handler({
+              contract: new ethers.Contract(
+                log.address,
+                handler.interface.fragments,
+                this.provider,
+              ),
+              event,
+              eventName: fragment.name,
+              provider: this.provider,
+              store: this.store,
+              db: this.db,
+            });
+          } catch (_e) {
+            handler.handler({
+              contract: new ethers.Contract(
+                log.address,
+                handler.interface.fragments,
+                this.provider,
+              ),
+              event,
+              eventName: fragment.name,
+              provider: this.provider,
+              store: this.store,
+              db: this.db,
+            }).catch((e) => {
+              logger.error(`Error running event handler ${event}: ${e}`);
+            });
+          }
         } else {
           const block = logOrBlock as {
             block: ethers.Block;
@@ -382,12 +417,25 @@ export class DataSource {
 
           for (const handlerPath of block.handlers) {
             const handler = this.blockHandlers.get(handlerPath)!;
-            await handler({
-              block: block.block,
-              provider: this.provider,
-              store: this.store,
-              db: this.db,
-            });
+            try {
+              await handler({
+                block: block.block,
+                provider: this.provider,
+                store: this.store,
+                db: this.db,
+              });
+            } catch (_e) {
+              handler({
+                block: block.block,
+                provider: this.provider,
+                store: this.store,
+                db: this.db,
+              }).catch((e) => {
+                logger.error(
+                  `Error running block handler ${handlerPath}: ${e}`,
+                );
+              });
+            }
           }
         }
       }

@@ -1,5 +1,4 @@
-import { ethers } from "../deps.ts";
-import { EventHandler } from "@types";
+import { ethers, EventHandler } from "../deps.ts";
 import { setPrice } from "../shared.ts";
 
 const handler: EventHandler = async ({

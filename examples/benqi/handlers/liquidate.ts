@@ -1,5 +1,5 @@
-import { ethers, Point } from "../deps.ts";
-import { EventHandler } from "@types";
+import { ethers, EventHandler, Point } from "../deps.ts";
+import { setAccountTvl } from "../shared.ts";
 
 const handler: EventHandler = async ({
   contract,
@@ -10,6 +10,16 @@ const handler: EventHandler = async ({
   const [liquidator, borrower, repayAmount, qiTokenCollateral, seizeAmount] =
     event.args;
   const address = contract.target.toString();
+
+  const symbol = await store.retrieve(
+    `${address}-symbol`,
+    async () => {
+      if (!contract.interface.getFunction("symbol")) {
+        return "AVAX";
+      }
+      return await contract.symbol();
+    },
+  ) as string;
 
   // ---------REPAY UNDERLYING---------
   const underlying = await store.retrieve(
@@ -35,19 +45,6 @@ const handler: EventHandler = async ({
     },
   );
 
-  const underlyingSymbol = await store.retrieve(
-    `${underlying}-symbol`,
-    async () => {
-      if (underlying === "AVAX") {
-        return "AVAX";
-      }
-      const underlyingContract = new ethers.Contract(underlying, [
-        "function symbol() view returns (string)",
-      ], contract.runner);
-      return await underlyingContract.symbol();
-    },
-  );
-
   // ---------SEIZE QITOKEN---------
   // contract of collateral qi token
   const qiTokenCollateralContract = new ethers.Contract(qiTokenCollateral, [
@@ -65,36 +62,47 @@ const handler: EventHandler = async ({
     qiTokenCollateralContract.decimals,
   ) as number;
 
-  const formattedRepayAmount = ethers.formatUnits(
+  const formattedRepayAmount = parseFloat(ethers.formatUnits(
     repayAmount,
     underlyingDecimals as number,
-  );
+  ));
 
-  const formattedSeizeAmount = ethers.formatUnits(
+  const formattedSeizeAmount = parseFloat(ethers.formatUnits(
     seizeAmount,
     qiTokenCollateralDecimals as number,
-  );
+  ));
 
-  const timestamp = (await event.getBlock()).timestamp;
+  const timestamp = async () => (await event.getBlock()).timestamp;
 
-  db.writer.writePoint(
-    new Point("liquidate")
-      .tag("liquidator", liquidator)
-      .tag("borrower", borrower)
-      .tag("repayUnderlyingAddress", underlying) // address of underlying token being repaid
-      .tag("repayUnderlyingSymbol", underlyingSymbol as string) // symbol of underlying token being repaid
-      .tag("seizedQiTokenAddress", qiTokenCollateral) // address of QiToken collateral being seized
-      .tag("seizedQiTokenSymbol", qiTokenCollateralSymbol) // symbol of QiToken collateral being seized
-      .floatField(
-        "repayAmount", // amount of underlying token being repaid
-        parseFloat(formattedRepayAmount),
-      )
-      .floatField(
-        "seizeAmount", // amount of QiToken collateral being seized
-        parseFloat(formattedSeizeAmount),
-      )
-      .intField("blockHeight", event.blockNumber)
-      .timestamp(timestamp),
+  setAccountTvl({
+    db,
+    account: borrower,
+    amount: formattedRepayAmount,
+    blockHeight: event.blockNumber,
+    timestamp,
+    store,
+    symbol,
+  });
+
+  timestamp().then((timestamp) =>
+    db.writer.writePoint(
+      new Point("liquidate")
+        .tag("liquidator", liquidator)
+        .tag("borrower", borrower)
+        .tag("symbol", symbol)
+        .tag("seizeAddress", qiTokenCollateral) // address of QiToken collateral being seized
+        .tag("seizeSymbol", qiTokenCollateralSymbol) // symbol of QiToken collateral being seized
+        .floatField(
+          "repayAmount", // amount of underlying token being repaid
+          formattedRepayAmount,
+        )
+        .floatField(
+          "seizeAmount", // amount of QiToken collateral being seized
+          formattedSeizeAmount,
+        )
+        .intField("blockHeight", event.blockNumber)
+        .timestamp(timestamp),
+    )
   );
 };
 

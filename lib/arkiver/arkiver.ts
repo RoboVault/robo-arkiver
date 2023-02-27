@@ -29,7 +29,11 @@ export class Arkiver extends EventTarget {
     logger.info(
       `Running Arkiver for arkive ID number ${this.arkiveData.id}...`,
     );
-    await this.initSources();
+    try {
+      await this.initSources();
+    } catch (e) {
+      logger.error(`Error running arkiver: ${e}`);
+    }
   }
 
   private async initSources() {
