@@ -270,7 +270,11 @@
     "https://esm.sh/v108/es5-ext@0.10.62/deno/global.js": "5fe45a955818afd1e0e8ad67eeb50f62a4b543588aefd727a1f9b732121a33fa",
     "https://esm.sh/v108/node.ns.d.ts": "0fb081f0cd2150931bd54baa04f31466abd9ca701fd9060d07931402cf8367ba",
     "https://esm.sh/v108/websocket@1.0.34/deno/websocket.js": "3d867159b9e896cd98f092ce218166b4a7ac22adb0a569904ffe5f73716b823b",
-    "https://esm.sh/zod@3.20.2": "23fc535ce0d7972236f916313671dcb3d73a4f8b3211e81c0c3e4b000f181565"
+    "https://esm.sh/zod@3.20.2": "23fc535ce0d7972236f916313671dcb3d73a4f8b3211e81c0c3e4b000f181565",
+    "https://raw.githubusercontent.com/RoboVault/robo-arkiver/main/lib/arkiver/store.ts": "3125ad2b35fd33b23538a7174992f96c612b24a5651630013e93fcde53c01254",
+    "https://raw.githubusercontent.com/RoboVault/robo-arkiver/main/lib/deps.ts": "f436f822ee54d606fa583d7f1829a3c43a15f5838dc29285a02a313f665e7109",
+    "https://raw.githubusercontent.com/RoboVault/robo-arkiver/main/lib/types.ts": "ffbc4583d92cfb146455181b5958322ef9ebce61aed94b6fb88df95afd3a33f5",
+    "https://raw.githubusercontent.com/RoboVault/robo-arkiver/main/mod.ts": "2e6caa4a528b156c6f65249a2f8c63864ebb71ce02861d9be3fedd8735dcc79a"
   },
   "npm": {
     "specifiers": {

@@ -1,5 +1,5 @@
 import { ethers, EventHandler, Point } from "../deps.ts";
-import { setAccountTvl } from "../shared.ts";
+import { getPrice, setAccountTvl } from "../shared.ts";
 
 const handler: EventHandler = async ({
   contract,
@@ -73,6 +73,19 @@ const handler: EventHandler = async ({
   ));
 
   const timestamp = async () => (await event.getBlock()).timestamp;
+
+  const price = await getPrice(db, store, symbol);
+  const amountUsd = formattedRepayAmount * price;
+
+  setAccountTvl({
+    db,
+    account: "total",
+    amount: amountUsd,
+    blockHeight: event.blockNumber,
+    timestamp,
+    store,
+    symbol: "usd",
+  });
 
   setAccountTvl({
     db,

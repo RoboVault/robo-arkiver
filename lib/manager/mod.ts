@@ -1,19 +1,26 @@
 import { SupabaseProvider } from "../providers/supabase.ts";
 import { ArkiveProvider } from "../providers/types.ts";
 import { Arkive, ArkiveMessageEvent, Deployment } from "@types";
-import { devLog, rm } from "@utils";
-import { logError } from "@utils";
+import { devLog, getEnv, logError, rm } from "@utils";
+import { DeleteAPI, InfluxDB } from "@deps";
 
 export class ArkiveManager {
   // private indexerWorker: Worker;
   private arkiveProvider: ArkiveProvider;
   private arkives: { arkive: Arkive; worker: Worker }[] = [];
+  private readonly deleteApi: DeleteAPI;
 
   constructor() {
     this.removeAllArkives = this.removeAllArkives.bind(this);
     this.addNewArkive = this.addNewArkive.bind(this);
 
     this.arkiveProvider = new SupabaseProvider();
+
+    const db = new InfluxDB({
+      url: getEnv("INFLUXDB_URL"),
+      token: getEnv("INFLUXDB_TOKEN"),
+    });
+    this.deleteApi = new DeleteAPI(db);
   }
 
   public async init() {
@@ -106,6 +113,21 @@ export class ArkiveManager {
     arkive.worker.terminate();
   }
 
+  private removeIndexedData(arkive: Arkive) {
+    const start = new Date(0);
+    const stop = new Date();
+
+    this.deleteApi.postDelete({
+      org: getEnv("INFLUXDB_ORG"),
+      bucket: getEnv("INFLUXDB_BUCKET"),
+      body: {
+        start: start.toISOString(),
+        stop: stop.toISOString(),
+        predicate: `arkiveId="${arkive.id}"`,
+      },
+    });
+  }
+
   private async spawnArkiverWorker(arkive: Arkive) {
     const manifestPath =
       `../packages/${arkive.user_id}/${arkive.id}/${arkive.deployment.major_version}_${arkive.deployment.minor_version}/manifest.config.ts`;
@@ -154,6 +176,7 @@ export class ArkiveManager {
             ) {
               devLog("removing old major version", previousVersion.arkive);
               await this.removeArkive(previousVersion);
+              this.removeIndexedData(previousVersion.arkive);
               devLog("removed old major version", previousVersion.arkive);
             }
           }
