@@ -1,5 +1,5 @@
 import { ethers, EventHandler, Point } from "../deps.ts";
-import { getPrice, setAccountTvl } from "../shared.ts";
+import { getAccountTvl, getPrice, setAccountTvl } from "../shared.ts";
 
 const handler: EventHandler = async ({
   contract,
@@ -77,10 +77,28 @@ const handler: EventHandler = async ({
   const price = await getPrice(db, store, symbol);
   const amountUsd = formattedRepayAmount * price;
 
+  const previousAccountTvl = await getAccountTvl(db, store, borrower, symbol);
+  const previousAccountTvlUsd = await getAccountTvl(db, store, borrower, "usd");
+  const newAccountTvl = previousAccountTvl + formattedRepayAmount;
+  const newAccountTvlUsd = previousAccountTvlUsd + amountUsd;
+
+  const previousTotalTvlUsd = await getAccountTvl(db, store, "total", "usd");
+  const newTotalTvlUsd = previousTotalTvlUsd + amountUsd;
+
   setAccountTvl({
     db,
-    account: "total",
-    amount: amountUsd,
+    account: borrower,
+    amount: newAccountTvl,
+    blockHeight: event.blockNumber,
+    timestamp,
+    store,
+    symbol,
+  });
+
+  setAccountTvl({
+    db,
+    account: borrower,
+    amount: newAccountTvlUsd,
     blockHeight: event.blockNumber,
     timestamp,
     store,
@@ -89,12 +107,12 @@ const handler: EventHandler = async ({
 
   setAccountTvl({
     db,
-    account: borrower,
-    amount: formattedRepayAmount,
+    account: "total",
+    amount: newTotalTvlUsd,
     blockHeight: event.blockNumber,
     timestamp,
     store,
-    symbol,
+    symbol: "usd",
   });
 
   timestamp().then((timestamp) =>

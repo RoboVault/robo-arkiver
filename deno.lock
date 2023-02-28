@@ -2,9 +2,12 @@
   "version": "2",
   "remote": {
     "https://cdn.skypack.dev/-/@influxdata/influxdb-client-apis@v1.33.2-uUb3fa8y0KWDEvmPjFOB/dist=es2019,mode=imports/optimized/@influxdata/influxdb-client-apis.js": "c747c45bd23c81010f4ff21c9078e14cef080e5a2fdec64a6acf948a7400f33f",
+    "https://cdn.skypack.dev/-/@influxdata/influxdb-client-apis@v1.33.2-uUb3fa8y0KWDEvmPjFOB/dist=es2019,mode=types/dist/index.d.ts": "02c1a8108d6c79e1c4b0e241f930389b901091fe108d0678a276f17f8a70e7f7",
     "https://cdn.skypack.dev/-/@influxdata/influxdb-client-browser@v1.33.2-EZL9Mz630msbXfW6w37Y/dist=es2019,mode=imports/optimized/@influxdata/influxdb-client-browser.js": "3875805feffa71b03670a10f0f4815e0e4420e61ce9cc47ed1483ecb86873934",
     "https://cdn.skypack.dev/-/@influxdata/influxdb-client-browser@v1.33.2-EZL9Mz630msbXfW6w37Y/dist=es2019,mode=types/dist/index.d.ts": "332f064bd084584121036cbcc2b77d00745ff31707a40521fd611ebf64e8a28d",
+    "https://cdn.skypack.dev/-/@influxdata/influxdb-client@v1.33.2-e2cjimkhr1DAy81s3PgC/dist=es2019,mode=imports/optimized/@influxdata/influxdb-client.js": "3875805feffa71b03670a10f0f4815e0e4420e61ce9cc47ed1483ecb86873934",
     "https://cdn.skypack.dev/@influxdata/influxdb-client-apis": "8cbfdbeef61c492dcd229935adbbdc9be38ece48aa15a02b1956ba3f418e85cb",
+    "https://cdn.skypack.dev/@influxdata/influxdb-client-apis?dts": "8cbfdbeef61c492dcd229935adbbdc9be38ece48aa15a02b1956ba3f418e85cb",
     "https://cdn.skypack.dev/@influxdata/influxdb-client-browser?dts": "305d971cf5c226efa1d9a82ec760c08002bf2c8f3b8d316371395e5db87559b0",
     "https://deno.land/std@0.170.0/_util/asserts.ts": "d0844e9b62510f89ce1f9878b046f6a57bf88f208a10304aab50efcb48365272",
     "https://deno.land/std@0.170.0/_util/os.ts": "8a33345f74990e627b9dfe2de9b040004b08ea5146c7c9e8fe9a29070d193934",

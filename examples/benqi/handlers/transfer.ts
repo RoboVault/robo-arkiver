@@ -60,14 +60,18 @@ const handler: EventHandler = async ({
   }
 
   const priceUsd = await getPrice(db, store, symbol);
+  const amount = formattedValue * exchangeRate;
+  const amountUsd = amount * priceUsd;
 
   const senderTvl = await getAccountTvl(db, store, from, symbol);
-  const newSenderTvl = senderTvl - formattedValue * exchangeRate;
-  const newSenderTvlUsd = newSenderTvl * priceUsd;
+  const senderTvlUsd = await getAccountTvl(db, store, from, "usd");
+  const newSenderTvl = senderTvl - amount;
+  const newSenderTvlUsd = senderTvlUsd - amountUsd;
 
   const receiverTvl = await getAccountTvl(db, store, to, symbol);
-  const newReceiverTvl = receiverTvl + formattedValue * exchangeRate;
-  const newReceiverTvlUsd = newReceiverTvl * priceUsd;
+  const receiverTvlUsd = await getAccountTvl(db, store, to, "usd");
+  const newReceiverTvl = receiverTvl + amount;
+  const newReceiverTvlUsd = receiverTvlUsd + amountUsd;
 
   const timestamp = async () => (await event.getBlock()).timestamp;
 
