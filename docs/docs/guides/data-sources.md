@@ -1,2 +1,0 @@
-# Data sources
-A **data source** is a set of contracts on a **blockchain** that you want to **query** and **index**. For example, you might want to query and index all the **ERC20 transfers** that happen on the **Ethereum** blockchain from a particular **set of contracts**. You may also define a **block interval** as a **data source**. For example, you might want to run an **indexing function** every **1000 blocks**. This is useful if you want to call a **read-only method** on a contract every few blocks.
