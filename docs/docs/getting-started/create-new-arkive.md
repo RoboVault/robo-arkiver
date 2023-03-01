@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # Create a new Arkive
 
-An **Arkive** is a directory containing a `manifest.config.ts` file and one or more **TypeScript** files which contain your handler functions. All your **data sources** are defined in the `manifest.config.ts` file and the **handler functions** are used to **process** the data. **No need** to learn _3 different languages and schemas_ to index blockchain data anymore, enjoy **full type safety** and a **single language** for everything.
+An **Arkive** consists of **data sources** which you define and **indexing functions** that process the data coming from those sources. All your **data sources** are defined and mapped to their respective **indexing functions** in the **`manifest.config.ts`** file and all your **indexing functions** are written in plain **TypeScript** files.
 
 ## Create your first Arkive
 
@@ -14,7 +14,7 @@ To create a new Arkive, run the following command:
 arkiver init my-arkive
 ```
 
-This will scaffold a new Arkive in the `my-arkive` directory.
+This will scaffold a new Arkive project in the `my-arkive` directory.
 
 :::tip
 If you are using VSCode with the official Deno extension, make sure to initialize the workspace by running the `Deno: Initialize Workspace Configuration` command in the new directory to enable the Deno language server.
@@ -36,4 +36,4 @@ my-arkive
 - `/handlers/` - Contains the handler functions for your data sources.
 - `/manifest.config.ts` - Contains the configuration for your Arkive. This is where you define your data sources and map them to your handler functions.
 
-We will go through each of these files in the next sections.
+We will go through each of these in the next sections.
