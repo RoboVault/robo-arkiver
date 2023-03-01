@@ -63,4 +63,4 @@ This will deploy your Arkive to the Arkiver and you can view it at https://arkiv
 
 ## Next steps
 
-Now that you have created your first Arkive, you can learn more about the [manifest file](/docs/reference/manifest) and [data sources](/docs/reference/data-sources) to add more data sources and handler functions to your Arkive.
+Now that you have created your first Arkive, you can learn more about the [manifest file](/docs/reference/manifest) and [handler functions](/docs/reference/handler-functions) to add more data sources and handler functions to your Arkive.
