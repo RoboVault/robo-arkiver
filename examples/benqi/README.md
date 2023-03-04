@@ -1,5 +1,5 @@
 # Arkive example
-This is a simple example of an arkive that indexes all USDC transfers on avalanche.
+This is a simple example of an arkive that indexes the BenQI protocol on avalanche.
 
 ## Prerequisites
 * [deno](https://deno.land/)
@@ -15,7 +15,18 @@ This is a simple example of an arkive that indexes all USDC transfers on avalanc
     # signup
     arkiver signup
     ```
-3. Run `arkiver deploy`
+3. Run the arkive locally
+   ```bash
+    arkiver start .
+    ```
+4. Run `arkiver deploy`
     ```bash
     arkiver deploy . myFirstArkive
     ```
+
+## Schema
+| Measurement | Field | Type | Description |
+| ----------- | ----- | ---- | ----------- |
+| `tvl` | `amount` | `number` | The total value locked for the account |
+|| `symbol` | `string` | The symbol of the asset |
+|| `account` | `string` | The account that the TVL is for |

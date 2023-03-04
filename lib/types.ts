@@ -29,7 +29,7 @@ export interface NewArkiveMessageEvent {
   topic: "initArkive";
   data: {
     arkive: Arkive;
-    manifest: IManifest;
+    manifest: ArkiveManifest;
   };
 }
 
@@ -117,14 +117,15 @@ export interface BlockHandlerContext {
     writer: WriteApi;
     reader: QueryApi;
   };
+  tempStore: Store;
 }
 
 /**
- * @interface IManifest
+ * @interface ArkiveManifest
  * @description A manifest is a collection of data sources
  * @property {IDataSource[]} dataSources - The data sources
  */
-export interface IManifest {
+export interface ArkiveManifest {
   dataSources: {
     avalanche?: IDataSource;
   };
@@ -140,6 +141,7 @@ export interface EventHandlerContext {
     writer: WriteApi;
     reader: QueryApi;
   };
+  tempStore: Store;
 }
 
 export type EventHandler = (ctx: EventHandlerContext) => Promise<void>;

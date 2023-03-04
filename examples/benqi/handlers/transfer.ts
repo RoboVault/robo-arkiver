@@ -1,11 +1,12 @@
 import { ethers, EventHandler, logger, Point } from "../deps.ts";
-import { getAccountTvl, getPrice, setAccountTvl } from "../shared.ts";
+import { getTimestampFromEvent, writeTvlChange } from "../shared.ts";
 
 const handler: EventHandler = async ({
   contract,
   event,
   store,
   db,
+  tempStore,
 }) => {
   const [from, to, value] = event.args;
   const address = contract.target.toString();
@@ -59,56 +60,27 @@ const handler: EventHandler = async ({
     return;
   }
 
-  const priceUsd = await getPrice(db, store, symbol);
   const amount = formattedValue * exchangeRate;
-  const amountUsd = amount * priceUsd;
 
-  const senderTvl = await getAccountTvl(db, store, from, symbol);
-  const senderTvlUsd = await getAccountTvl(db, store, from, "usd");
-  const newSenderTvl = senderTvl - amount;
-  const newSenderTvlUsd = senderTvlUsd - amountUsd;
+  const timestamp = getTimestampFromEvent(event, tempStore);
 
-  const receiverTvl = await getAccountTvl(db, store, to, symbol);
-  const receiverTvlUsd = await getAccountTvl(db, store, to, "usd");
-  const newReceiverTvl = receiverTvl + amount;
-  const newReceiverTvlUsd = receiverTvlUsd + amountUsd;
-
-  const timestamp = async () => (await event.getBlock()).timestamp;
-
-  setAccountTvl({
+  await writeTvlChange({
     db,
-    store,
     account: from,
+    amount: -amount,
+    blockHeight: event.blockNumber,
+    store,
     symbol,
-    amount: newSenderTvl,
-    blockHeight: event.blockNumber,
     timestamp,
   });
-  setAccountTvl({
+
+  writeTvlChange({
     db,
-    store,
-    account: from,
-    symbol: "usd",
-    amount: newSenderTvlUsd,
-    blockHeight: event.blockNumber,
-    timestamp,
-  });
-  setAccountTvl({
-    db,
-    store,
     account: to,
+    amount,
+    blockHeight: event.blockNumber,
+    store,
     symbol,
-    amount: newReceiverTvl,
-    blockHeight: event.blockNumber,
-    timestamp,
-  });
-  setAccountTvl({
-    db,
-    store,
-    account: to,
-    symbol: "usd",
-    amount: newReceiverTvlUsd,
-    blockHeight: event.blockNumber,
     timestamp,
   });
 };

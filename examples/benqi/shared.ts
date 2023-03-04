@@ -1,4 +1,4 @@
-import { logger, Point, QueryApi, Store, WriteApi } from "./deps.ts";
+import { ethers, logger, Point, QueryApi, Store, WriteApi } from "./deps.ts";
 
 export const symbolToPair = (symbol: string) => {
   const pair = pairs[symbol];
@@ -59,16 +59,19 @@ export const setPrice = (
   pair: string,
   price: number,
   blockHeight: number,
+  timestamp: Promise<number>,
 ) => {
   store.set(pair, price);
 
-  const point = new Point("price")
-    .tag("pair", pair)
-    .floatField("price", price)
-    .intField("blockHeight", blockHeight)
-    .timestamp(0);
+  timestamp.then((timestamp) => {
+    const point = new Point("price")
+      .tag("pair", pair)
+      .floatField("price", price)
+      .intField("blockHeight", blockHeight)
+      .timestamp(timestamp);
 
-  db.writer.writePoint(point);
+    db.writer.writePoint(point);
+  });
 };
 
 export const getAccountTvl = async (
@@ -98,7 +101,7 @@ export const setAccountTvl = (
     symbol: string;
     amount: number;
     blockHeight: number;
-    timestamp: () => Promise<number>;
+    timestamp: Promise<number>;
     noSetStore?: boolean;
   },
 ) => {
@@ -115,7 +118,7 @@ export const setAccountTvl = (
 
   if (!noSetStore) store.set(`${account}-tvl-${symbol}`, amount);
 
-  timestamp().then((timestamp) => {
+  timestamp.then((timestamp) => {
     const point = new Point("tvl")
       .tag("account", account)
       .tag("symbol", symbol)
@@ -134,26 +137,23 @@ export const writeTvlChange = async (
     account: string;
     symbol: string;
     amount: number;
-    timestamp: () => Promise<number>;
+    timestamp: Promise<number>;
     blockHeight: number;
   },
 ) => {
   const { db, store, account, symbol, amount, timestamp, blockHeight } = params;
 
-  const priceUsd = await getPrice(db, store, symbol);
-  const amountUsd = amount * priceUsd;
+  const price = await getPrice(db, store, symbol);
 
-  const accountTvl = await getAccountTvl(db, store, account, symbol);
-  const accountTvlUsd = await getAccountTvl(db, store, account, "usd");
-  const newAccountTvl = accountTvl + amount;
-  const newAccountTvlUsd = accountTvlUsd + amountUsd;
+  // account tokens
+  const accountTvl = await getAccountTvls(db, store, account, blockHeight);
+  const newAccountTvl = accountTvl[symbol] + amount;
+  const newAccountTvlUsd = accountTvl.usd + amount * price;
 
-  const tokenTvl = await getAccountTvl(db, store, symbol, symbol);
+  // // token total
+  const tokenTvl = await getAccountTvl(db, store, "total", symbol);
   const newTokenTvl = tokenTvl + amount;
-  const newTokenTvlUsd = newTokenTvl * priceUsd;
-
-  const totalTvl = await getAccountTvl(db, store, "total", "usd");
-  const newTotalTvl = totalTvl + amountUsd;
+  const newTokenTvlUsd = newTokenTvl * price;
 
   setAccountTvl({
     db,
@@ -168,7 +168,7 @@ export const writeTvlChange = async (
     db,
     store,
     account,
-    symbol: "usd",
+    symbol: "USD",
     amount: newAccountTvlUsd,
     blockHeight,
     timestamp,
@@ -177,7 +177,7 @@ export const writeTvlChange = async (
   setAccountTvl({
     db,
     store,
-    account: symbol,
+    account: "total",
     symbol,
     amount: newTokenTvl,
     blockHeight,
@@ -186,38 +186,106 @@ export const writeTvlChange = async (
   setAccountTvl({
     db,
     store,
-    account: symbol,
-    symbol: "usd",
+    account: "total",
+    symbol: `${symbol}-USD`,
     amount: newTokenTvlUsd,
     blockHeight,
     timestamp,
-    noSetStore: true,
-  });
-
-  setAccountTvl({
-    db,
-    store,
-    account: "total",
-    symbol: "usd",
-    amount: newTotalTvl,
-    blockHeight,
-    timestamp,
   });
 };
 
-export const setAndForget = (
-  params: {
-    key: string;
-    store: Store;
-    // deno-lint-ignore no-explicit-any
-    value: any;
-    db: { writer: WriteApi };
-    points: Point[];
-  },
+export const getTimestampFromEvent = async (
+  event: ethers.EventLog,
+  tempStore: Store,
 ) => {
-  const { key, store, value, db, points } = params;
-
-  store.set(key, value);
-
-  db.writer.writePoints(points);
+  const block = await tempStore.retrieve(
+    `block-${event.blockNumber}`,
+    async () => await event.getBlock(),
+  );
+  return block.timestamp as number;
 };
+
+export const getAccountTvls = async (
+  db: { reader: QueryApi },
+  store: Store,
+  account: string,
+  blockHeight: number,
+) => {
+  const tvls: Record<
+    string,
+    number
+  > = {};
+  const prices: Record<string, number> = {};
+  for (const { symbol, startBlockHeight } of qiTokens) {
+    if (blockHeight < startBlockHeight) continue;
+
+    const price = await getPrice(db, store, symbol);
+    prices[symbol] = price;
+
+    const tokenAmount = await getAccountTvl(db, store, account, symbol);
+    tvls[symbol] = tokenAmount;
+  }
+
+  const totalUsd = Object.entries(tvls).reduce(
+    (acc, [symbol, amount]) => acc + (amount * prices[symbol]),
+    0,
+  );
+  tvls.usd = totalUsd;
+
+  return tvls;
+};
+
+const qiTokens = [
+  {
+    symbol: "qisAVAX",
+    startBlockHeight: 26530000,
+  },
+  {
+    symbol: "qiBTC.b",
+    startBlockHeight: 16578216,
+  },
+  {
+    symbol: "qiUSDCn",
+    startBlockHeight: 26520000,
+  },
+  {
+    symbol: "qiBTC",
+    startBlockHeight: 3046690,
+  },
+  {
+    symbol: "qiETH",
+    startBlockHeight: 3046701,
+  },
+  {
+    symbol: "qiLINK",
+    startBlockHeight: 3046723,
+  },
+  {
+    symbol: "qiUSDT",
+    startBlockHeight: 3046718,
+  },
+  {
+    symbol: "qiUSDC",
+    startBlockHeight: 3620405,
+  },
+  {
+    symbol: "qiUSDTn",
+    startBlockHeight: 13319600,
+  },
+  {
+    symbol: "qiDAI",
+    startBlockHeight: 3046729,
+  },
+  {
+    symbol: "qiBUSD",
+    startBlockHeight: 21221137,
+  },
+  {
+    symbol: "qiQI",
+    startBlockHeight: 4408541,
+  },
+  {
+    symbol: "qiAVAX",
+    startBlockHeight: 3046672,
+  },
+] as const;

@@ -1,11 +1,12 @@
 import { ethers, EventHandler } from "../deps.ts";
-import { setPrice } from "../shared.ts";
+import { getTimestampFromEvent, setPrice } from "../shared.ts";
 
 const handler: EventHandler = async ({
   contract,
   event,
   store,
   db,
+  tempStore,
 }) => {
   const [answer] = event.args;
 
@@ -19,12 +20,15 @@ const handler: EventHandler = async ({
     contract.description,
   ) as string;
 
+  const timestamp = getTimestampFromEvent(event, tempStore);
+
   setPrice(
     db,
     store,
     pair,
     parseFloat(ethers.formatUnits(answer, decimals)),
     event.blockNumber,
+    timestamp,
   );
 };
 

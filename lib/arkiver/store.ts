@@ -9,15 +9,16 @@ export class Store extends Map<string, unknown> {
   ) {
     const value = super.get(key);
     if (value) {
+      if (value instanceof Promise) {
+        return await value;
+      }
       return value;
     }
 
-    let defaultValue = defaultValueAccessor();
-    if (defaultValue instanceof Promise) {
-      defaultValue = await defaultValue;
-    }
+    const defaultValue = defaultValueAccessor();
 
     super.set(key, defaultValue);
+
     return defaultValue;
   }
 }

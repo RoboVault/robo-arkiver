@@ -1,5 +1,5 @@
 import { ethers, EventHandler, logger, Point } from "../deps.ts";
-import { writeTvlChange } from "../shared.ts";
+import { getTimestampFromEvent, writeTvlChange } from "../shared.ts";
 
 const handler: EventHandler = async ({
   contract,
@@ -7,6 +7,7 @@ const handler: EventHandler = async ({
   store,
   provider,
   db,
+  tempStore,
 }) => {
   const [minter, depositAmountRaw, mintAmountRaw] = event.args;
   const address = contract.target.toString();
@@ -56,7 +57,7 @@ const handler: EventHandler = async ({
 
   const exchangeRate = depositAmount / mintAmount;
 
-  const timestamp = async () => (await event.getBlock()).timestamp;
+  const timestamp = getTimestampFromEvent(event, tempStore);
 
   await writeTvlChange({
     db,
@@ -68,7 +69,7 @@ const handler: EventHandler = async ({
     blockHeight: event.blockNumber,
   });
 
-  timestamp().then((timestamp) => {
+  timestamp.then((timestamp) => {
     db.writer.writePoints([
       new Point("deposit")
         .tag("symbol", symbol)
@@ -88,7 +89,7 @@ const handler: EventHandler = async ({
     return;
   }
 
-  timestamp().then((timestamp) => {
+  timestamp.then((timestamp) => {
     const erPoint = new Point("exchange_rate")
       .tag("symbol", symbol)
       .floatField("value", exchangeRate)

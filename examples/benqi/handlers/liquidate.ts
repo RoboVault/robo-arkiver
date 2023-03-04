@@ -1,11 +1,12 @@
 import { ethers, EventHandler, Point } from "../deps.ts";
-import { getAccountTvl, getPrice, setAccountTvl } from "../shared.ts";
+import { getTimestampFromEvent, writeTvlChange } from "../shared.ts";
 
 const handler: EventHandler = async ({
   contract,
   event,
   store,
   db,
+  tempStore,
 }) => {
   const [liquidator, borrower, repayAmount, qiTokenCollateral, seizeAmount] =
     event.args;
@@ -72,50 +73,19 @@ const handler: EventHandler = async ({
     qiTokenCollateralDecimals as number,
   ));
 
-  const timestamp = async () => (await event.getBlock()).timestamp;
+  const timestamp = getTimestampFromEvent(event, tempStore);
 
-  const price = await getPrice(db, store, symbol);
-  const amountUsd = formattedRepayAmount * price;
-
-  const previousAccountTvl = await getAccountTvl(db, store, borrower, symbol);
-  const previousAccountTvlUsd = await getAccountTvl(db, store, borrower, "usd");
-  const newAccountTvl = previousAccountTvl + formattedRepayAmount;
-  const newAccountTvlUsd = previousAccountTvlUsd + amountUsd;
-
-  const previousTotalTvlUsd = await getAccountTvl(db, store, "total", "usd");
-  const newTotalTvlUsd = previousTotalTvlUsd + amountUsd;
-
-  setAccountTvl({
+  await writeTvlChange({
     db,
     account: borrower,
-    amount: newAccountTvl,
+    amount: formattedRepayAmount,
     blockHeight: event.blockNumber,
     timestamp,
     store,
     symbol,
   });
 
-  setAccountTvl({
-    db,
-    account: borrower,
-    amount: newAccountTvlUsd,
-    blockHeight: event.blockNumber,
-    timestamp,
-    store,
-    symbol: "usd",
-  });
-
-  setAccountTvl({
-    db,
-    account: "total",
-    amount: newTotalTvlUsd,
-    blockHeight: event.blockNumber,
-    timestamp,
-    store,
-    symbol: "usd",
-  });
-
-  timestamp().then((timestamp) =>
+  timestamp.then((timestamp) =>
     db.writer.writePoint(
       new Point("liquidate")
         .tag("liquidator", liquidator)

@@ -1,18 +1,22 @@
-import { IManifest } from "@types";
+import { ArkiveManifest } from "@types";
 import { Arkive } from "@types";
 import { getEnv, getRpcUrl } from "@utils";
 import { InfluxDB, logger } from "@deps";
 import { DataSource } from "./data-source.ts";
 
 export class Arkiver extends EventTarget {
-  private readonly manifest: IManifest;
+  private readonly manifest: ArkiveManifest;
   private arkiveData: Arkive;
   private sources: DataSource[] = [];
   private packagePath: string;
 
   private readonly db: InfluxDB;
 
-  constructor(manifest: IManifest, arkiveData: Arkive, directory?: string) {
+  constructor(
+    manifest: ArkiveManifest,
+    arkiveData: Arkive,
+    directory?: string,
+  ) {
     super();
     this.manifest = manifest;
     this.arkiveData = arkiveData;

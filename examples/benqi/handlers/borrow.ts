@@ -1,5 +1,5 @@
 import { ethers, EventHandler, Point } from "../deps.ts";
-import { writeTvlChange } from "../shared.ts";
+import { getTimestampFromEvent, writeTvlChange } from "../shared.ts";
 
 const handler: EventHandler = async ({
   contract,
@@ -7,6 +7,7 @@ const handler: EventHandler = async ({
   store,
   provider,
   db,
+  tempStore,
 }) => {
   const [borrower, borrowAmount] = event.args;
   const address = contract.target.toString();
@@ -44,7 +45,7 @@ const handler: EventHandler = async ({
     underlyingDecimals as number,
   ));
 
-  const timestamp = async () => (await event.getBlock()).timestamp;
+  const timestamp = getTimestampFromEvent(event, tempStore);
 
   await writeTvlChange({
     db,
@@ -56,7 +57,7 @@ const handler: EventHandler = async ({
     blockHeight: event.blockNumber,
   });
 
-  timestamp().then((timestamp) => {
+  timestamp.then((timestamp) => {
     db.writer.writePoint(
       new Point("borrow")
         .tag("borrower", borrower)

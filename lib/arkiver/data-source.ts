@@ -79,7 +79,7 @@ export class DataSource {
     fetcher: true,
     processor: true,
   };
-  private maxStageSize = 100;
+  private maxStageSize = 10;
   private liveDelay = 2000;
   private queueDelay = 500;
   private fetchInterval = 500;
@@ -321,6 +321,7 @@ export class DataSource {
   }
 
   private async runProcessorLoop() {
+    const tempStore = new Store();
     while (this.eventLoops.processor) {
       const logs = this.stagingLogsQueue.get(this.processedBlockHeight);
       const logsPending = this.stagingQueuePending.logs.get(
@@ -392,6 +393,7 @@ export class DataSource {
               provider: this.provider,
               store: this.store,
               db: this.db,
+              tempStore,
             });
           } catch (_e) {
             handler.handler({
@@ -405,6 +407,7 @@ export class DataSource {
               provider: this.provider,
               store: this.store,
               db: this.db,
+              tempStore,
             }).catch((e) => {
               logger.error(`Error running event handler ${event}: ${e}`);
             });
@@ -423,6 +426,7 @@ export class DataSource {
                 provider: this.provider,
                 store: this.store,
                 db: this.db,
+                tempStore,
               });
             } catch (_e) {
               handler({
@@ -430,6 +434,7 @@ export class DataSource {
                 provider: this.provider,
                 store: this.store,
                 db: this.db,
+                tempStore,
               }).catch((e) => {
                 logger.error(
                   `Error running block handler ${handlerPath}: ${e}`,
@@ -444,10 +449,13 @@ export class DataSource {
       this.stagingBlocksQueue.delete(this.processedBlockHeight);
       this.stagingQueuePending.logs.delete(this.processedBlockHeight);
       this.stagingQueuePending.blocks.delete(this.processedBlockHeight);
+      tempStore.clear();
       logger.info(`Processed block ${this.processedBlockHeight}...`);
 
       this.processedBlockHeight = logs?.nextFromBlock ??
         blocks!.nextFromBlock;
+
+      console.log("store size", this.store.size);
     }
   }
 
@@ -483,7 +491,7 @@ export class DataSource {
     logger.info(`Loading block handlers for ${this.chain}...`);
     for (const blockSource of this.blockSources) {
       const { handlerPath } = blockSource;
-      const handlerFn = await import(`${this.packagePath}/${handlerPath}`);
+      const handlerFn = await import(join(this.packagePath, handlerPath));
       this.blockHandlers.set(handlerPath, handlerFn.default);
 
       if (

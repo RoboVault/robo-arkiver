@@ -1,11 +1,12 @@
 import { ethers, EventHandler, logger, Point } from "../deps.ts";
-import { writeTvlChange } from "../shared.ts";
+import { getTimestampFromEvent, writeTvlChange } from "../shared.ts";
 
 const handler: EventHandler = async ({
   contract,
   event,
   store,
   db,
+  tempStore,
 }) => {
   const [redeemer, redeemAmount, redeemTokens] = event.args;
   const address = contract.target.toString();
@@ -55,7 +56,7 @@ const handler: EventHandler = async ({
 
   const exchangeRate = withdrawAmount / redeemAmountFloat;
 
-  const timestamp = async () => (await event.getBlock()).timestamp;
+  const timestamp = getTimestampFromEvent(event, tempStore);
 
   await writeTvlChange({
     db,
@@ -67,7 +68,7 @@ const handler: EventHandler = async ({
     blockHeight: event.blockNumber,
   });
 
-  timestamp().then((timestamp) => {
+  timestamp.then((timestamp) => {
     db.writer.writePoint(
       new Point("withdraw")
         .tag("withdrawer", redeemer)
@@ -93,7 +94,7 @@ const handler: EventHandler = async ({
     return;
   }
 
-  timestamp().then((timestamp) => {
+  timestamp.then((timestamp) => {
     const erPoint = new Point("exchange_rate")
       .tag("symbol", symbol)
       .floatField("value", exchangeRate)

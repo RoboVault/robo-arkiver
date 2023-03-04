@@ -1,6 +1,6 @@
-import type { IManifest } from "@types";
+import type { ArkiveManifest } from "@types";
 
-export const manifest: IManifest = {
+export const manifest: ArkiveManifest = {
   dataSources: {
     avalanche: {
       contracts: [
@@ -32,7 +32,7 @@ export const manifest: IManifest = {
               startBlockHeight: 3046723,
             },
             {
-              address: "0xc9e5999b8e75C3fEB117F6f73E664b9f3C8ca65C", // qiUSDt
+              address: "0xc9e5999b8e75C3fEB117F6f73E664b9f3C8ca65C", // qiUSDT
               startBlockHeight: 3046718,
             },
             {
@@ -81,6 +81,14 @@ export const manifest: IManifest = {
               handler: "handlers/transfer.ts",
               name: "Transfer",
             },
+            // {
+            //   handler: "handlers/revenue.ts",
+            //   name: "AccrueInterest",
+            // },
+            // {
+            //   handler: "handlers/reserve-factor.ts",
+            //   name: "NewReserveFactor",
+            // },
           ],
         },
         {
@@ -116,6 +124,14 @@ export const manifest: IManifest = {
               handler: "handlers/transfer.ts",
               name: "Transfer",
             },
+            // {
+            //   handler: "handlers/revenue.ts",
+            //   name: "AccrueInterest",
+            // },
+            // {
+            //   handler: "handlers/reserve-factor.ts",
+            //   name: "NewReserveFactor",
+            // },
           ],
         },
         {
@@ -156,6 +172,13 @@ export const manifest: IManifest = {
               startBlockHeight: 13992148,
             },
           ],
+        },
+      ],
+      blockHandlers: [
+        {
+          blockInterval: 43200, // ~ 2 seconds per block or 6 hours
+          handlerPath: "handlers/total-tvl.ts",
+          startBlockHeight: 3046672,
         },
       ],
     },
