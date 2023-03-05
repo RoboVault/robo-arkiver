@@ -1,11 +1,14 @@
 import { ethers, EventHandler, logger, Point } from "../deps.ts";
-import { getTimestampFromEvent, writeTvlChange } from "../shared.ts";
+import {
+  getTimestampFromEvent,
+  getUnderlyingAmount,
+  writeTvlChange,
+} from "../shared.ts";
 
 const handler: EventHandler = async ({
   contract,
   event,
   store,
-  provider,
   db,
   tempStore,
 }) => {
@@ -22,33 +25,11 @@ const handler: EventHandler = async ({
     contract.decimals,
   )) as number;
 
-  const underlying = await store.retrieve(
-    `${address}-underlying`,
-    async () => {
-      if (!contract.interface.getFunction("underlying")) {
-        return "AVAX";
-      }
-      return await contract.underlying();
-    },
-  ) as string;
-
-  const underlyingDecimals = await store.retrieve(
-    `${address}-underlyingDecimals`,
-    async () => {
-      if (underlying === "AVAX") {
-        return 18;
-      }
-      const underlyingContract = new ethers.Contract(underlying, [
-        "function decimals() view returns (uint8)",
-      ], provider);
-      return await underlyingContract.decimals();
-    },
-  );
-
-  const depositAmount = parseFloat(ethers.formatUnits(
+  const depositAmount = await getUnderlyingAmount(
     depositAmountRaw,
-    underlyingDecimals as number,
-  ));
+    contract,
+    store,
+  );
 
   const mintAmount = parseFloat(ethers.formatUnits(
     mintAmountRaw,
@@ -73,7 +54,6 @@ const handler: EventHandler = async ({
     db.writer.writePoints([
       new Point("deposit")
         .tag("symbol", symbol)
-        .tag("underlying", underlying)
         .tag("depositor", minter)
         .floatField("amount", depositAmount)
         .floatField("mintAmount", mintAmount)

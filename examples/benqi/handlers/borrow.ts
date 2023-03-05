@@ -1,11 +1,14 @@
-import { ethers, EventHandler, Point } from "../deps.ts";
-import { getTimestampFromEvent, writeTvlChange } from "../shared.ts";
+import { EventHandler, Point } from "../deps.ts";
+import {
+  getTimestampFromEvent,
+  getUnderlyingAmount,
+  writeTvlChange,
+} from "../shared.ts";
 
 const handler: EventHandler = async ({
   contract,
   event,
   store,
-  provider,
   db,
   tempStore,
 }) => {
@@ -17,33 +20,11 @@ const handler: EventHandler = async ({
     contract.symbol,
   ) as string;
 
-  const underlying = await store.retrieve(
-    `${address}-underlying`,
-    async () => {
-      if (!contract.interface.getFunction("underlying")) {
-        return "AVAX";
-      }
-      return await contract.underlying();
-    },
-  ) as string;
-
-  const underlyingDecimals = await store.retrieve(
-    `${address}-underlyingDecimals`,
-    async () => {
-      if (underlying === "AVAX") {
-        return 18;
-      }
-      const underlyingContract = new ethers.Contract(underlying, [
-        "function decimals() view returns (uint8)",
-      ], provider);
-      return await underlyingContract.decimals();
-    },
-  );
-
-  const formattedBorrowAmount = parseFloat(ethers.formatUnits(
+  const formattedBorrowAmount = await getUnderlyingAmount(
     borrowAmount,
-    underlyingDecimals as number,
-  ));
+    contract,
+    store,
+  );
 
   const timestamp = getTimestampFromEvent(event, tempStore);
 

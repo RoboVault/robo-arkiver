@@ -150,7 +150,7 @@ export const writeTvlChange = async (
   const newAccountTvl = accountTvl[symbol] + amount;
   const newAccountTvlUsd = accountTvl.usd + amount * price;
 
-  // // token total
+  // token total
   const tokenTvl = await getAccountTvl(db, store, "total", symbol);
   const newTokenTvl = tokenTvl + amount;
   const newTokenTvlUsd = newTokenTvl * price;
@@ -289,3 +289,42 @@ const qiTokens = [
     startBlockHeight: 3046672,
   },
 ] as const;
+
+export const getUnderlyingAmount = async (
+  amount: number,
+  contract: ethers.Contract,
+  store: Store,
+) => {
+  const address = contract.target.toString();
+  const provider = contract.runner!.provider;
+
+  const underlying = await store.retrieve(
+    `${address}-underlying`,
+    async () => {
+      if (!contract.interface.getFunction("underlying")) {
+        return "AVAX";
+      }
+      return await contract.underlying();
+    },
+  ) as string;
+
+  const underlyingDecimals = await store.retrieve(
+    `${address}-underlyingDecimals`,
+    async () => {
+      if (underlying === "AVAX") {
+        return 18;
+      }
+      const underlyingContract = new ethers.Contract(underlying, [
+        "function decimals() view returns (uint8)",
+      ], provider);
+      return await underlyingContract.decimals();
+    },
+  );
+
+  const underlyingAmount = parseFloat(ethers.formatUnits(
+    amount,
+    underlyingDecimals as number,
+  ));
+
+  return underlyingAmount;
+};

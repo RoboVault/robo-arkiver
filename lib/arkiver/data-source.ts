@@ -25,7 +25,7 @@ interface NormalizedContracts {
   }[];
   topics: string[];
 }
-// TODO: add block eventHandlers
+
 export class DataSource {
   private readonly chain: string;
   private readonly rpcUrl: string;
@@ -46,6 +46,10 @@ export class DataSource {
     string,
     { handler: EventHandler; interface: ethers.Interface }
   > = new Map(); // topic to handler and interface
+  private readonly addressToAbiPath: Map<
+    string,
+    string
+  > = new Map(); // address to abiPath
   private readonly blockHandlers: Map<
     string,
     BlockHandlerFn
@@ -367,7 +371,12 @@ export class DataSource {
       ) {
         if (!(logOrBlock as { isBlock: boolean | undefined }).isBlock) {
           const log = logOrBlock as ethers.Log;
-          const handler = this.eventHandlers.get(log.topics[0]);
+          const abiPath = this.addressToAbiPath.get(log.address);
+          if (!abiPath) {
+            logger.error(`No ABI found for log ${log}`);
+            continue;
+          }
+          const handler = this.eventHandlers.get(`${log.topics[0]}-${abiPath}`);
           if (!handler) {
             throw new Error("No handler set for topic " + log.topics[0]);
           }
@@ -512,7 +521,10 @@ export class DataSource {
       const { abiPath, eventQueries, sources } = rawContract;
 
       const lowestBlockHeight = Math.min(
-        ...sources.map((s) => s.startBlockHeight),
+        ...sources.map((s) => {
+          this.addressToAbiPath.set(s.address, abiPath); // hackerzzz
+          return s.startBlockHeight;
+        }),
       );
 
       if (
@@ -547,10 +559,13 @@ export class DataSource {
           throw new Error(`Handler ${handler} is not a function`);
         }
 
-        this.eventHandlers.set(event.topicHash, {
-          handler: handlerFn,
-          interface: iface,
-        });
+        this.eventHandlers.set(
+          `${event.topicHash}-${abiPath}`,
+          {
+            handler: handlerFn,
+            interface: iface,
+          },
+        );
       }
 
       res.push(normalized);
@@ -566,7 +581,7 @@ export class DataSource {
       return this.abiStore.get(abiPath)!;
     }
     const abi = (
-      await import(`${this.packagePath}/${abiPath}`, {
+      await import(join(this.packagePath, abiPath), {
         assert: { type: "json" },
       })
     ).default;

@@ -1,5 +1,9 @@
 import { ethers, EventHandler, logger, Point } from "../deps.ts";
-import { getTimestampFromEvent, writeTvlChange } from "../shared.ts";
+import {
+  getTimestampFromEvent,
+  getUnderlyingAmount,
+  writeTvlChange,
+} from "../shared.ts";
 
 const handler: EventHandler = async ({
   contract,
@@ -21,33 +25,11 @@ const handler: EventHandler = async ({
     contract.symbol,
   ) as string;
 
-  const underlying = await store.retrieve(
-    `${address}-underlying`,
-    async () => {
-      if (!contract.interface.getFunction("underlying")) {
-        return "AVAX";
-      }
-      return await contract.underlying();
-    },
-  ) as string;
-
-  const underlyingDecimals = await store.retrieve(
-    `${address}-underlyingDecimals`,
-    async () => {
-      if (underlying === "AVAX") {
-        return 18;
-      }
-      const underlyingContract = new ethers.Contract(underlying, [
-        "function decimals() view returns (uint8)",
-      ], contract.runner!.provider);
-      return await underlyingContract.decimals();
-    },
-  );
-
-  const withdrawAmount = parseFloat(ethers.formatUnits(
+  const withdrawAmount = await getUnderlyingAmount(
     redeemAmount,
-    underlyingDecimals as number,
-  ));
+    contract,
+    store,
+  );
 
   const redeemAmountFloat = parseFloat(ethers.formatUnits(
     redeemTokens,
@@ -73,7 +55,6 @@ const handler: EventHandler = async ({
       new Point("withdraw")
         .tag("withdrawer", redeemer)
         .tag("symbol", symbol)
-        .tag("underlying", underlying)
         .floatField(
           "withdrawAmount",
           withdrawAmount,

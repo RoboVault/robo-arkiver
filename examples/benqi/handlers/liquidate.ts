@@ -1,5 +1,9 @@
 import { ethers, EventHandler, Point } from "../deps.ts";
-import { getTimestampFromEvent, writeTvlChange } from "../shared.ts";
+import {
+  getTimestampFromEvent,
+  getUnderlyingAmount,
+  writeTvlChange,
+} from "../shared.ts";
 
 const handler: EventHandler = async ({
   contract,
@@ -22,30 +26,6 @@ const handler: EventHandler = async ({
     },
   ) as string;
 
-  // ---------REPAY UNDERLYING---------
-  const underlying = await store.retrieve(
-    `${address}-underlying`,
-    async () => {
-      if (!contract.interface.getFunction("underlying")) {
-        return "AVAX";
-      }
-      return await contract.underlying();
-    },
-  ) as string;
-
-  const underlyingDecimals = await store.retrieve(
-    `${underlying}-decimals`,
-    async () => {
-      if (underlying === "AVAX") {
-        return 18;
-      }
-      const underlyingContract = new ethers.Contract(underlying, [
-        "function decimals() view returns (uint8)",
-      ], contract.runner);
-      return await underlyingContract.decimals();
-    },
-  );
-
   // ---------SEIZE QITOKEN---------
   // contract of collateral qi token
   const qiTokenCollateralContract = new ethers.Contract(qiTokenCollateral, [
@@ -63,10 +43,11 @@ const handler: EventHandler = async ({
     qiTokenCollateralContract.decimals,
   ) as number;
 
-  const formattedRepayAmount = parseFloat(ethers.formatUnits(
+  const formattedRepayAmount = await getUnderlyingAmount(
     repayAmount,
-    underlyingDecimals as number,
-  ));
+    contract,
+    store,
+  );
 
   const formattedSeizeAmount = parseFloat(ethers.formatUnits(
     seizeAmount,
