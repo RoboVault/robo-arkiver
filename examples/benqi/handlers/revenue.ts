@@ -1,76 +1,99 @@
-// import { ethers, EventHandler, Point } from "../deps.ts";
-// import { writeTvlChange } from "../shared.ts";
+import {
+  ethers,
+  EventHandler,
+  logger,
+  Point,
+  QueryApi,
+  Store,
+} from "../deps.ts";
+import {
+  getPrice,
+  getTimestampFromEvent,
+  getUnderlyingAmount,
+} from "../shared.ts";
 
-// const handler: EventHandler = async ({
-//   contract,
-//   event,
-//   store,
-//   provider,
-//   db,
-// }) => {
-//   const [repayer, borrower, repayAmount] = event.args;
-//   const address = contract.target.toString();
+const handler: EventHandler = async ({
+  contract,
+  event,
+  store,
+  db,
+  tempStore,
+}) => {
+  const [_, interestAccumulated] = event.args;
 
-//   const symbol = await store.retrieve(
-//     `${address}-symbol`,
-//     contract.symbol,
-//   ) as string;
+  if (interestAccumulated === 0n) return;
 
-//   const underlying = await store.retrieve(
-//     `${address}-underlying`,
-//     async () => {
-//       if (!contract.interface.getFunction("underlying")) {
-//         return "AVAX";
-//       }
-//       return await contract.underlying();
-//     },
-//   ) as string;
+  const address = contract.target.toString();
 
-//   const underlyingDecimals = await store.retrieve(
-//     `${address}-underlyingDecimals`,
-//     async () => {
-//       if (underlying === "AVAX") {
-//         return 18;
-//       }
-//       const underlyingContract = new ethers.Contract(underlying, [
-//         "function decimals() view returns (uint8)",
-//       ], provider);
-//       return await underlyingContract.decimals();
-//     },
-//   );
+  const symbol = await store.retrieve(
+    `${address}-symbol`,
+    contract.symbol,
+  ) as string;
 
-//   const formattedRepayAmount = parseFloat(ethers.formatUnits(
-//     repayAmount,
-//     underlyingDecimals as number,
-//   ));
+  const reserveFactor = await getReserveFactor(db, store, address);
 
-//   const timestamp = async () => (await event.getBlock()).timestamp;
+  const price = await getPrice(db, store, symbol);
 
-//   await writeTvlChange({
-//     db,
-//     store,
-//     account: borrower,
-//     symbol,
-//     amount: formattedRepayAmount,
-//     timestamp,
-//     blockHeight: event.blockNumber,
-//   });
+  const protocolRevenue = interestAccumulated as bigint * reserveFactor /
+    ethers.WeiPerEther;
+  const formattedProtocolRevenue = await getUnderlyingAmount(
+    protocolRevenue,
+    contract,
+    store,
+  );
+  const protocolRevenueUsd = formattedProtocolRevenue * price;
 
-//   timestamp().then((timestamp) => {
-//     db.writer.writePoint(
-//       new Point("repay")
-//         .tag("repayer", repayer)
-//         .tag("borrower", borrower)
-//         .tag("underlying", underlying)
-//         .tag("symbol", symbol)
-//         .floatField(
-//           "amount",
-//           formattedRepayAmount,
-//         )
-//         .intField("blockHeight", event.blockNumber)
-//         .timestamp(timestamp),
-//     );
-//   });
-// };
+  const lpRevenue = interestAccumulated as bigint - protocolRevenue;
+  const formattedLpRevenue = await getUnderlyingAmount(
+    lpRevenue,
+    contract,
+    store,
+  );
+  const lpRevenueUsd = formattedLpRevenue * price;
 
-// export default handler;
+  const timestamp = getTimestampFromEvent(event, tempStore);
+
+  timestamp.then((timestamp) => {
+    db.writer.writePoint(
+      new Point("revenue")
+        .tag("symbol", symbol)
+        .floatField("protocol", formattedProtocolRevenue)
+        .floatField("protocol-usd", protocolRevenueUsd)
+        .floatField("lp", formattedLpRevenue)
+        .floatField("lp-usd", lpRevenueUsd)
+        .timestamp(timestamp),
+    );
+  });
+};
+
+export default handler;
+
+const getReserveFactor = async (
+  db: { reader: QueryApi },
+  store: Store,
+  address: string,
+) => {
+  const reserveFactor = await store.retrieve(
+    `${address}-reserve-factor`,
+    async () => {
+      const res = await db.reader.collectRows<{ _value: number }>(`
+			from(bucket: "arkiver")
+				|> range(start: 0)
+				|> filter(fn: (r) => r._measurement == "reserve-factor" and r._field == "value" and r.address == "${address}")
+				|> last()
+		`);
+      if (res.length === 0) {
+        logger.error(
+          `No reserve factor found for ${address}, using 0.2`,
+        );
+      }
+      return ethers.parseUnits(
+        (res[0]?._value || 0.2).toLocaleString("fullwide", {
+          maximumFractionDigits: 18,
+        }),
+        18,
+      );
+    },
+  );
+  return reserveFactor as bigint;
+};

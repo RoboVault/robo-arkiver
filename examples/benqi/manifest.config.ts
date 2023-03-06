@@ -81,14 +81,18 @@ export const manifest: ArkiveManifest = {
               handler: "handlers/transfer.ts",
               name: "Transfer",
             },
-            // {
-            //   handler: "handlers/revenue.ts",
-            //   name: "AccrueInterest",
-            // },
-            // {
-            //   handler: "handlers/reserve-factor.ts",
-            //   name: "NewReserveFactor",
-            // },
+            {
+              handler: "handlers/revenue.ts",
+              name: "AccrueInterest",
+            },
+            {
+              handler: "handlers/reserve-factor.ts",
+              name: "NewReserveFactor",
+            },
+            {
+              handler: "handlers/liquidation-revenue.ts",
+              name: "ReservesAdded",
+            },
           ],
         },
         {
@@ -124,14 +128,18 @@ export const manifest: ArkiveManifest = {
               handler: "handlers/transfer.ts",
               name: "Transfer",
             },
-            // {
-            //   handler: "handlers/revenue.ts",
-            //   name: "AccrueInterest",
-            // },
-            // {
-            //   handler: "handlers/reserve-factor.ts",
-            //   name: "NewReserveFactor",
-            // },
+            {
+              handler: "handlers/revenue.ts",
+              name: "AccrueInterest",
+            },
+            {
+              handler: "handlers/reserve-factor.ts",
+              name: "NewReserveFactor",
+            },
+            {
+              handler: "handlers/liquidation-revenue.ts",
+              name: "ReservesAdded",
+            },
           ],
         },
         {

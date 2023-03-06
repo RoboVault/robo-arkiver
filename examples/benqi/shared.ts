@@ -291,7 +291,7 @@ const qiTokens = [
 ] as const;
 
 export const getUnderlyingAmount = async (
-  amount: number,
+  amount: number | bigint,
   contract: ethers.Contract,
   store: Store,
 ) => {

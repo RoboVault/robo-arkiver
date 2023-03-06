@@ -363,11 +363,10 @@ export class DataSource {
           isBlock: true,
         })) ?? [],
       ];
+      logsAndBlocks.sort((a, b) => a.blockNumber - b.blockNumber);
 
       for (
-        const logOrBlock of logsAndBlocks.sort((a, b) =>
-          a.blockNumber - b.blockNumber
-        )
+        const logOrBlock of logsAndBlocks
       ) {
         if (!(logOrBlock as { isBlock: boolean | undefined }).isBlock) {
           const log = logOrBlock as ethers.Log;
@@ -463,8 +462,6 @@ export class DataSource {
 
       this.processedBlockHeight = logs?.nextFromBlock ??
         blocks!.nextFromBlock;
-
-      console.log("store size", this.store.size);
     }
   }
 
