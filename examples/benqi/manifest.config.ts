@@ -9,7 +9,7 @@ export const manifest: ArkiveManifest = {
           sources: [
             {
               address: "0xF362feA9659cf036792c9cb02f8ff8198E21B4cB", // qisAVAX
-              startBlockHeight: 26530000,
+              startBlockHeight: 13995148,
             },
             {
               address: "0x89a415b3D20098E6A6C8f7a59001C67BD3129821", // qiBTC.b
@@ -17,7 +17,7 @@ export const manifest: ArkiveManifest = {
             },
             {
               address: "0xB715808a78F6041E46d61Cb123C9B4A27056AE9C", //qiUSDCn
-              startBlockHeight: 26520000,
+              startBlockHeight: 13319519,
             },
             {
               address: "0xe194c4c5aC32a3C9ffDb358d9Bfd523a0B6d1568", // qiBTC
