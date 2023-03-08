@@ -184,9 +184,14 @@ export const manifest: ArkiveManifest = {
       ],
       blockHandlers: [
         {
-          blockInterval: 43200, // ~ 2 seconds per block or 6 hours
+          blockInterval: 43200, // ~ 2 seconds per block or 24 hours
           handlerPath: "handlers/total-tvl.ts",
           startBlockHeight: 3046672,
+        },
+        {
+          blockInterval: 43200, // ~ 2 seconds per block or 24 hours
+          handlerPath: "handlers/user-retention.ts",
+          startBlockHeight: "live",
         },
       ],
     },

@@ -235,7 +235,7 @@ export const getAccountTvls = async (
   return tvls;
 };
 
-const qiTokens = [
+export const qiTokens = [
   {
     symbol: "qisAVAX",
     startBlockHeight: 26530000,

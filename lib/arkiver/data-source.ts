@@ -93,6 +93,7 @@ export class DataSource {
     reader: QueryApi;
   };
   private readonly store = new Store();
+  private isLive = false;
 
   constructor(
     params: {
@@ -150,10 +151,10 @@ export class DataSource {
 
   private async init() {
     logger.info(`Initializing data source for ${this.chain}...`);
+    await this.getLiveBlockHeight();
     await this.processRawContracts();
     await this.loadBlockHandlers();
     await this.checkIndexedBlockHeights();
-    await this.getLiveBlockHeight();
     this.fetchedBlockHeight = this.processedBlockHeight;
   }
 
@@ -187,6 +188,8 @@ export class DataSource {
         fromBlock + this.blockRange,
         this.liveBlockHeight,
       );
+
+      if (toBlock === this.liveBlockHeight && !this.isLive) this.isLive = true;
 
       if (fromBlock > toBlock) {
         await delay(this.liveDelay);
@@ -260,14 +263,22 @@ export class DataSource {
     logger.info(`Fetching blocks from block ${fromBlock} to ${toBlock}...`);
     const blockToHandlers = new Map<number, string[]>();
     const blockSources = this.blockSources.filter((source) =>
-      source.startBlockHeight <= toBlock
+      source.startBlockHeight <= toBlock ||
+      (source.startBlockHeight === "live" && this.isLive)
     );
     if (blockSources.length === 0) {
       this.stagingQueuePending.blocks.set(fromBlock, false);
       return;
     }
     for (const blockSource of blockSources) {
-      const newFromBlock = Math.max(blockSource.startBlockHeight, fromBlock);
+      if (blockSource.startBlockHeight === "live") {
+        blockSource.startBlockHeight = this.liveBlockHeight;
+      }
+
+      const newFromBlock = Math.max(
+        blockSource.startBlockHeight,
+        fromBlock,
+      );
       const blocks = Array.from(
         {
           length: Math.ceil(
@@ -499,6 +510,13 @@ export class DataSource {
       const { handlerPath } = blockSource;
       const handlerFn = await import(join(this.packagePath, handlerPath));
       this.blockHandlers.set(handlerPath, handlerFn.default);
+
+      if (blockSource.startBlockHeight === "live") {
+        if (this.processedBlockHeight === 0) {
+          this.processedBlockHeight = this.liveBlockHeight;
+        }
+        continue;
+      }
 
       if (
         this.processedBlockHeight === 0 ||

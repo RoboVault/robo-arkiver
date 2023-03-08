@@ -103,7 +103,7 @@ export type Filter = [(string | null), (string | null), (string | null)];
  */
 export interface IBlockHandler {
   handlerPath: string;
-  startBlockHeight: number;
+  startBlockHeight: number | "live";
   blockInterval: number;
 }
 
