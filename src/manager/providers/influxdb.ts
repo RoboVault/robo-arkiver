@@ -1,5 +1,5 @@
-import { IndexedBlockHeightParams, StatusProvider } from "./types.ts";
-import { type FluxTableMetaData, InfluxDB, type QueryApi } from "@deps";
+import { IndexedBlockHeightParams, StatusProvider } from "./interfaces.ts";
+import { type FluxTableMetaData, InfluxDB, type QueryApi } from "../../deps.ts";
 
 export interface queryOptions {
   measurement?: string;

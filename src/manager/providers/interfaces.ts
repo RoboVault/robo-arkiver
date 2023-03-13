@@ -1,4 +1,4 @@
-import { Arkive } from "@types";
+import { Arkive } from "../../arkiver/types.ts";
 
 export interface StatusProvider {
   getIndexedBlockHeight(

@@ -238,7 +238,7 @@ export const getAccountTvls = async (
 export const qiTokens = [
   {
     symbol: "qisAVAX",
-    startBlockHeight: 26530000,
+    startBlockHeight: 13995148,
   },
   {
     symbol: "qiBTC.b",
@@ -246,7 +246,7 @@ export const qiTokens = [
   },
   {
     symbol: "qiUSDCn",
-    startBlockHeight: 26520000,
+    startBlockHeight: 13319519,
   },
   {
     symbol: "qiBTC",

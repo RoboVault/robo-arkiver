@@ -1,32 +1,35 @@
-import { ArkiveManifest } from "@types";
-import { Arkive } from "@types";
-import { getEnv, getRpcUrl } from "@utils";
-import { InfluxDB, logger } from "@deps";
+import { Arkive, ArkiveManifest } from "./types.ts";
+import { getRpcUrl } from "../utils.ts";
+import { logger } from "../logger.ts";
 import { DataSource } from "./data-source.ts";
 
 export class Arkiver extends EventTarget {
   private readonly manifest: ArkiveManifest;
   private arkiveData: Arkive;
   private sources: DataSource[] = [];
-  private packagePath: string;
-
-  private readonly db: InfluxDB;
 
   constructor(
     manifest: ArkiveManifest,
-    arkiveData: Arkive,
-    directory?: string,
+    arkiveData?: Arkive,
   ) {
     super();
     this.manifest = manifest;
-    this.arkiveData = arkiveData;
-    this.packagePath = directory
-      ? directory
-      : `../packages/${this.arkiveData.user_id}/${this.arkiveData.id}/${this.arkiveData.deployment.major_version}_${this.arkiveData.deployment.minor_version}`;
-    this.db = new InfluxDB({
-      url: getEnv("INFLUXDB_URL"),
-      token: getEnv("INFLUXDB_TOKEN"),
-    });
+    this.arkiveData = arkiveData ?? {
+      id: 0,
+      deployment: {
+        id: 0,
+        arkive_id: 0,
+        major_version: 0,
+        minor_version: 0,
+        created_at: "",
+        status: "pending",
+        file_path: "",
+      },
+      user_id: "",
+      name: "",
+      public: false,
+      created_at: "",
+    };
   }
 
   public async run() {
@@ -47,20 +50,11 @@ export class Arkiver extends EventTarget {
       const dataSource = new DataSource({
         arkiveId: this.arkiveData.id,
         arkiveVersion: this.arkiveData.deployment.major_version,
-        blockRange: 3000,
+        blockRange: 3000n,
         chain,
         contracts: source.contracts ?? [],
-        packagePath: this.packagePath,
         rpcUrl: getRpcUrl(chain),
         blockSources: source.blockHandlers ?? [],
-        db: {
-          writer: this.db.getWriteApi(
-            getEnv("INFLUXDB_ORG"),
-            getEnv("INFLUXDB_BUCKET"),
-            "s",
-          ),
-          reader: this.db.getQueryApi(getEnv("INFLUXDB_ORG")),
-        },
       });
       await dataSource.run();
       this.sources.push(dataSource);

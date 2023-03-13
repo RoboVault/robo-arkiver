@@ -1,4 +1,4 @@
-import { StatusProvider } from "./types.ts";
+import { StatusProvider } from "./interfaces.ts";
 
 export const mockStatusProvider: StatusProvider = {
   getIndexedBlockHeight: () => Promise.resolve(0),

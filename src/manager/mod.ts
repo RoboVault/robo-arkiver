@@ -1,11 +1,11 @@
-import { SupabaseProvider } from "../providers/supabase.ts";
-import { ArkiveProvider } from "../providers/types.ts";
-import { Arkive, ArkiveMessageEvent, Deployment } from "@types";
-import { devLog, getEnv, logError, rm } from "@utils";
-import { DeleteAPI, InfluxDB } from "@deps";
+import { SupabaseProvider } from "./providers/supabase.ts";
+import { ArkiveProvider } from "./providers/interfaces.ts";
+import { Arkive, Deployment } from "../arkiver/types.ts";
+import { ArkiveMessageEvent } from "../manager/types.ts";
+import { devLog, getEnv, logError, rm } from "../utils.ts";
+import { DeleteAPI, InfluxDB } from "../deps.ts";
 
 export class ArkiveManager {
-  // private indexerWorker: Worker;
   private arkiveProvider: ArkiveProvider;
   private arkives: { arkive: Arkive; worker: Worker }[] = [];
   private readonly deleteApi: DeleteAPI;
@@ -130,7 +130,7 @@ export class ArkiveManager {
 
   private async spawnArkiverWorker(arkive: Arkive) {
     const manifestPath =
-      `../packages/${arkive.user_id}/${arkive.id}/${arkive.deployment.major_version}_${arkive.deployment.minor_version}/manifest.config.ts`;
+      `../packages/${arkive.user_id}/${arkive.id}/${arkive.deployment.major_version}_${arkive.deployment.minor_version}/manifest.ts`;
     const { manifest } = await import(manifestPath);
 
     const worker = new Worker(

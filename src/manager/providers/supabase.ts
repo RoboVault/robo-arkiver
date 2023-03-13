@@ -1,5 +1,5 @@
-import { ArkiveProvider } from "./types.ts";
-import { RealtimeChannel, SupabaseClient } from "@deps";
+import { ArkiveProvider } from "./interfaces.ts";
+import { RealtimeChannel, SupabaseClient } from "../../deps.ts";
 import {
   devLog,
   getEnv,
@@ -7,8 +7,8 @@ import {
   logError,
   rm,
   unpack,
-} from "@utils";
-import { Arkive, Deployment } from "@types";
+} from "../../utils.ts";
+import { Arkive, Deployment } from "../../arkiver/types.ts";
 
 interface RawArkive extends Omit<Arkive, "deployment"> {
   deployments: Deployment[];

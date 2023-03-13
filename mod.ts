@@ -1,3 +1,7 @@
-export * from "./lib/types.ts";
-export { logger } from "./lib/deps.ts";
-export { Store } from "./lib/arkiver/store.ts";
+export type {
+  ArkiveManifest,
+  BlockHandler,
+  EventHandlerFor,
+} from "./src/arkiver/types.ts";
+export { logger } from "./src/logger.ts";
+export { Store } from "./src/arkiver/store.ts";

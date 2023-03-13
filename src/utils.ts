@@ -1,4 +1,5 @@
-import { createClient, ethers, Point } from "@deps";
+import { avalanche, createClient, ethers, Log, RpcLog } from "./deps.ts";
+import { logger } from "./logger.ts";
 
 export const getSupabaseClient = () => {
   return createClient(getEnv("SUPABASE_URL"), getEnv("SUPABASE_SERVICE_KEY"), {
@@ -58,17 +59,7 @@ export const getFromStore = async (
 };
 
 export const logError = (error: Error, tags: Record<string, string>) => {
-  const errorPoint = new Point("arkiver_error")
-    .stringField("message", error.message)
-    .stringField("stack", error.stack || "")
-    .intField("error", 1)
-    .timestamp(new Date());
-
-  Object.entries(tags).forEach(([key, value]) => {
-    errorPoint.tag(key, value);
-  });
-
-  console.log(errorPoint.toLineProtocol());
+  logger.error(`an error occured: ${error} $${tags}`);
 };
 
 export const toNumber = (n: ethers.BigNumberish, decimals: number) => {
@@ -87,3 +78,36 @@ export const getRpcUrl = (chain: string) => {
   }
   return rpcUrl;
 };
+
+export const getChainObjFromChainName = (chain: string) => {
+  switch (chain) {
+    case "avalanche":
+      return avalanche;
+    default:
+      throw new Error(`Unsupported chain: ${chain}`);
+  }
+};
+
+export const bigIntMax = (...args: bigint[]) =>
+  args.reduce((m, e) => e > m ? e : m);
+
+export const bigIntMin = (...args: bigint[]) =>
+  args.reduce((m, e) => e < m ? e : m);
+
+export function formatLog(
+  log: RpcLog,
+  { args, eventName }: { args?: unknown; eventName?: string } = {},
+) {
+  return {
+    ...log,
+    blockHash: log.blockHash ? log.blockHash : null,
+    blockNumber: log.blockNumber ? BigInt(log.blockNumber) : null,
+    logIndex: log.logIndex ? BigInt(log.logIndex) : null,
+    transactionHash: log.transactionHash ? log.transactionHash : null,
+    transactionIndex: log.transactionIndex
+      ? BigInt(log.transactionIndex)
+      : null,
+    ...(eventName ? { args, eventName } : {}),
+    // deno-lint-ignore no-explicit-any
+  } as Log<bigint, bigint, any, [any], any>;
+}

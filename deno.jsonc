@@ -4,9 +4,6 @@
     "start": "DENO_ENV=PROD deno run -A --unstable main.ts"
   },
   "imports": {
-    "@deps": "./lib/deps.ts",
-    "@types": "./lib/types.ts",
-    "@utils": "./lib/utils.ts",
-    "@arkiver": "./lib/mod.ts"
+    "graphql": "https://cdn.skypack.dev/graphql?dts"
   }
 }
