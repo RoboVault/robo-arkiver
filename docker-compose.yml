@@ -1,7 +1,0 @@
-version: '3'
-services:
-  
-  influx:
-    image: influxdb:latest
-    ports:
-      - "8086:8086"

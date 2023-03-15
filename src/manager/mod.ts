@@ -1,11 +1,12 @@
-import { SupabaseProvider } from "../providers/supabase.ts";
-import { ArkiveProvider } from "../providers/types.ts";
-import { Arkive, ArkiveMessageEvent, Deployment } from "@types";
-import { devLog, getEnv, logError, rm } from "@utils";
-import { DeleteAPI, InfluxDB } from "@deps";
+import { SupabaseProvider } from "./providers/supabase.ts";
+import { ArkiveProvider } from "./providers/interfaces.ts";
+import { Arkive, Deployment } from "../arkiver/types.ts";
+import { ArkiveMessageEvent } from "../manager/types.ts";
+import { getEnv, rm } from "../utils.ts";
+import { DeleteAPI, InfluxDB } from "../deps.ts";
+import { logger } from "../logger.ts";
 
 export class ArkiveManager {
-  // private indexerWorker: Worker;
   private arkiveProvider: ArkiveProvider;
   private arkives: { arkive: Arkive; worker: Worker }[] = [];
   private readonly deleteApi: DeleteAPI;
@@ -38,18 +39,18 @@ export class ArkiveManager {
         }),
       );
     } catch (e) {
-      logError(e, { source: "ArkiveManager.init" });
+      logger.error(e, { source: "ArkiveManager.init" });
     }
   }
 
   private async getArkives() {
-    devLog("fetching existing arkives");
+    logger.info("fetching existing arkives");
     return await this.arkiveProvider.getArkives();
   }
 
   private listenNewArkives() {
     this.arkiveProvider.listenNewArkive(async (arkive: Arkive) => {
-      devLog("new arkkive", arkive);
+      logger.info("new arkive", arkive);
       // only remove previous versions if on the same major version.
       // new major versions will be removed once the new version is synced
       const previousArkives = this.getPreviousVersions(arkive);
@@ -68,43 +69,43 @@ export class ArkiveManager {
 
       await this.addNewArkive(arkive);
     });
-    devLog("listening for new arkives");
+    logger.info("listening for new arkives");
   }
 
   private listenForDeletedArkives() {
     this.arkiveProvider.listenDeletedArkive(async ({ id }) => {
-      devLog("deleting arkives", id);
+      logger.info("deleting arkives", id);
       await this.removeAllArkives(id);
-      devLog("deleted arkives", id);
+      logger.info("deleted arkives", id);
     });
-    devLog("listening for deleted arkives");
+    logger.info("listening for deleted arkives");
   }
 
   private async addNewArkive(arkive: Arkive) {
-    devLog("adding new arkive", arkive);
+    logger.info("adding new arkive", arkive);
     await this.pullPackage(arkive);
     const worker = await this.spawnArkiverWorker(arkive);
     await this.updateDeploymentStatus(arkive, "syncing");
     this.arkives = [...this.arkives, { arkive, worker }];
-    devLog("added new arkive", arkive);
+    logger.info("added new arkive", arkive);
   }
 
   // this is called when an arkive is deleted by the user which means the record is no longer in the tables
   private async removeAllArkives(id: number) {
-    devLog("removing arkives", id);
+    logger.info("removing arkives", id);
     const deletedArkives = this.arkives.filter((a) => a.arkive.id === id);
     await Promise.all(deletedArkives.map(async (arkive) => {
       await this.removePackage(arkive.arkive);
       arkive.worker.terminate();
     }));
     this.arkives = this.arkives.filter((a) => a.arkive.id !== id);
-    devLog("removed arkives", id);
+    logger.info("removed arkives", id);
   }
 
   // this is called in two places: when a new minor version is added (listenNewArkives)
   // and when a new major version has fully synced (worker.onmessage)
   private async removeArkive(arkive: { arkive: Arkive; worker: Worker }) {
-    devLog("removing arkive", arkive);
+    logger.info("removing arkive", arkive);
     await this.removePackage(arkive.arkive);
     await this.updateDeploymentStatus(
       arkive.arkive,
@@ -130,7 +131,7 @@ export class ArkiveManager {
 
   private async spawnArkiverWorker(arkive: Arkive) {
     const manifestPath =
-      `../packages/${arkive.user_id}/${arkive.id}/${arkive.deployment.major_version}_${arkive.deployment.minor_version}/manifest.config.ts`;
+      `../packages/${arkive.user_id}/${arkive.id}/${arkive.deployment.major_version}_${arkive.deployment.minor_version}/manifest.ts`;
     const { manifest } = await import(manifestPath);
 
     const worker = new Worker(
@@ -162,7 +163,7 @@ export class ArkiveManager {
 
     worker.onmessage = async (e: MessageEvent<ArkiveMessageEvent>) => {
       if (e.data.topic === "workerError") {
-        logError(e.data.data.error, {
+        logger.error(e.data.data.error, {
           source: "worker-arkive-" + e.data.data.arkive.id,
         });
       } else if (e.data.topic === "synced") {
@@ -174,10 +175,10 @@ export class ArkiveManager {
               previousVersion.arkive.deployment.major_version <
                 arkive.deployment.major_version
             ) {
-              devLog("removing old major version", previousVersion.arkive);
+              logger.info("removing old major version", previousVersion.arkive);
               await this.removeArkive(previousVersion);
               this.removeIndexedData(previousVersion.arkive);
-              devLog("removed old major version", previousVersion.arkive);
+              logger.info("removed old major version", previousVersion.arkive);
             }
           }
           await this.updateDeploymentStatus(
@@ -185,14 +186,14 @@ export class ArkiveManager {
             "synced",
           );
         } catch (error) {
-          logError(error, {
+          logger.error(error, {
             source: "worker-arkive-synced-" + e.data.data.arkive.id,
           });
         }
       }
     };
     worker.onerror = (e) => {
-      logError(e.error, {
+      logger.error(e.error, {
         source: "worker-arkive-" + arkive.id,
       });
     };
@@ -228,7 +229,7 @@ export class ArkiveManager {
       `../packages/${path}/${arkive.deployment.major_version}_${arkive.deployment.minor_version}`,
       import.meta.url,
     );
-    devLog("removing package", localDir.pathname);
+    logger.info("removing package", localDir.pathname);
     await rm(localDir.pathname, { recursive: true });
   }
 

@@ -3,11 +3,11 @@ export class Store extends Map<string, unknown> {
     super();
   }
 
-  async retrieve(
+  async retrieve<TValue>(
     key: string,
-    defaultValueAccessor: () => unknown | Promise<unknown>,
-  ) {
-    const value = super.get(key);
+    defaultValueAccessor: () => TValue | Promise<TValue>,
+  ): Promise<TValue> {
+    const value = super.get(key) as TValue | Promise<TValue>;
     if (value) {
       if (value instanceof Promise) {
         return await value;

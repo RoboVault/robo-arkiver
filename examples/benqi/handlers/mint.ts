@@ -1,18 +1,21 @@
-import { ethers, EventHandler, logger, Point } from "../deps.ts";
+import { ethers, EventHandlerFor, logger, Point } from "../deps.ts";
 import {
   getTimestampFromEvent,
   getUnderlyingAmount,
   writeTvlChange,
 } from "../shared.ts";
+import type qiERC20 from "../abis/qiERC20.ts";
 
-const handler: EventHandler = async ({
+export const mintHandler: EventHandlerFor<typeof qiERC20, "Mint"> = async ({
   contract,
   event,
   store,
   db,
   tempStore,
 }) => {
-  const [minter, depositAmountRaw, mintAmountRaw] = event.args;
+  // const [minter, depositAmountRaw, mintAmountRaw] = event.args;
+  const { minter, mintAmount: depositAmountRaw, mintTokens: mintAmountRaw } =
+    event.args;
   const address = contract.target.toString();
 
   const symbol = await store.retrieve(
@@ -80,5 +83,3 @@ const handler: EventHandler = async ({
 
   store.set(`${symbol}-exchangeRate`, exchangeRate);
 };
-
-export default handler;

@@ -1,16 +1,16 @@
-import { ArkiveMessageEvent } from "@types";
-import { devLog } from "@utils";
+import { ArkiveMessageEvent } from "../manager/types.ts";
+import { logger } from "../logger.ts";
 import { Arkiver } from "./arkiver.ts";
 
 declare const self: Worker;
-devLog("worker started");
+logger.info("worker started");
 
 self.onmessage = async (e: MessageEvent<ArkiveMessageEvent>) => {
-  devLog("worker received message", e.data);
+  logger.info("worker received message", e.data);
   switch (e.data.topic) {
     case "initArkive": {
       const { arkive, manifest } = e.data.data;
-      devLog("initializing arkive", arkive);
+      logger.info("initializing arkive", arkive);
       const arkiver = new Arkiver(manifest, arkive);
       arkiver.addEventListener("synced", () => {
         self.postMessage({ topic: "synced", data: { arkive } });
