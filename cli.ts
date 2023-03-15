@@ -1,6 +1,14 @@
-import { Command } from "./cli/deps.ts";
-import { deploy, login, logout, remove, signup, start } from "./cli/mod.ts";
-import "https://deno.land/std@0.177.0/dotenv/load.ts";
+import {
+  Command,
+  deploy,
+  init,
+  login,
+  logout,
+  remove,
+  signup,
+  start,
+} from "./cli/mod.ts";
+import "https://deno.land/std@0.179.0/dotenv/load.ts";
 
 if (import.meta.main) {
   const command = new Command()
@@ -48,6 +56,13 @@ if (import.meta.main) {
       default: "./manifest.ts",
     })
     .action(start.action);
+
+  // init
+  command
+    .command("init", "Initialize a new arkive")
+    .arguments("<dir:string>")
+    .option("--overwrite", "Overwrite existing files")
+    .action(init.action);
 
   await command.parse(Deno.args);
 }

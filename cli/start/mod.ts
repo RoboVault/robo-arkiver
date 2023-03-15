@@ -1,9 +1,8 @@
 import "npm:reflect-metadata";
-import { join } from "https://deno.land/std@0.179.0/path/mod.ts";
 import { Arkiver } from "../../src/arkiver/arkiver.ts";
 import { buildSchemaFromEntities } from "../../src/graphql/builder.ts";
 import { serve } from "https://deno.land/std@0.179.0/http/server.ts";
-import { $, createYoga, delay } from "../deps.ts";
+import { $, createYoga, delay, join } from "../deps.ts";
 
 export const action = async (
   options: { manifest?: string },

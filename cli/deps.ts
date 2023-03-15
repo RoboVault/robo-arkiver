@@ -14,3 +14,4 @@ export { default as $ } from "https://deno.land/x/dax@0.28.0/mod.ts";
 export { delay } from "https://deno.land/std@0.179.0/async/mod.ts";
 export { DataSource } from "npm:typeorm";
 export { createYoga } from "https://cdn.skypack.dev/graphql-yoga?dts";
+export { join } from "https://deno.land/std@0.179.0/path/mod.ts";

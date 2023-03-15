@@ -10,6 +10,8 @@ export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
 
     const address = event.address;
 
+    // store.retrieve() is a wrapper around Map.get() that will
+    // call the provided function if the key is not found in the store.
     const decimals = await store.retrieve(
       `${address}:decimals`,
       async () =>
@@ -20,39 +22,36 @@ export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
         }),
     );
 
-    const formattedValue = parseFloat(formatUnits(value, decimals));
+    const parsedValue = parseFloat(formatUnits(value, decimals));
 
-    const senderBalance = await store.retrieve(
-      `${from}:${address}:balance`,
-      async () =>
-        (await Balance.findOneBy({ id: `${from}:${address}` }))?.amount ??
-          0,
-    );
+    const [senderBalance, receiverBalance] = await Promise.all([
+      store.retrieve(
+        `${from}:${address}:balance`,
+        async () =>
+          await Balance.findOneBy({ id: `${from}:${address}` }) ??
+            Object.assign(new Balance(), {
+              id: `${from}:${address}`,
+              amount: 0,
+              token: address,
+              account: from,
+            }),
+      ),
+      store.retrieve(
+        `${to}:${address}:balance`,
+        async () =>
+          await Balance.findOneBy({ id: `${to}:${address}` }) ??
+            Object.assign(new Balance(), {
+              id: `${to}:${address}`,
+              amount: 0,
+              token: address,
+              account: to,
+            }),
+      ),
+    ]);
 
-    const receiverBalance = await store.retrieve(
-      `${to}:${address}:balance`,
-      async () =>
-        (await Balance.findOneBy({ id: `${to}:${address}` }))?.amount ?? 0,
-    );
+    senderBalance.amount -= parsedValue;
+    receiverBalance.amount += parsedValue;
 
-    const newSenderBalance = senderBalance - formattedValue;
-    const newReceiverBalance = receiverBalance + formattedValue;
-
-    store.set(`${from}:${address}:balance`, newSenderBalance);
-    store.set(`${to}:${address}:balance`, newReceiverBalance);
-
-    await Balance.upsert([
-      {
-        id: `${from}:${address}`,
-        amount: newSenderBalance,
-        token: address,
-        account: from,
-      },
-      {
-        id: `${to}:${address}`,
-        amount: newReceiverBalance,
-        token: address,
-        account: to,
-      },
-    ], ["id"]);
+    store.set(`${from}:${address}:balance`, senderBalance.save());
+    store.set(`${to}:${address}:balance`, receiverBalance.save());
   };

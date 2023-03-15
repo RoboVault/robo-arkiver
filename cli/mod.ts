@@ -4,3 +4,5 @@ export * as signup from "./signup/mod.ts";
 export * as logout from "./logout/mod.ts";
 export * as remove from "./remove/mod.ts";
 export * as start from "./start/mod.ts";
+export * as init from "./init/mod.ts";
+export { Command } from "./deps.ts";
