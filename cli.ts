@@ -44,6 +44,9 @@ if (import.meta.main) {
   command
     .command("start", "Start local development arkiver")
     .arguments("<dir:string>")
+    .option("-m, --manifest <manifest:string>", "Path to manifest file", {
+      default: "./manifest.ts",
+    })
     .action(start.action);
 
   await command.parse(Deno.args);

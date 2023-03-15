@@ -4,7 +4,6 @@ export {
   SupabaseClient,
 } from "https://esm.sh/@supabase/supabase-js@2.5.0";
 export { delay } from "https://deno.land/std@0.179.0/async/mod.ts";
-export { ethers } from "npm:ethers@6.0.3";
 export {
   type Block,
   createPublicClient,
@@ -35,3 +34,5 @@ export {
 } from "npm:@influxdata/influxdb-client";
 export { DeleteAPI } from "npm:@influxdata/influxdb-client-apis";
 export { join } from "https://deno.land/std@0.179.0/path/mod.ts";
+export { default as pg } from "npm:pg";
+export { DataSource as TypeORMDataSource } from "npm:typeorm";

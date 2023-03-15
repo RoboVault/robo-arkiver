@@ -2,14 +2,23 @@ import { Arkive, ArkiveManifest } from "./types.ts";
 import { getRpcUrl } from "../utils.ts";
 import { logger } from "../logger.ts";
 import { DataSource } from "./data-source.ts";
+import { pg, TypeORMDataSource } from "../deps.ts";
 
 export class Arkiver extends EventTarget {
   private readonly manifest: ArkiveManifest;
   private arkiveData: Arkive;
   private sources: DataSource[] = [];
+  private db: TypeORMDataSource;
 
   constructor(
     manifest: ArkiveManifest,
+    dbConfig: {
+      database: string;
+      host: string;
+      port: number;
+      username: string;
+      password: string;
+    },
     arkiveData?: Arkive,
   ) {
     super();
@@ -30,6 +39,20 @@ export class Arkiver extends EventTarget {
       public: false,
       created_at: "",
     };
+
+    const { database, host, password, port, username } = dbConfig;
+
+    this.db = new TypeORMDataSource({
+      type: "postgres",
+      database,
+      host,
+      port,
+      username,
+      password,
+      entities: manifest.entities,
+      synchronize: true,
+      driver: pg,
+    });
   }
 
   public async run() {
@@ -37,6 +60,8 @@ export class Arkiver extends EventTarget {
       `Running Arkiver for arkive ID number ${this.arkiveData.id}...`,
     );
     try {
+      logger.info(`Connecting to database...`);
+      await this.db.initialize();
       await this.initSources();
     } catch (e) {
       logger.error(`Error running arkiver: ${e}`);

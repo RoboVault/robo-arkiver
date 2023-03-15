@@ -1,15 +1,15 @@
-import { ManifestBuilder } from "../../src/arkiver/manifest-builder.ts";
+import { Manifest } from "../../src/arkiver/manifest-builder.ts";
 import chainlinkAggregator from "./abis/chainlinkAggregator.ts";
 import qiAvax from "./abis/qiAvax.ts";
 import qiERC20 from "./abis/qiERC20.ts";
 import { mintHandler } from "./handlers/mint.ts";
 
-const builder = new ManifestBuilder();
+const manifest = new Manifest();
 
-const avalancheBuilder = builder
-  .addDataSource("avalanche");
+const avalanche = manifest
+  .addChain("avalanche");
 
-avalancheBuilder
+avalanche
   .addContract(qiERC20)
   .addSources({
     "0xF362feA9659cf036792c9cb02f8ff8198E21B4cB": 13995148n, // qisAVAX
@@ -27,12 +27,12 @@ avalancheBuilder
   })
   .addEventHandler("Mint", mintHandler);
 
-avalancheBuilder
+avalanche
   .addContract(qiAvax)
   .addSource("0x5C0401e81Bc07Ca70fAD469b451682c0d747Ef1c", 3046672n) // qiAVAX
   .addEventHandler("Mint", mintHandler);
 
-avalancheBuilder
+avalanche
   .addContract(chainlinkAggregator)
   .addSources({
     "0x154baB1FC1D87fF641EeD0E9Bc0f8a50D880D2B6": 3043690n, // BTC/USD
@@ -45,7 +45,7 @@ avalancheBuilder
   })
   .addEventHandler("AnswerUpdated", async () => {}); // TODO: Add handler
 
-avalancheBuilder
+avalanche
   .addBlockHandler({
     startBlockHeight: 3046672n,
     blockInterval: 43200,
@@ -57,4 +57,4 @@ avalancheBuilder
     handler: async () => {}, // TODO: Add handler
   });
 
-export default builder.build();
+export default manifest.build();

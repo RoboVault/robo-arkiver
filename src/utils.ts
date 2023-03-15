@@ -1,5 +1,5 @@
-import { avalanche, createClient, ethers, Log, RpcLog } from "./deps.ts";
-import { logger } from "./logger.ts";
+import { SafeLog, SafeRpcLog } from "./arkiver/types.ts";
+import { avalanche, createClient } from "./deps.ts";
 
 export const getSupabaseClient = () => {
   return createClient(getEnv("SUPABASE_URL"), getEnv("SUPABASE_SERVICE_KEY"), {
@@ -35,42 +35,6 @@ export const getEnv = (key: string, defaultValue?: string): string => {
   return value || defaultValue || "";
 };
 
-export const devLog = (...logs: unknown[]) => {
-  if (getEnv("DENO_ENV") === "DEV") {
-    console.log("%cDEV", "color: blue", ...logs);
-  }
-};
-
-export const error = (message: string) => {
-  console.error(message);
-  throw new Error(message);
-};
-
-export const getFromStore = async (
-  store: Record<string, unknown>,
-  key: string,
-  getter: () => Promise<unknown>,
-): Promise<unknown> => {
-  if (store[key]) {
-    return store[key];
-  }
-  store[key] = await getter();
-  return store[key];
-};
-
-export const logError = (error: Error, tags: Record<string, string>) => {
-  logger.error(`an error occured: ${error} $${tags}`);
-};
-
-export const toNumber = (n: ethers.BigNumberish, decimals: number) => {
-  return Number(ethers.formatUnits(n, decimals));
-};
-
-export const timeout = async (ms: number) => {
-  await delay(ms);
-  throw new Error(`Timed out after ${ms}ms`);
-};
-
 export const getRpcUrl = (chain: string) => {
   const rpcUrl = getEnv(`${chain.toUpperCase()}_RPC_URL`);
   if (!rpcUrl) {
@@ -95,19 +59,17 @@ export const bigIntMin = (...args: bigint[]) =>
   args.reduce((m, e) => e < m ? e : m);
 
 export function formatLog(
-  log: RpcLog,
+  log: SafeRpcLog,
   { args, eventName }: { args?: unknown; eventName?: string } = {},
 ) {
   return {
     ...log,
-    blockHash: log.blockHash ? log.blockHash : null,
-    blockNumber: log.blockNumber ? BigInt(log.blockNumber) : null,
-    logIndex: log.logIndex ? BigInt(log.logIndex) : null,
-    transactionHash: log.transactionHash ? log.transactionHash : null,
-    transactionIndex: log.transactionIndex
-      ? BigInt(log.transactionIndex)
-      : null,
+    blockHash: log.blockHash,
+    blockNumber: BigInt(log.blockNumber),
+    logIndex: BigInt(log.logIndex),
+    transactionHash: log.transactionHash,
+    transactionIndex: BigInt(log.transactionIndex),
     ...(eventName ? { args, eventName } : {}),
     // deno-lint-ignore no-explicit-any
-  } as Log<bigint, bigint, any, [any], any>;
+  } as SafeLog<any>;
 }

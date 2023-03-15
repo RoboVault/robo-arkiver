@@ -8,7 +8,9 @@ import {
   ExtractAbiEventNames,
   Log,
   PublicClient,
+  RpcLog,
 } from "../deps.ts";
+import { BaseEntity } from "../graphql/mod.ts";
 import { Store } from "./store.ts";
 
 export interface Arkive {
@@ -44,6 +46,7 @@ export interface ArkiveManifest {
       blockHandlers?: IBlockHandler[];
     }>
   >;
+  entities: typeof BaseEntity[];
 }
 
 export type DataSource = {
@@ -72,11 +75,21 @@ export type EventHandlerFor<
   TEventName extends ExtractAbiEventNames<TAbi>,
 > = EventHandler<ExtractAbiEvent<TAbi, TEventName>, TEventName>;
 
+type OneDeepNonNullable<T> = {
+  [K in keyof T]: NonNullable<T[K]>;
+};
+
+export type SafeLog<TAbiEvent extends AbiEvent> = OneDeepNonNullable<
+  Log<bigint, bigint, TAbiEvent, [TAbiEvent], string>
+>;
+
+export type SafeRpcLog = OneDeepNonNullable<RpcLog>;
+
 export interface EventHandlerContext<
   TAbiEvent extends AbiEvent,
   TEventName extends string,
 > {
-  event: Log<bigint, bigint, TAbiEvent, [TAbiEvent], TEventName>;
+  event: SafeLog<TAbiEvent>;
   eventName: TEventName;
   client: PublicClient;
   store: Store;

@@ -12,14 +12,26 @@ import {
   ExtractAbiEvent,
   ExtractAbiEventNames,
 } from "../deps.ts";
+import { BaseEntity } from "../graphql/mod.ts";
 
-export class ManifestBuilder {
+export class Manifest {
   public manifest: ArkiveManifest = {
     dataSources: {},
+    entities: [],
   };
 
-  public addDataSource(chain: typeof supportedChains[number]) {
+  public addChain(chain: typeof supportedChains[number]) {
     return new DataSourceBuilder(this, chain);
+  }
+
+  public addEntity(entity: typeof BaseEntity) {
+    this.manifest.entities.push(entity);
+    return this;
+  }
+
+  public addEntities(entities: typeof BaseEntity[]) {
+    this.manifest.entities.push(...entities);
+    return this;
   }
 
   public build() {
@@ -31,7 +43,7 @@ export class DataSourceBuilder {
   public dataSource: DataSource = {};
 
   constructor(
-    private builder: ManifestBuilder,
+    private builder: Manifest,
     chain: typeof supportedChains[number],
   ) {
     if (this.builder.manifest.dataSources[chain] != undefined) {
@@ -80,18 +92,18 @@ export class ContractBuilder<
     private builder: DataSourceBuilder,
     abi: TAbi,
   ) {
-    this.contract = {
-      abi,
-      sources: [],
-      events: [],
-      id: crypto.randomUUID(),
-    };
     const existing = this.builder.dataSource.contracts?.find(
       (contract) => contract.abi === abi,
     );
     if (existing !== undefined) {
       this.contract = existing;
     } else {
+      this.contract = {
+        abi,
+        sources: [],
+        events: [],
+        id: crypto.randomUUID(),
+      };
       this.builder.dataSource.contracts!.push(this.contract);
     }
   }

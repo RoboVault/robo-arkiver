@@ -1,14 +1,8 @@
 import { ArkiveProvider } from "./interfaces.ts";
 import { RealtimeChannel, SupabaseClient } from "../../deps.ts";
-import {
-  devLog,
-  getEnv,
-  getSupabaseClient,
-  logError,
-  rm,
-  unpack,
-} from "../../utils.ts";
+import { getEnv, getSupabaseClient, rm, unpack } from "../../utils.ts";
 import { Arkive, Deployment } from "../../arkiver/types.ts";
+import { logger } from "../../logger.ts";
 
 interface RawArkive extends Omit<Arkive, "deployment"> {
   deployments: Deployment[];
@@ -89,7 +83,7 @@ export class SupabaseProvider implements ArkiveProvider {
               ...e,
               name: "SupabaseProvider.listenNewArkive",
             } satisfies Error;
-            logError(error, { source: "SupabaseProvider.listenNewArkive" });
+            logger.error(error, { source: "SupabaseProvider.listenNewArkive" });
             return;
           }
           const newArkive = {
@@ -176,6 +170,6 @@ export class SupabaseProvider implements ArkiveProvider {
     if (this.deletedArkiveListener) {
       this.deletedArkiveListener.unsubscribe();
     }
-    devLog("closed");
+    logger.info("closed");
   }
 }

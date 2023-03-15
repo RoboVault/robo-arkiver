@@ -11,3 +11,4 @@ export {
   logger,
   Store,
 } from "../../mod.ts";
+export { formatEther } from "npm:viem";

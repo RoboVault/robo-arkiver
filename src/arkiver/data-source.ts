@@ -7,7 +7,6 @@ import {
   http,
   HttpTransport,
   PublicClient,
-  RpcLog,
 } from "../deps.ts";
 import { logger } from "../logger.ts";
 import { InfluxDBAdapter } from "../manager/providers/influxdb.ts";
@@ -18,6 +17,7 @@ import {
   Contract,
   EventHandler,
   IBlockHandler,
+  SafeRpcLog,
 } from "./types.ts";
 import {
   bigIntMax,
@@ -69,7 +69,7 @@ export class DataSource {
   private fetchedBlockHeight = 0n;
   private readonly stagingLogsQueue: Map<
     bigint,
-    { logs: RpcLog[]; nextFromBlock: bigint }
+    { logs: SafeRpcLog[]; nextFromBlock: bigint }
   > = new Map(); // from block to logs
   private readonly stagingBlocksQueue: Map<
     bigint,
@@ -147,8 +147,8 @@ export class DataSource {
   private async init() {
     logger.info(`Initializing data source for ${this.chain}...`);
     await this.getLiveBlockHeight();
-    await this.loadContracts();
-    await this.loadBlockHandlers();
+    this.loadContracts();
+    this.loadBlockHandlers();
     await this.checkIndexedBlockHeights();
     this.fetchedBlockHeight = this.processedBlockHeight;
   }
@@ -248,7 +248,10 @@ export class DataSource {
       logger.info(
         `Fetched ${logs.length} logs from block ${fromBlock} to ${toBlock}...`,
       );
-      this.stagingLogsQueue.set(fromBlock, { logs, nextFromBlock });
+      this.stagingLogsQueue.set(fromBlock, {
+        logs: logs as SafeRpcLog[],
+        nextFromBlock,
+      });
       this.retryBlocks.delete(fromBlock);
     }).catch((e) => {
       logger.error(
@@ -379,7 +382,7 @@ export class DataSource {
       const logsAndBlocks = [
         ...logs?.logs.map((log) => ({
           ...log,
-          blockNumber: log.blockNumber ? BigInt(log.blockNumber) : null,
+          blockNumber: log.blockNumber,
           isBlock: false,
         })) ?? [],
         ...blocks?.blocks.map((block) => ({
@@ -389,27 +392,35 @@ export class DataSource {
         })) ?? [],
       ];
 
-      logsAndBlocks.sort((a, b) =>
-        Number((a.blockNumber ?? 0n) - (b.blockNumber ?? 0n))
-      );
+      logsAndBlocks.sort((a, b) => {
+        a.blockNumber = !(typeof a.blockNumber === "bigint")
+          ? BigInt(a.blockNumber ?? 0)
+          : a.blockNumber;
+        b.blockNumber = !(typeof b.blockNumber === "bigint")
+          ? BigInt(b.blockNumber ?? 0)
+          : b.blockNumber;
+        return Number((a.blockNumber ?? 0n) - (b.blockNumber ?? 0n));
+      });
 
       for (
         const logOrBlock of logsAndBlocks
       ) {
         if (!logOrBlock.isBlock) {
-          const log = logOrBlock as RpcLog;
+          const log = logOrBlock as SafeRpcLog;
 
-          const contractId = this.addressToId.get(log.address);
+          const contractId = this.addressToId.get(log.address.toLowerCase());
           if (!contractId) {
             logger.error(`No contract ID found for log ${log}`);
             continue;
           }
           const handler = this.eventHandlers.get(
-            `${log.topics[0]}-${contractId}}`,
+            `${log.topics[0]}-${contractId}`,
           );
 
           if (!handler) {
-            throw new Error("No handler set for topic " + log.topics[0]);
+            throw new Error(
+              `No handler set for topic ${log.topics[0]}-${contractId}`,
+            );
           }
 
           const event = decodeEventLog({
@@ -549,7 +560,7 @@ export class DataSource {
 
       for (const source of sources) {
         this.normalizedContracts.contracts.push(source);
-        this.addressToId.set(source.address, id);
+        this.addressToId.set(source.address.toLowerCase(), id);
       }
 
       for (const event of events) {
@@ -560,12 +571,14 @@ export class DataSource {
           eventName: name,
         })[0];
 
+        const handlerAndAbi = {
+          handler,
+          abi,
+        };
+
         this.eventHandlers.set(
           `${topic}-${id}`,
-          {
-            handler,
-            abi,
-          },
+          handlerAndAbi,
         );
 
         this.normalizedContracts.signatureTopics.push(topic);
