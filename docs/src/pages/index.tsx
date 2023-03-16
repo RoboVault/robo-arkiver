@@ -31,7 +31,7 @@ export default function Home(): JSX.Element {
   return (
     <Layout
       title={`${siteConfig.title}`}
-      description="End-to-end blockchain indexer with the best developer experience 🔥">
+      description="Cybernetically Enhanced Blockchain Indexing 🤖">
       <HomepageHeader />
       <main>
         <HomepageFeatures />
