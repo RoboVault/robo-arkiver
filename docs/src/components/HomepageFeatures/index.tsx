@@ -10,32 +10,29 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
+    title: 'Seamless Multichain Integration',
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        Arkiver enables developers to effortlessly query and index data from multiple blockchains using a single, coherent interface. Simplify your workflow and reduce the complexity of integrating various blockchain technologies into your applications with Arkiver's end-to-end blockchain indexing solution.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
+    title: 'Customizable Data Processing',
     Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        Unleash your creativity by defining custom data processing functions in TypeScript. Arkiver's flexible architecture allows you to tailor your data transformations to suit your specific needs, providing you with valuable insights and maximizing the potential of blockchain data in your applications.
       </>
     ),
   },
   {
-    title: 'Powered by React',
+    title: 'Efficient Data Storage and Retrieval',
     Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        Arkiver's efficient data storage and retrieval system are powered by a GraphQL API, allowing you to query only the data you need when you need it. With optimized handler functions and caching mechanisms, Arkiver ensures high-performance data access, making your applications more responsive and user-friendly.
       </>
     ),
   },

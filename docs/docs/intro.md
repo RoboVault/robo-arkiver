@@ -5,6 +5,6 @@ sidebar_label: "Introduction"
 
 # What is Arkiver?
 
-**Arkiver** is an **end-to-end blockchain indexing service** that allows you to query data from various blockchains, process them through your own functions written in **TypeScript**, and store them in a database to be read from a **GraphQL API**. It is built on top of [**Deno**](https://deno.land/) with **simplicity**, **flexibility** and **performance** in mind.
+**Arkiver** is a post-modern **end-to-end blockchain indexer** designed to streamline the process of querying data from various blockchains, offer flexibility by enabling custom processing through **TypeScript** functions, and provide a smooth experience by storing the data in a database accessible via a **GraphQL API**. Developed with the powerful [**Deno**](https://deno.land) runtime, **Arkiver** emphasizes **flexibility**, **performance**, and **ergonomics** to support dApp developers and blockchain analysts.
 
-Read on to get started by creating your first Arkive.
+Read on to get started with Arkiver and learn how to create your first **Arkive**.

@@ -2,24 +2,19 @@
 sidebar_position: 2
 ---
 
-# Handler functions
+# Handlers
 
-Your **handler functions** are your **functions** written in TypeScript that takes in data from your data sources. It is used to **process** the data and **store** it in the **database**. You can import any **external modules**, query from the **database**, or even make **HTTP requests**.
+Handlers are functions responsible for processing incoming data from the data sources defined in the manifest. They transform the data, ensuring it conforms to the desired format, and store it in the database. With full end-to-end typesafety, handlers provide a powerful way to customize how data is processed and stored, allowing you to tailor the system to your specific needs.
 
 ## Example handler function
 
-```ts title="handlers/transfer.ts"
-import { EventHandler } from "https://raw.githubusercontent.com/RoboVault/arkiver/main/mod.ts";
-import { ethers } from "npm:ethers";
+```ts
+import { EventHandlerFor } from "https://raw.githubusercontent.com/RoboVault/arkiver/main/mod.ts";
+import erc20 from "../abis/erc20.ts";
 
-const handler: EventHandler = async ({ event, contract, db }) => {
-	const [ from, to, value ] = event.args;
-
-	const decimals = await contract.decimals();
-
-	const symbol = await contract.symbol();
-
-	const formattedValue = ethers.formatUnits(value, decimals);
-
-	console.log(`${from} sent ${formattedValue} ${symbol} to ${to}`); // "0x... sent 100 USDC to 0x..."
-};
+export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
+  async ({ event }) => {
+		const { from, to, value } = event.args;
+    // Your data processing and transformation logic here
+  };
+```

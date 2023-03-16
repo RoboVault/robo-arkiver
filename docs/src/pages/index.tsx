@@ -18,7 +18,7 @@ function HomepageHeader() {
           <Link
             className="button button--secondary button--lg"
             to="/docs/intro">
-            Arkiver Tutorial - 5min ⏱️
+            Get Started
           </Link>
         </div>
       </div>
@@ -30,8 +30,8 @@ export default function Home(): JSX.Element {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title={`Hello from ${siteConfig.title}`}
-      description="Description will go into a meta tag in <head />">
+      title={`${siteConfig.title}`}
+      description="End-to-end blockchain indexer with the best developer experience 🔥">
       <HomepageHeader />
       <main>
         <HomepageFeatures />

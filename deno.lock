@@ -836,7 +836,7 @@
       "pg": "pg@8.10.0",
       "reflect-metadata": "reflect-metadata@0.1.13",
       "typeorm": "typeorm@0.3.12_pg@8.10.0",
-      "viem": "viem@0.1.10_ws@8.13.0"
+      "viem": "viem@0.1.19_ws@8.13.0"
     },
     "packages": {
       "@adraffy/ens-normalize@1.8.9": {
@@ -1303,6 +1303,18 @@
         "integrity": "sha512-8E+Fntaf0XX75RQ7eBOwbSas6A8f4HJ3+ZrPxgkeS8TWEb5Qb95EP6o1VPsCX2fz7wfId9Vf/hTXPTEzA7GKog==",
         "dependencies": {
           "@noble/hashes": "@noble/hashes@1.2.0",
+          "@wagmi/chains": "@wagmi/chains@0.2.11",
+          "abitype": "abitype@0.7.1_typescript@4.9.5",
+          "idna-uts46-hx": "idna-uts46-hx@4.1.2",
+          "isomorphic-ws": "isomorphic-ws@5.0.0_ws@8.13.0",
+          "ws": "ws@8.13.0"
+        }
+      },
+      "viem@0.1.19_ws@8.13.0": {
+        "integrity": "sha512-85o3nZVKgQyd2cFJlJ9/5ERvQrU27pn/16ctCZobKQL0BoFlYovWoOzJc/LCYW21wtIp4Idh0KKGWy6Y8qhsvA==",
+        "dependencies": {
+          "@noble/hashes": "@noble/hashes@1.2.0",
+          "@noble/secp256k1": "@noble/secp256k1@1.7.1",
           "@wagmi/chains": "@wagmi/chains@0.2.11",
           "abitype": "abitype@0.7.1_typescript@4.9.5",
           "idna-uts46-hx": "idna-uts46-hx@4.1.2",
