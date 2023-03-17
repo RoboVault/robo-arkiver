@@ -15,4 +15,3 @@ export {
 } from "./src/graphql/mod.ts";
 export { logger } from "./src/logger.ts";
 export { Store } from "./src/arkiver/store.ts";
-export { default as cli } from "./cli.ts";
