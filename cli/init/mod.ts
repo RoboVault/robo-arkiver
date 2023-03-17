@@ -490,7 +490,7 @@ export {
 	ID,
 	Manifest,
 	String,
-} from "https://raw.githubusercontent.com/RoboVault/robo-arkiver/main/mod.ts";`;
+} from "https://deno.land/x/robo_arkiver/mod.ts";`;
 
   writeFile(newDir, "deps.ts", deps, options.overwrite);
 };
