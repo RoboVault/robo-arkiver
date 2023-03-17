@@ -5,9 +5,16 @@ import { serve } from "https://deno.land/std@0.179.0/http/server.ts";
 import { $, createYoga, delay, join } from "../deps.ts";
 
 export const action = async (
-  options: { manifest?: string },
+  options: { manifest?: string; rpcUrl?: string[] },
   directory: string,
 ) => {
+  if (options.rpcUrl) {
+    for (const rpc in options.rpcUrl) {
+      const [name, url] = rpc.split("=");
+      Deno.env.set(`${name.toUpperCase()}_RPC_URL`, url);
+    }
+  }
+
   Deno.env.set("DENO_ENV", "development");
   const cleanup = async () => {
     console.log(`\nCleaning up...`);

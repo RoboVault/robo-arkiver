@@ -1,4 +1,4 @@
-import { join } from "../deps.ts";
+import { join } from "https://deno.land/std@0.179.0/path/mod.ts";
 
 export const action = (options: { overwrite?: boolean }, dir: string) => {
   const newDir = join(Deno.cwd(), dir);
