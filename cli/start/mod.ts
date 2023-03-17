@@ -9,7 +9,7 @@ export const action = async (
   directory: string,
 ) => {
   if (options.rpcUrl) {
-    for (const rpc in options.rpcUrl) {
+    for (const rpc of options.rpcUrl) {
       const [name, url] = rpc.split("=");
       Deno.env.set(`${name.toUpperCase()}_RPC_URL`, url);
     }
