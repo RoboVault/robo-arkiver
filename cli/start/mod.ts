@@ -5,7 +5,15 @@ import { serve } from "https://deno.land/std@0.179.0/http/server.ts";
 import { $, createYoga, delay, join } from "../deps.ts";
 
 export const action = async (
-  options: { manifest?: string; rpcUrl?: string[] },
+  options: {
+    manifest?: string;
+    rpcUrl?: string[];
+    pgHost?: string;
+    pgPort?: number;
+    pgUser?: string;
+    pgPassword?: string;
+    pgDatabase?: string;
+  },
   directory: string,
 ) => {
   if (options.rpcUrl) {
@@ -16,24 +24,29 @@ export const action = async (
   }
 
   Deno.env.set("DENO_ENV", "development");
-  const cleanup = async () => {
-    console.log(`\nCleaning up...`);
-    const stopRes = await $`docker stop ${containerId.stdout.substring(0, 12)}`
-      .stdout("piped");
-    Deno.exit(stopRes.code);
-  };
 
-  Deno.addSignalListener("SIGINT", cleanup);
-  Deno.addSignalListener("SIGHUP", cleanup);
-  Deno.addSignalListener("SIGTERM", cleanup);
-  Deno.addSignalListener("SIGQUIT", cleanup);
-  Deno.addSignalListener("SIGTSTP", cleanup);
-  Deno.addSignalListener("SIGABRT", cleanup);
+  if (!options.pgHost) {
+    const cleanup = async () => {
+      console.log(`\nCleaning up...`);
+      const stopRes = await $`docker stop ${
+        containerId.stdout.substring(0, 12)
+      }`
+        .stdout("piped");
+      Deno.exit(stopRes.code);
+    };
 
-  const containerId =
-    await $`docker run --rm -d -p 5432:5432 -e POSTGRES_PASSWORD=password --name arkiver_local_db postgres`
-      .stdout("piped");
-  await delay(3000); // wait for db to start
+    Deno.addSignalListener("SIGINT", cleanup);
+    Deno.addSignalListener("SIGHUP", cleanup);
+    Deno.addSignalListener("SIGTERM", cleanup);
+    Deno.addSignalListener("SIGQUIT", cleanup);
+    Deno.addSignalListener("SIGTSTP", cleanup);
+    Deno.addSignalListener("SIGABRT", cleanup);
+
+    const containerId =
+      await $`docker run --rm -d -p 5432:5432 -e POSTGRES_PASSWORD=password --name arkiver_local_db postgres`
+        .stdout("piped");
+    await delay(3000); // wait for db to start
+  }
 
   const { manifest: manifestPath } = options;
   const dir = join(Deno.cwd(), directory, manifestPath ?? "manifest.ts");
@@ -49,11 +62,11 @@ export const action = async (
   }
 
   const arkiver = new Arkiver(manifest, {
-    database: "postgres",
-    host: "localhost",
-    port: 5432,
-    username: "postgres",
-    password: "password",
+    database: options.pgDatabase ?? "postgres",
+    host: options.pgHost ?? "localhost",
+    port: options.pgPort ?? 5432,
+    username: options.pgUser ?? "postgres",
+    password: options.pgPassword ?? "password",
   });
 
   await arkiver.run();

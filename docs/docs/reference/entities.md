@@ -9,14 +9,14 @@ Entities are classes that describe the structure of your database schema. By ext
 ## Example entity
 
 ```ts title="entities/balance.ts"
-import { BaseEntity, Column, Entity, PrimaryColumn } from "https://raw.githubusercontent.com/RoboVault/arkiver/main/mod.ts";
+import { BaseEntity, Float, Entity, ID } from "https://raw.githubusercontent.com/RoboVault/arkiver/main/mod.ts";
 
 @Entity()
 export class Balance extends BaseEntity {
-	@PrimaryColumn()
+	@ID()
 	address!: string;
 
-	@Column()
+	@Float()
 	balance!: string;
 }
 ```

@@ -20,3 +20,13 @@ Find and install the official [Deno extension for VSCode](https://marketplace.vi
 ### LSP
 
 Deno provides a [language server protocol (LSP) implementation](https://deno.land/manual/advanced/language_server) that can be used with any editor that supports LSP. You can find more information about the LSP implementation [here](https://deno.land/manual/advanced/language_server).
+
+## Install Arkiver CLI
+
+The Arkiver CLI is a command line tool that helps you to create and manage Arkiver projects.
+
+You can install the Arkiver CLI by running the following command:
+
+```bash
+deno install -A -n arkiver https://deno.land/x/robo_arkiver/cli.ts
+```

@@ -1,6 +1,7 @@
 import {
   Command,
   deploy,
+  init,
   login,
   logout,
   remove,
@@ -53,8 +54,20 @@ command
   .option("-m, --manifest <manifest:string>", "Path to manifest file", {
     default: "./manifest.ts",
   })
+  .option("--pg-host <pgHost:string>", "Postgres host")
+  .option("--pg-port <pgPort:number>", "Postgres port")
+  .option("--pg-user <pgUser:string>", "Postgres user")
+  .option("--pg-password <pgPassword:string>", "Postgres password")
+  .option("--pg-database <pgDatabase:string>", "Postgres database")
   .option("--rpc-url <...rpcUrl:string>", "RPC URL")
   .action(start.action);
+
+//init
+command
+  .command("init", "Initialize a new arkive project")
+  .arguments("<dir:string>")
+  .option("--overwrite", "Overwrite existing files")
+  .action(init.action);
 
 if (import.meta.main) {
   await command.parse(Deno.args);

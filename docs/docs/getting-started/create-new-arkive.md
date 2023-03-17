@@ -4,14 +4,14 @@ sidebar_position: 2
 
 # Create your first Arkive
 
-An **Arkive** consists of **data sources** which you define and **handler functions** that process the data coming from those sources. All your **data sources** are defined and mapped to their respective **handler functions** in the **`manifest.config.ts`** file and all your **handler functions** are written in plain **TypeScript** files.
+An **Arkive** consists of **data sources** which you define and **handler functions** that process the data coming from those sources. All your **data sources** are defined and mapped to their respective **handler functions** in the **`manifest.ts`** file and all your **handler functions** are written in plain **TypeScript** files.
 
 ## Generate an Arkive using the CLI
 
 To generate a new Arkive from the CLI, run the following command:
 
 ```bash
-deno run -A https://raw.githubusercontent.com/RoboVault/robo-arkiver/main/cli.ts init my-arkive
+arkiver init my-arkive
 cd my-arkive
 ```
 
@@ -32,8 +32,7 @@ my-arkive
 ├── handlers
 │   └── transferHandler.ts
 ├── manifest.ts
-├── deps.ts
-└── deno.jsonc
+└── deps.ts
 ```
 
 ### Project structure rundown
@@ -42,13 +41,12 @@ my-arkive
 - `/handlers/` - Contains your handler functions.
 - `/manifest.ts` - Contains the configuration for your Arkive. This is where you define your data sources and map them to your handler functions. This is also where you add your database entities.
 - `/deps.ts` - Contains the dependencies for your Arkive. This is where you import any third-party libraries and use them throughout your Arkive.
-- `/deno.jsonc` - Contains some configuration for Deno and also some easy-access commands to interact with your Arkive.
 ## Run your Arkive locally
 
 To run your Arkive locally for debugging, run the following command:
 
 ```bash
-deno task start --rpc-url "ethereum=https://mainnet.infura.io/v3/<YOUR_INFURA_PROJECT_ID>"
+arkiver start . --rpc-url "ethereum=https://mainnet.infura.io/v3/<YOUR_INFURA_PROJECT_ID>"
 ```
 
 :::tip
@@ -62,7 +60,7 @@ This example Arkive queries the Ethereum blockchain for ERC20 transfers on the U
 To deploy your Arkive to the Arkiver, make sure you have an account and have logged in using the `arkiver login` command. Then run the following command:
 
 ```bash
-deno task deploy my-first-arkive
+arkiver deploy . my-first-arkive
 ```
 
 This will deploy your Arkive to the Arkiver and you can view it at https://arkiver.robolabs.biz/my-arkives/.

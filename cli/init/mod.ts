@@ -1,4 +1,4 @@
-import { join } from "https://deno.land/std@0.179.0/path/mod.ts";
+import { join } from "../deps.ts";
 
 export const action = (options: { overwrite?: boolean }, dir: string) => {
   const newDir = join(Deno.cwd(), dir);
@@ -493,21 +493,6 @@ export {
 } from "https://raw.githubusercontent.com/RoboVault/robo-arkiver/main/mod.ts";`;
 
   writeFile(newDir, "deps.ts", deps, options.overwrite);
-
-  const deno = `{
-	"tasks": {
-		"login": "deno run -A https://raw.githubusercontent.com/RoboVault/robo-arkiver/main/cli.ts login",
-		"signup": "deno run -A https://raw.githubusercontent.com/RoboVault/robo-arkiver/main/cli.ts signup",
-		"start": "deno run -A https://raw.githubusercontent.com/RoboVault/robo-arkiver/main/cli.ts start .",
-		"deploy": "deno run -A https://raw.githubusercontent.com/RoboVault/robo-arkiver/main/cli.ts deploy .",
-		"cli": "deno run -A --unstable cli.ts"
-	},
-	"imports": {
-		"graphql": "https://cdn.skypack.dev/graphql?dts"
-	}
-}`;
-
-  writeFile(newDir, "deno.jsonc", deno, options.overwrite);
 };
 
 const encoder = new TextEncoder();

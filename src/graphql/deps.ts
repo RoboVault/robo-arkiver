@@ -11,4 +11,4 @@ export {
 export {
   default as SchemaBuilder,
   FieldRef,
-} from "https://esm.sh/*@pothos/core@3.27.1";
+} from "https://cdn.skypack.dev/@pothos/core@3.27.1?dts";
