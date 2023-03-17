@@ -49,7 +49,9 @@ export const action = async (
   }
 
   const { manifest: manifestPath } = options;
-  const dir = join(Deno.cwd(), directory, manifestPath ?? "manifest.ts");
+  const dir = `file://${
+    join(Deno.cwd(), directory, manifestPath ?? "manifest.ts")
+  }`;
 
   const manifestImport = await import(dir);
 
