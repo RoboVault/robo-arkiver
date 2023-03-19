@@ -7,6 +7,6 @@ const manifest = new Manifest();
 manifest
 	.addEntity(GLP)
 	.addChain("arbitrum")
-	.addBlockHandler({ blockInterval: 20000, startBlockHeight: BigInt(3000000), handler: GlpHandler })// 
+	.addBlockHandler({ blockInterval: 2000, startBlockHeight: BigInt(60000000), handler: GlpHandler })// 
 
 export default manifest.build();
