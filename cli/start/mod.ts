@@ -16,24 +16,24 @@ export const action = async (
   }
 
   Deno.env.set("DENO_ENV", "development");
-  const cleanup = async () => {
-    console.log(`\nCleaning up...`);
-    const stopRes = await $`docker stop ${containerId.stdout.substring(0, 12)}`
-      .stdout("piped");
-    Deno.exit(stopRes.code);
-  };
+  // const cleanup = async () => {
+  //   console.log(`\nCleaning up...`);
+  //   const stopRes = await $`docker stop ${containerId.stdout.substring(0, 12)}`
+  //     .stdout("piped");
+  //   Deno.exit(stopRes.code);
+  // };
 
-  Deno.addSignalListener("SIGINT", cleanup);
-  Deno.addSignalListener("SIGHUP", cleanup);
-  Deno.addSignalListener("SIGTERM", cleanup);
-  Deno.addSignalListener("SIGQUIT", cleanup);
-  Deno.addSignalListener("SIGTSTP", cleanup);
-  Deno.addSignalListener("SIGABRT", cleanup);
+  // Deno.addSignalListener("SIGINT", cleanup);
+  // Deno.addSignalListener("SIGHUP", cleanup);
+  // Deno.addSignalListener("SIGTERM", cleanup);
+  // Deno.addSignalListener("SIGQUIT", cleanup);
+  // Deno.addSignalListener("SIGTSTP", cleanup);
+  // Deno.addSignalListener("SIGABRT", cleanup);
 
-  const containerId =
-    await $`docker run --rm -d -p 5432:5432 -e POSTGRES_PASSWORD=password --name arkiver_local_db postgres`
-      .stdout("piped");
-  await delay(3000); // wait for db to start
+  // const containerId =
+  //   await $`docker run --rm -d -p 5432:5432 -e POSTGRES_PASSWORD=password --name arkiver_local_db postgres`
+  //     .stdout("piped");
+  // await delay(3000); // wait for db to start
 
   const { manifest: manifestPath } = options;
   const dir = join(Deno.cwd(), directory, manifestPath ?? "manifest.ts");
