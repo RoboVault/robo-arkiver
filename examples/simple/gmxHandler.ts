@@ -172,7 +172,7 @@ export const GlpHandler: BlockHandler = async ({ block, client }: {
 		}
 
 		// new calcs
-		const newGetTokenAum = async async () => {
+		const newGetTokenAum = async () => {
 			const [
 				btcGlobalShortDeltaBn,
 				ethGlobalShortDeltaBn,
