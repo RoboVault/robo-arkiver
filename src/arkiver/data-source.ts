@@ -161,7 +161,7 @@ export class DataSource {
   private async runFetcherLoop() {
     while (this.eventLoops.fetcher) {
       for (const [retryFrom, retryTo] of this.retryBlocks) {
-        this.fetchLogs(retryFrom, retryTo);
+        // this.fetchLogs(retryFrom, retryTo);
         this.fetchBlocks(retryFrom, retryTo);
       }
 
@@ -180,7 +180,7 @@ export class DataSource {
 
       const fromBlock = this.fetchedBlockHeight;
       const toBlock = bigIntMin(
-        fromBlock + this.blockRange,
+        fromBlock + this.blockRange - 1n,
         this.liveBlockHeight,
       );
 
@@ -191,7 +191,7 @@ export class DataSource {
         continue;
       }
 
-      this.fetchLogs(fromBlock, toBlock);
+      // this.fetchLogs(fromBlock, toBlock);
       this.fetchBlocks(fromBlock, toBlock);
 
       this.fetchedBlockHeight = toBlock + 1n;
