@@ -221,7 +221,11 @@ export const GlpHandler: BlockHandler = async ({ block, client }: {
 			glp.save()
 			console.log(glp)
 			console.log('****COMPLETE***** elapsed: ' + ((Date.now() - x) / 1000) + 's')
+		}).catch(e => {
+			console.log(e)
 		})
+	}).catch(e => {
+		console.log(e)
 	})
 	
 };
