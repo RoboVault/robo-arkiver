@@ -56,6 +56,12 @@ command
   .option("--rpc-url <...rpcUrl:string>", "RPC URL")
   .action(start.action);
 
-await command.parse(Deno.args);
+
+if (import.meta.main) {
+	const run = async () => {
+		await command.parse(Deno.args);
+	}
+	run()
+}
 
 export default command;

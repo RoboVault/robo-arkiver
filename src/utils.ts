@@ -1,5 +1,5 @@
 import { SafeLog, SafeRpcLog } from "./arkiver/types.ts";
-import { avalanche, createClient } from "./deps.ts";
+import { avalanche, arbitrum, createClient } from "./deps.ts";
 
 export const getSupabaseClient = () => {
   return createClient(getEnv("SUPABASE_URL"), getEnv("SUPABASE_SERVICE_KEY"), {
@@ -47,6 +47,8 @@ export const getChainObjFromChainName = (chain: string) => {
   switch (chain) {
     case "avalanche":
       return avalanche;
+		case "arbitrum":
+			return arbitrum;
     default:
       throw new Error(`Unsupported chain: ${chain}`);
   }

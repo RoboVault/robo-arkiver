@@ -1,15 +1,12 @@
 import { Manifest } from "./deps.ts";
-import erc20 from "./erc20.ts";
-import { Balance } from "./entities.ts";
-import { transferHandler } from "./transferHandler.ts";
+import { GLP } from "./entities.ts";
+import { GlpHandler } from "./gmxHandler.ts";
 
 const manifest = new Manifest();
 
 manifest
-	.addEntity(Balance)
-	.addChain("avalanche")
-  .addContract(erc20)
-  .addSource("0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664", 27347402n)
-  .addEventHandler("Transfer", transferHandler);
+	.addEntity(GLP)
+	.addChain("arbitrum")
+	.addBlockHandler({ blockInterval: 2000, startBlockHeight: BigInt(60000000), handler: GlpHandler })// 
 
 export default manifest.build();
