@@ -1,3 +1,4 @@
+// deno-lint-ignore-file require-await
 
 import { type PublicClient, type Block } from "npm:viem";
 // import erc20 from "./erc20.ts";
@@ -37,6 +38,8 @@ export const GlpHandler: BlockHandler = async ({ block, client }: {
   store: Store,
   tempStore: Store,
 }) => {
+	console.log('****STARTING*****')
+	const x = Date.now()
 	const blockNumber = block.number
 	if (!blockNumber)
 		throw new Error()
@@ -83,26 +86,7 @@ export const GlpHandler: BlockHandler = async ({ block, client }: {
 		address: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506' as Address,
 	}
 	
-	const [
-		glpAumBn, 
-		glpTotalSupplyBn, 
-		btcAumABn,
-		ethAumABn,
-		btcPoolAmountBn,
-		ethPoolAmountBn,
-		btcReservedAmountBn,
-		ethReservedAmountBn,
-		btcPriceBn, 
-		ethPriceBn,
-		btcGlobalShortSizeBn, 
-		ethGlobalShortSizeBn,
-		btcGuaranteedUsdBn, 
-		ethGuaranteedUsdBn,
-		btcUtilisationBn, 
-		ethUtilisationBn,
-		cumulativeRewardPerTokenBn,
-		[, gmxPriceBn],
-	] = await Promise.all([
+	Promise.all([
 		client.readContract({ functionName: "getAum", args: [true],	...glpManager }),
 		client.readContract({ functionName: "totalSupply", ...glpErc20Token }),
 		client.readContract({ functionName: "usdgAmounts", args: [BTC], ...glpVault }),
@@ -121,97 +105,123 @@ export const GlpHandler: BlockHandler = async ({ block, client }: {
 		client.readContract({ functionName: "getUtilisation", args: [ETH], ...glpVault }),
 		client.readContract({ functionName: "cumulativeRewardPerToken", ...RewardTracker }),
 		client.readContract({ functionName: "getAmountsOut", ...SushiRouter, args: [BigInt(1e18),[GMX, USDC]]}),
-	])
-
-
-	const glpAum = toNumber(glpAumBn, GLP_PRICE_DECIMALS)
-	const glpTotalSupply = toNumber(glpTotalSupplyBn, STANDARD_DECIMALS)
-	const btcAumA = toNumber(btcAumABn, STANDARD_DECIMALS)
-	const ethAumA = toNumber(ethAumABn, STANDARD_DECIMALS)
-	const btcPoolAmount = toNumber(btcPoolAmountBn, BTC_DECIMALS)
-	const ethPoolAmount = toNumber(ethPoolAmountBn, ETH_DECIMALS)
-	const btcReservedAmount = toNumber(btcReservedAmountBn, BTC_DECIMALS)
-	const ethReservedAmount = toNumber(ethReservedAmountBn, ETH_DECIMALS)
-	const btcPrice = toNumber(btcPriceBn, PRICE_FEED_DECIMALS)
-	const ethPrice = toNumber(ethPriceBn, PRICE_FEED_DECIMALS)
-	const btcShortSize = toNumber(btcGlobalShortSizeBn, GLP_PRICE_DECIMALS)
-	const ethShortSize = toNumber(ethGlobalShortSizeBn, GLP_PRICE_DECIMALS)
-	const btcGuaranteedUsd = toNumber(btcGuaranteedUsdBn, GLP_PRICE_DECIMALS)
-	const ethGuaranteedUsd = toNumber(ethGuaranteedUsdBn, GLP_PRICE_DECIMALS)
-	const btcUtilisation = toNumber(btcUtilisationBn, FUNDING_RATE_DECIMALS)
-	const ethUtilisation = toNumber(ethUtilisationBn, FUNDING_RATE_DECIMALS)
-	const cumulativeRewardPerToken = toNumber(cumulativeRewardPerTokenBn, GLP_PRICE_DECIMALS)
-	const gmxPrice = toNumber(gmxPriceBn, USDC_DECIMALS)
-	const glpPrice = glpAum / glpTotalSupply
-	const btcReserves = btcAumA / btcPrice
-	const ethReserves = ethAumA / ethPrice
-	const btcAumB = btcGuaranteedUsd + (btcPoolAmount - btcReservedAmount) * btcPrice // Neutra getTokenAums
-	const ethAumB = ethGuaranteedUsd + (ethPoolAmount - ethReservedAmount) * ethPrice // Neutra getTokenAums
-
-	// Old calcs
-	const oldGetTokenAum = async () => {
+	]).then(async data => {
 		const [
-			btcAveragePriceBn,
-			ethAveragePriceBn,
-		] = await Promise.all([
-			client.readContract({ functionName: "globalShortAveragePrices", args: [BTC], ...glpVault }),
-			client.readContract({ functionName: "globalShortAveragePrices", args: [ETH], ...glpVault }),
-		])
+			glpAumBn, 
+			glpTotalSupplyBn, 
+			btcAumABn,
+			ethAumABn,
+			btcPoolAmountBn,
+			ethPoolAmountBn,
+			btcReservedAmountBn,
+			ethReservedAmountBn,
+			btcPriceBn, 
+			ethPriceBn,
+			btcGlobalShortSizeBn, 
+			ethGlobalShortSizeBn,
+			btcGuaranteedUsdBn, 
+			ethGuaranteedUsdBn,
+			btcUtilisationBn, 
+			ethUtilisationBn,
+			cumulativeRewardPerTokenBn,
+			[, gmxPriceBn],
+		] = data
 
-		const btcAveragePrice = toNumber(btcAveragePriceBn, GLP_PRICE_DECIMALS)
-		const ethAveragePrice = toNumber(ethAveragePriceBn, GLP_PRICE_DECIMALS)
-		const btcPriceDelta = Math.abs(btcAveragePrice - btcPrice)
-		const ethPriceDelta = Math.abs(ethAveragePrice - ethPrice)
-		const btcDelta = btcShortSize * btcPriceDelta / btcAveragePrice
-		const ethDelta = ethShortSize * ethPriceDelta / ethAveragePrice
-		return { btcDelta, ethDelta }
-	}
 
-	// new calcs
-	const newGetTokenAum = async () => {
-		const [
-			btcGlobalShortDeltaBn,
-			ethGlobalShortDeltaBn,
-		] = await Promise.all([
-			client.readContract({ functionName: "getGlobalShortDelta", args: [BTC, btcPriceBn, btcGlobalShortSizeBn], ...glpManager }),
-			client.readContract({ functionName: "getGlobalShortDelta", args: [ETH, ethPriceBn, ethGlobalShortSizeBn], ...glpManager }),
-		])
+		const glpAum = toNumber(glpAumBn, GLP_PRICE_DECIMALS)
+		const glpTotalSupply = toNumber(glpTotalSupplyBn, STANDARD_DECIMALS)
+		const btcAumA = toNumber(btcAumABn, STANDARD_DECIMALS)
+		const ethAumA = toNumber(ethAumABn, STANDARD_DECIMALS)
+		const btcPoolAmount = toNumber(btcPoolAmountBn, BTC_DECIMALS)
+		const ethPoolAmount = toNumber(ethPoolAmountBn, ETH_DECIMALS)
+		const btcReservedAmount = toNumber(btcReservedAmountBn, BTC_DECIMALS)
+		const ethReservedAmount = toNumber(ethReservedAmountBn, ETH_DECIMALS)
+		const btcPrice = toNumber(btcPriceBn, PRICE_FEED_DECIMALS)
+		const ethPrice = toNumber(ethPriceBn, PRICE_FEED_DECIMALS)
+		const btcShortSize = toNumber(btcGlobalShortSizeBn, GLP_PRICE_DECIMALS)
+		const ethShortSize = toNumber(ethGlobalShortSizeBn, GLP_PRICE_DECIMALS)
+		const btcGuaranteedUsd = toNumber(btcGuaranteedUsdBn, GLP_PRICE_DECIMALS)
+		const ethGuaranteedUsd = toNumber(ethGuaranteedUsdBn, GLP_PRICE_DECIMALS)
+		const btcUtilisation = toNumber(btcUtilisationBn, FUNDING_RATE_DECIMALS)
+		const ethUtilisation = toNumber(ethUtilisationBn, FUNDING_RATE_DECIMALS)
+		const cumulativeRewardPerToken = toNumber(cumulativeRewardPerTokenBn, GLP_PRICE_DECIMALS)
+		const gmxPrice = toNumber(gmxPriceBn, USDC_DECIMALS)
+		const glpPrice = glpAum / glpTotalSupply
+		const btcReserves = btcAumA / btcPrice
+		const ethReserves = ethAumA / ethPrice
+		const btcAumB = btcGuaranteedUsd + (btcPoolAmount - btcReservedAmount) * btcPrice // Neutra getTokenAums
+		const ethAumB = ethGuaranteedUsd + (ethPoolAmount - ethReservedAmount) * ethPrice // Neutra getTokenAums
 
-		const btcDelta = btcGlobalShortDeltaBn[1] ? toNumber(btcGlobalShortDeltaBn[0], GLP_PRICE_DECIMALS) : 0
-		const ethDelta = ethGlobalShortDeltaBn[1] ? toNumber(ethGlobalShortDeltaBn[0], GLP_PRICE_DECIMALS) : 0
-		return { btcDelta, ethDelta }
-	}
+		// Old calcs
+		const oldGetTokenAum = async () => {
+			const [
+				btcAveragePriceBn,
+				ethAveragePriceBn,
+			] = await Promise.all([
+				client.readContract({ functionName: "globalShortAveragePrices", args: [BTC], ...glpVault }),
+				client.readContract({ functionName: "globalShortAveragePrices", args: [ETH], ...glpVault }),
+			])
 
-	// getTokenAums accounting for trader PnL
-	const { btcDelta, ethDelta } = isNewManager ? await newGetTokenAum() : await oldGetTokenAum()
+			const btcAveragePrice = toNumber(btcAveragePriceBn, GLP_PRICE_DECIMALS)
+			const ethAveragePrice = toNumber(ethAveragePriceBn, GLP_PRICE_DECIMALS)
+			const btcPriceDelta = Math.abs(btcAveragePrice - btcPrice)
+			const ethPriceDelta = Math.abs(ethAveragePrice - ethPrice)
+			const btcDelta = btcShortSize * btcPriceDelta / btcAveragePrice
+			const ethDelta = ethShortSize * ethPriceDelta / ethAveragePrice
+			return { btcDelta, ethDelta }
+		}
 
-	const btcAumC = btcAumB + btcDelta
-	const ethAumC = ethAumB + ethDelta
+		// new calcs
+		const newGetTokenAum = async async () => {
+			const [
+				btcGlobalShortDeltaBn,
+				ethGlobalShortDeltaBn,
+			] = await Promise.all([
+				client.readContract({ functionName: "getGlobalShortDelta", args: [BTC, btcPriceBn, btcGlobalShortSizeBn], ...glpManager }),
+				client.readContract({ functionName: "getGlobalShortDelta", args: [ETH, ethPriceBn, ethGlobalShortSizeBn], ...glpManager }),
+			])
+
+			const btcDelta = btcGlobalShortDeltaBn[1] ? toNumber(btcGlobalShortDeltaBn[0], GLP_PRICE_DECIMALS) : 0
+			const ethDelta = ethGlobalShortDeltaBn[1] ? toNumber(ethGlobalShortDeltaBn[0], GLP_PRICE_DECIMALS) : 0
+			return { btcDelta, ethDelta }
+		}
+
+		// getTokenAums accounting for trader PnL
+		const promise =  isNewManager ? newGetTokenAum() : oldGetTokenAum()
+		promise.then(data => {
+			const { btcDelta, ethDelta } = data
 	
-	const glp = new GLP()
-	Object.assign(glp, {
-		id: `${blockNumber}`,
-		block: Number(block.number),
-		timestamp: Number(block.timestamp),
-		glpAum,
-		glpTotalSupply,
-		glpPrice,
-		btcReserves,
-		ethReserves,
-		btcPrice,
-		ethPrice,
-		btcAumA,
-		ethAumA,
-		btcAumB,
-		ethAumB,
-		btcAumC,
-		ethAumC,
-		cumulativeRewardPerToken,
-		gmxPrice,
-		btcUtilisation,
-		ethUtilisation,
+			const btcAumC = btcAumB + btcDelta
+			const ethAumC = ethAumB + ethDelta
+			
+			const glp = new GLP()
+			Object.assign(glp, {
+				id: `${blockNumber}`,
+				block: Number(block.number),
+				timestamp: Number(block.timestamp),
+				glpAum,
+				glpTotalSupply,
+				glpPrice,
+				btcReserves,
+				ethReserves,
+				btcPrice,
+				ethPrice,
+				btcAumA,
+				ethAumA,
+				btcAumB,
+				ethAumB,
+				btcAumC,
+				ethAumC,
+				cumulativeRewardPerToken,
+				gmxPrice,
+				btcUtilisation,
+				ethUtilisation,
+			})
+	
+			glp.save()
+			console.log(glp)
+			console.log('****COMPLETE***** elapsed: ' + ((Date.now() - x) / 1000) + 's')
+		})
 	})
-
-	glp.save()
-	console.log(glp)
+	
 };
