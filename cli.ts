@@ -59,6 +59,7 @@ command
   .option("--pg-user <pgUser:string>", "Postgres user")
   .option("--pg-password <pgPassword:string>", "Postgres password")
   .option("--pg-database <pgDatabase:string>", "Postgres database")
+  .option("--drop-database", "Drop database")
   .option("--rpc-url <...rpcUrl:string>", "RPC URL")
   .action(start.action);
 

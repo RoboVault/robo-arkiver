@@ -9,9 +9,8 @@ import {
   PublicClient,
 } from "../deps.ts";
 import { logger } from "../logger.ts";
-import { InfluxDBAdapter } from "../manager/providers/influxdb.ts";
-import { mockStatusProvider } from "../manager/providers/mock.ts";
-import { StatusProvider } from "../manager/providers/interfaces.ts";
+import { mockStatusProvider } from "./providers/mock.ts";
+import { StatusProvider } from "./providers/interfaces.ts";
 import {
   BlockHandler,
   Contract,
@@ -28,6 +27,7 @@ import {
   getEnv,
 } from "../utils.ts";
 import { Store } from "./store.ts";
+import { MongoStatusProvider } from "./providers/mongodb.ts";
 
 interface NormalizedContracts {
   contracts: {
@@ -125,12 +125,7 @@ export class DataSource {
     this.arkiveVersion = params.arkiveVersion;
     if (getEnv("DENO_ENV") === "PROD") {
       logger.info("Using InfluxDB status provider...");
-      this.statusProvider = new InfluxDBAdapter({
-        url: getEnv("INFLUXDB_URL"),
-        token: getEnv("INFLUXDB_TOKEN"),
-        bucket: getEnv("INFLUXDB_BUCKET"),
-        org: getEnv("INFLUXDB_ORG"),
-      });
+      this.statusProvider = new MongoStatusProvider();
     } else {
       logger.info("Using mock status provider...");
       this.statusProvider = mockStatusProvider;
@@ -351,6 +346,7 @@ export class DataSource {
   private async runProcessorLoop() {
     const tempStore = new Store();
     while (this.eventLoops.processor) {
+      console.time("processLoop");
       const logs = this.stagingLogsQueue.get(this.processedBlockHeight);
       const logsPending = this.stagingQueuePending.logs.get(
         this.processedBlockHeight,
@@ -402,6 +398,7 @@ export class DataSource {
         return Number((a.blockNumber ?? 0n) - (b.blockNumber ?? 0n));
       });
 
+      console.time("processIter");
       for (
         const logOrBlock of logsAndBlocks
       ) {
@@ -426,7 +423,7 @@ export class DataSource {
           const event = decodeEventLog({
             abi: handler.abi,
             data: log.data,
-            topics: [log.topics[0], ...log.topics.slice(1)],
+            topics: [log.topics[0]!, ...log.topics.slice(1)],
           });
 
           try {
@@ -477,6 +474,7 @@ export class DataSource {
           }
         }
       }
+      console.timeEnd("processIter");
 
       this.stagingLogsQueue.delete(this.processedBlockHeight);
       this.stagingBlocksQueue.delete(this.processedBlockHeight);
@@ -487,6 +485,7 @@ export class DataSource {
 
       this.processedBlockHeight = logs?.nextFromBlock ??
         blocks!.nextFromBlock;
+      console.timeEnd("processLoop");
     }
   }
 

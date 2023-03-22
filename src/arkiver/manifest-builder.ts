@@ -11,26 +11,30 @@ import {
   Address,
   ExtractAbiEvent,
   ExtractAbiEventNames,
+  mongoose,
 } from "../deps.ts";
-import { BaseEntity } from "../graphql/mod.ts";
 
 export class Manifest {
   public manifest: ArkiveManifest = {
     dataSources: {},
-    entities: [],
+    entities: {},
   };
 
-  public addChain(chain: typeof supportedChains[number]) {
+  public addChain(
+    chain: typeof supportedChains[number],
+  ) {
     return new DataSourceBuilder(this, chain);
   }
 
-  public addEntity(entity: typeof BaseEntity) {
-    this.manifest.entities.push(entity);
+  // deno-lint-ignore no-explicit-any
+  public addEntity(name: string, entity: mongoose.Model<any>) {
+    this.manifest.entities[name] = entity;
     return this;
   }
 
-  public addEntities(entities: typeof BaseEntity[]) {
-    this.manifest.entities.push(...entities);
+  // deno-lint-ignore no-explicit-any
+  public addEntities(entities: Record<string, mongoose.Model<any>>) {
+    this.manifest.entities = { ...this.manifest.entities, ...entities };
     return this;
   }
 
