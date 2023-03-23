@@ -28,6 +28,7 @@ import {
 } from "../utils.ts";
 import { Store } from "./store.ts";
 import { MongoStatusProvider } from "./providers/mongodb.ts";
+import { ArkiverMetadata } from "./entities.ts";
 
 interface NormalizedContracts {
   contracts: {
@@ -98,7 +99,9 @@ export class DataSource {
   private queueDelay = 500;
   private fetchInterval = 500;
   private maxStagingDelay = 1000;
-  private readonly store = new Store();
+  private readonly store = new Store({
+    max: 1000,
+  });
   private isLive = false;
 
   constructor(
@@ -266,7 +269,8 @@ export class DataSource {
     logger.info(`Fetching blocks from block ${fromBlock} to ${toBlock}...`);
     const blockToHandlers = new Map<bigint, BlockHandler[]>();
     const blockSources = this.blockSources.filter((source) =>
-      source.startBlockHeight <= toBlock ||
+      source.startBlockHeight !== "live" &&
+        source.startBlockHeight <= toBlock ||
       (source.startBlockHeight === "live" && this.isLive)
     );
     if (blockSources.length === 0) {
@@ -344,9 +348,8 @@ export class DataSource {
   }
 
   private async runProcessorLoop() {
-    const tempStore = new Store();
+    const tempStore = new Store({ max: 100 });
     while (this.eventLoops.processor) {
-      console.time("processLoop");
       const logs = this.stagingLogsQueue.get(this.processedBlockHeight);
       const logsPending = this.stagingQueuePending.logs.get(
         this.processedBlockHeight,
@@ -398,7 +401,6 @@ export class DataSource {
         return Number((a.blockNumber ?? 0n) - (b.blockNumber ?? 0n));
       });
 
-      console.time("processIter");
       for (
         const logOrBlock of logsAndBlocks
       ) {
@@ -474,7 +476,6 @@ export class DataSource {
           }
         }
       }
-      console.timeEnd("processIter");
 
       this.stagingLogsQueue.delete(this.processedBlockHeight);
       this.stagingBlocksQueue.delete(this.processedBlockHeight);
@@ -485,7 +486,19 @@ export class DataSource {
 
       this.processedBlockHeight = logs?.nextFromBlock ??
         blocks!.nextFromBlock;
-      console.timeEnd("processLoop");
+
+      const arkiverMetadata = await this.store.retrieve(
+        `${this.chain}:metadata`,
+        async () =>
+          await ArkiverMetadata.findOne({ chain: this.chain }) ??
+            new ArkiverMetadata({
+              processedBlockHeight: 0,
+              chain: this.chain,
+            }),
+      );
+      arkiverMetadata.processedBlockHeight = Number(this.processedBlockHeight);
+
+      this.store.set(`${this.chain}:metadata`, arkiverMetadata.save());
     }
   }
 

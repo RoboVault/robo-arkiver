@@ -10,9 +10,7 @@ export function createEntity<
   >,
 ) {
   const schema = new mongoose.Schema<TEnforcedDocType>(schemaDefinition);
-  const model = mongoose.model<TEnforcedDocType>(name, schema, name, {
-    overwriteModels: true,
-  });
+  const model = mongoose.model<TEnforcedDocType>(name, schema);
 
   return model;
 }

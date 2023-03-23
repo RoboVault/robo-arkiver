@@ -9,3 +9,4 @@ export { Store } from "./src/arkiver/store.ts";
 export { Arkiver } from "./src/arkiver/arkiver.ts";
 export { createEntity } from "./src/graphql/entity.ts";
 export { Types } from "./src/deps.ts";
+export { buildSchemaFromEntities } from "./src/graphql/builder.ts";

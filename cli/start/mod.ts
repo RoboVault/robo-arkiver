@@ -1,15 +1,7 @@
 import "npm:reflect-metadata";
-import { Arkiver } from "../../mod.ts";
-import {
-  $,
-  composeMongoose,
-  delay,
-  GraphQLHTTP,
-  join,
-  mongoose,
-  schemaComposer,
-  serve,
-} from "../deps.ts";
+import { Arkiver, buildSchemaFromEntities } from "../../mod.ts";
+import { $, createYoga, delay, join, serve } from "../deps.ts";
+import { ArkiverMetadata } from "../../src/arkiver/entities.ts";
 
 export const action = async (
   options: {
@@ -80,27 +72,22 @@ export const action = async (
 
   await arkiver.run();
 
-  // deno-lint-ignore no-explicit-any
-  const entities: Record<string, mongoose.Model<any>> = manifest.entities;
-
-  for (const entityName in entities) {
-    // deno-lint-ignore no-explicit-any
-    const ModelTC = composeMongoose<any>(entities[entityName]);
-
-    schemaComposer.Query.addFields({
-      [entityName]: ModelTC.mongooseResolvers.findOne({ lean: true }),
-      [`${entityName}s`]: ModelTC.mongooseResolvers.findMany({ lean: true }),
-    });
-  }
-
-  const schema = schemaComposer.buildSchema();
-
-  const server = GraphQLHTTP({
-    schema,
-    graphiql: true,
+  const schema = buildSchemaFromEntities({
+    ...manifest.entities,
+    "arkiverMetadata": ArkiverMetadata,
   });
 
-  await serve(server, {
+  const yoga = createYoga({
+    schema,
+    fetchAPI: {
+      Response,
+    },
+    graphiql: {
+      title: "Arkiver playground",
+    },
+  });
+
+  await serve(yoga, {
     port: 4000,
     onListen: ({ hostname, port }) => {
       console.log(

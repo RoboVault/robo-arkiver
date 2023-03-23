@@ -23,3 +23,4 @@ export {
 export { default as mongoose, Schema, Types } from "npm:mongoose";
 export { schemaComposer } from "npm:graphql-compose";
 export { composeMongoose } from "npm:graphql-compose-mongoose";
+export { default as LRU } from "npm:lru-cache";

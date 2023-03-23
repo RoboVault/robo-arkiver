@@ -1,9 +1,11 @@
-export class Store extends Map<string, unknown> {
-  constructor() {
-    super();
+import { LRU } from "../deps.ts";
+
+export class Store extends LRU<{}, {}> {
+  constructor(options: LRU.Options<{}, {}, unknown>) {
+    super(options);
   }
 
-  async retrieve<TValue>(
+  async retrieve<TValue extends {}>(
     key: string,
     defaultValueAccessor: () => TValue | Promise<TValue>,
   ): Promise<TValue> {
