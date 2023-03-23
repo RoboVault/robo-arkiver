@@ -2,16 +2,22 @@ import { composeMongoose, mongoose, schemaComposer } from "../deps.ts";
 
 export const buildSchemaFromEntities = (
   // deno-lint-ignore no-explicit-any
-  entities: Record<string, mongoose.Model<any>>,
+  entities: { model: mongoose.Model<any>; list: boolean }[],
 ) => {
-  for (const entityName in entities) {
+  for (const { model, list } of entities) {
     // deno-lint-ignore no-explicit-any
-    const ModelTC = composeMongoose<any>(entities[entityName]);
+    const ModelTC = composeMongoose<any>(model);
 
     schemaComposer.Query.addFields({
-      [entityName]: ModelTC.mongooseResolvers.findOne({ lean: true }),
-      [`${entityName}List`]: ModelTC.mongooseResolvers.findMany({ lean: true }),
+      [model.modelName]: ModelTC.mongooseResolvers.findOne({ lean: true }),
     });
+    if (list) {
+      schemaComposer.Query.addFields({
+        [`${model.modelName}s`]: ModelTC.mongooseResolvers.findMany({
+          lean: true,
+        }),
+      });
+    }
   }
 
   const schema = schemaComposer.buildSchema();

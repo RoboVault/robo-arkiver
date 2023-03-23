@@ -6,7 +6,7 @@ interface IBalance {
   token: string;
 }
 
-export const Balance = createEntity<IBalance>("balance", {
+export const Balance = createEntity<IBalance>("Balance", {
   account: String,
   amount: {
     type: Number,

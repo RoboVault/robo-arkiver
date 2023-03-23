@@ -1,3 +1,4 @@
+// deno-lint-ignore-file ban-types
 import { LRU } from "../deps.ts";
 
 export class Store extends LRU<{}, {}> {

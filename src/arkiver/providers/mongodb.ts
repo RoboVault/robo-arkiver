@@ -9,6 +9,6 @@ export class MongoStatusProvider implements StatusProvider {
 
     const arkiverMetadata = await ArkiverMetadata.findOne({ chain });
 
-    return arkiverMetadata?.processedBlockHeight ?? 0;
+    return arkiverMetadata?.processedBlockHeight || 0;
   }
 }

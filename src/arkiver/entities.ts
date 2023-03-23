@@ -6,6 +6,6 @@ interface IArkiverMetadata {
 }
 
 export const ArkiverMetadata = createEntity<IArkiverMetadata>(
-  "ArkiverMetadata",
+  "ArkiveMetadata",
   { processedBlockHeight: Number, chain: String },
 );

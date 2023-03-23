@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import { supportedChains } from "../chains.ts";
 import {
   ArkiveManifest,
@@ -17,7 +18,7 @@ import {
 export class Manifest {
   public manifest: ArkiveManifest = {
     dataSources: {},
-    entities: {},
+    entities: [],
   };
 
   public addChain(
@@ -26,15 +27,16 @@ export class Manifest {
     return new DataSourceBuilder(this, chain);
   }
 
-  // deno-lint-ignore no-explicit-any
-  public addEntity(name: string, entity: mongoose.Model<any>) {
-    this.manifest.entities[name] = entity;
+  public addEntity(entity: mongoose.Model<any>) {
+    this.manifest.entities.push({ model: entity, list: true });
     return this;
   }
 
-  // deno-lint-ignore no-explicit-any
-  public addEntities(entities: Record<string, mongoose.Model<any>>) {
-    this.manifest.entities = { ...this.manifest.entities, ...entities };
+  public addEntities(entities: mongoose.Model<any>[]) {
+    this.manifest.entities.push(...entities.map((entity) => ({
+      model: entity,
+      list: true,
+    })));
     return this;
   }
 

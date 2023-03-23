@@ -1,8 +1,7 @@
 import { mongoose } from "../deps.ts";
 
 export function createEntity<
-  // deno-lint-ignore no-explicit-any
-  TEnforcedDocType = any,
+  TEnforcedDocType = unknown,
 >(
   name: string,
   schemaDefinition: mongoose.SchemaDefinition<

@@ -60,7 +60,10 @@ export class Arkiver extends EventTarget {
           password ?? ""
         }${username && password ? "@" : ""}${host ?? "localhost"}:${
           port ?? 27017
-        }/${database ?? "arkiver"}`,
+        }/${
+          database ??
+            `${this.arkiveData.id}:${this.arkiveData.deployment.major_version}`
+        }`,
       );
       await this.initSources();
     } catch (e) {

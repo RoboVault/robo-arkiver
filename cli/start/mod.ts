@@ -22,7 +22,7 @@ export const action = async (
     }
   }
 
-  Deno.env.set("DENO_ENV", "development");
+  Deno.env.set("DENO_ENV", "PROD");
 
   if (!options.mongoHost) {
     const cleanup = async () => {
@@ -72,10 +72,9 @@ export const action = async (
 
   await arkiver.run();
 
-  const schema = buildSchemaFromEntities({
-    ...manifest.entities,
-    "arkiverMetadata": ArkiverMetadata,
-  });
+  const schema = buildSchemaFromEntities(
+    [...manifest.entities, { model: ArkiverMetadata, list: false }],
+  );
 
   const yoga = createYoga({
     schema,
@@ -83,7 +82,7 @@ export const action = async (
       Response,
     },
     graphiql: {
-      title: "Arkiver playground",
+      title: "Arkiver Playground",
     },
   });
 

@@ -908,6 +908,7 @@
       "graphql-compose": "graphql-compose@9.0.10_graphql@16.6.0",
       "graphql-compose-mongoose": "graphql-compose-mongoose@9.8.0_graphql-compose@9.0.10__graphql@16.6.0_mongoose@7.0.2_graphql@16.6.0",
       "graphql-yoga": "graphql-yoga@3.7.3_graphql@16.6.0_@envelop+core@3.0.6",
+      "lru-cache": "lru-cache@8.0.4",
       "mongoose": "mongoose@7.0.2",
       "pg": "pg@8.10.0",
       "reflect-metadata": "reflect-metadata@0.1.13",
