@@ -3,28 +3,25 @@ import { logger } from "../logger.ts";
 import { DataSource } from "./data-source.ts";
 import { mongoose } from "../deps.ts";
 
+interface DbConfig {
+  database: string;
+  host: string;
+  password?: string;
+  port: number;
+  username?: string;
+  protocol?: string;
+}
+
 export class Arkiver extends EventTarget {
   private readonly manifest: ArkiveManifest;
   private arkiveData: Arkive;
   private sources: DataSource[] = [];
-  private dbConfig: {
-    database: string;
-    host: string;
-    password?: string;
-    port: number;
-    username?: string;
-  };
+  private dbConfig: DbConfig;
   private rpcUrls: Record<string, string>;
 
   constructor(params: {
     manifest: ArkiveManifest;
-    dbConfig: {
-      database: string;
-      host: string;
-      port: number;
-      username?: string;
-      password?: string;
-    };
+    dbConfig: DbConfig;
     arkiveData?: Arkive;
     rpcUrls: Record<string, string>;
   }) {
@@ -57,13 +54,14 @@ export class Arkiver extends EventTarget {
     );
     try {
       logger.info(`Connecting to database...`);
-      const { database, host, password, port, username } = this.dbConfig;
+      const { database, host, password, port, username, protocol } =
+        this.dbConfig;
       await mongoose.connect(
-        `mongodb://${username ?? ""}${username && password ? ":" : ""}${
-          password ?? ""
-        }${username && password ? "@" : ""}${host ?? "localhost"}:${
-          port ?? 27017
-        }/${
+        `${protocol ?? "mongodb"}://${username ?? ""}${
+          username && password ? ":" : ""
+        }${password ?? ""}${username && password ? "@" : ""}${
+          host ?? "localhost"
+        }:${port ?? 27017}/${
           database ??
             `${this.arkiveData.id}:${this.arkiveData.deployment.major_version}`
         }`,
