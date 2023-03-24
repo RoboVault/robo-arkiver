@@ -1,11 +1,18 @@
-import { createEntity } from "../graphql/entity.ts";
+import { mongoose } from "../deps.ts";
 
 interface IArkiverMetadata {
   processedBlockHeight: number;
   chain: string;
 }
 
-export const ArkiverMetadata = createEntity<IArkiverMetadata>(
+const arkiverMetadataSchema = new mongoose.Schema<IArkiverMetadata>({
+  processedBlockHeight: Number,
+  chain: String,
+});
+
+export const ArkiverMetadata = mongoose.model<IArkiverMetadata>(
   "ArkiveMetadata",
-  { processedBlockHeight: Number, chain: String },
+  arkiverMetadataSchema,
+  undefined,
+  { overwriteModels: true },
 );

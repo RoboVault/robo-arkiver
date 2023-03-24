@@ -3,4 +3,4 @@ export {
   createEntity,
   type EventHandlerFor,
   Manifest,
-} from "https://deno.land/x/robo_arkiver@v0.1.6/mod.ts";
+} from "https://deno.land/x/robo_arkiver@v0.1.8/mod.ts";
