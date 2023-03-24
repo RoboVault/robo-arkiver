@@ -45,7 +45,12 @@ export class Arkiver extends EventTarget {
     );
     try {
       logger.info(`Connecting to database...`);
-      await mongoose.connect(this.mongoConnection);
+      await mongoose.connect(this.mongoConnection, {
+        dbName:
+          `${this.arkiveData.id}-${this.arkiveData.deployment.major_version}`,
+        // deno-lint-ignore no-explicit-any
+      } as any);
+      logger.info(`Connected to database`);
       await this.initSources();
     } catch (e) {
       logger.error(`Error running arkiver: ${e}`);
