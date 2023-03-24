@@ -54,11 +54,10 @@ command
   .option("-m, --manifest <manifest:string>", "Path to manifest file", {
     default: "./manifest.ts",
   })
-  .option("--mongo-host <mongoHost:string>", "Postgres host")
-  .option("--mongo-port <mongoPort:number>", "Postgres port")
-  .option("--mongo-user <mongoUser:string>", "Postgres user")
-  .option("--mongo-password <mongoPassword:string>", "Postgres password")
-  .option("--mongo-database <mongoDatabase:string>", "Postgres database")
+  .option(
+    "--mongo-connection <mongoConnection:string>",
+    "MongoDB Connection String",
+  )
   .option("--rpc-url <...rpcUrl:string>", "RPC URL", { required: true })
   .action(start.action);
 
