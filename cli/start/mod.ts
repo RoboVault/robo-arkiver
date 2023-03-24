@@ -6,7 +6,7 @@ import { ArkiverMetadata } from "../../src/arkiver/entities.ts";
 export const action = async (
   options: {
     manifest?: string;
-    rpcUrl?: string[];
+    rpcUrl: string[];
     mongoHost?: string;
     mongoPort?: number;
     mongoUser?: string;
@@ -15,13 +15,6 @@ export const action = async (
   },
   directory: string,
 ) => {
-  if (options.rpcUrl) {
-    for (const rpc of options.rpcUrl) {
-      const [name, url] = rpc.split("=");
-      Deno.env.set(`${name.toUpperCase()}_RPC_URL`, url);
-    }
-  }
-
   Deno.env.set("DENO_ENV", "PROD");
 
   if (!options.mongoHost) {
@@ -62,12 +55,22 @@ export const action = async (
     );
   }
 
-  const arkiver = new Arkiver(manifest, {
-    database: options.mongoDatabase ?? "arkiver",
-    host: options.mongoHost ?? "localhost",
-    port: options.mongoPort ?? 27017,
-    username: options.mongoUser,
-    password: options.mongoPassword,
+  const rpcUrls = options.rpcUrl?.reduce((acc, rpc) => {
+    const [name, url] = rpc.split("=");
+    acc[name] = url;
+    return acc;
+  }, {} as Record<string, string>);
+
+  const arkiver = new Arkiver({
+    manifest,
+    dbConfig: {
+      database: options.mongoDatabase ?? "arkiver",
+      host: options.mongoHost ?? "localhost",
+      port: options.mongoPort ?? 27017,
+      username: options.mongoUser,
+      password: options.mongoPassword,
+    },
+    rpcUrls,
   });
 
   await arkiver.run();

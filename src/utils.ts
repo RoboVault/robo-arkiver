@@ -7,22 +7,6 @@ export const delay = (durationMs: number) => {
   });
 };
 
-export const getEnv = (key: string, defaultValue?: string): string => {
-  const value = Deno.env.get(key);
-  if (!value && !defaultValue) {
-    throw new Error(`Missing environment variable: ${key}`);
-  }
-  return value || defaultValue || "";
-};
-
-export const getRpcUrl = (chain: string) => {
-  const rpcUrl = getEnv(`${chain.toUpperCase()}_RPC_URL`);
-  if (!rpcUrl) {
-    throw new Error(`Missing RPC URL for chain ${chain}`);
-  }
-  return rpcUrl;
-};
-
 export const getChainObjFromChainName = (chain: string) => {
   switch (chain) {
     case "avalanche":
