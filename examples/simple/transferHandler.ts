@@ -28,9 +28,8 @@ export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
       store.retrieve(
         `${from}:${address}:balance`,
         async () =>
-          await Balance.findOneBy({ id: `${from}:${address}` }) ??
-            Object.assign(new Balance(), {
-              id: `${from}:${address}`,
+          await Balance.findOne({ account: from }) ??
+            new Balance({
               amount: 0,
               token: address,
               account: from,
@@ -39,9 +38,8 @@ export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
       store.retrieve(
         `${to}:${address}:balance`,
         async () =>
-          await Balance.findOneBy({ id: `${to}:${address}` }) ??
-            Object.assign(new Balance(), {
-              id: `${to}:${address}`,
+          await Balance.findOne({ account: to }) ??
+            new Balance({
               amount: 0,
               token: address,
               account: to,

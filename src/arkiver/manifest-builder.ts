@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import { supportedChains } from "../chains.ts";
 import {
   ArkiveManifest,
@@ -11,8 +12,8 @@ import {
   Address,
   ExtractAbiEvent,
   ExtractAbiEventNames,
+  mongoose,
 } from "../deps.ts";
-import { BaseEntity } from "../graphql/mod.ts";
 
 export class Manifest {
   public manifest: ArkiveManifest = {
@@ -20,17 +21,22 @@ export class Manifest {
     entities: [],
   };
 
-  public addChain(chain: typeof supportedChains[number]) {
+  public addChain(
+    chain: typeof supportedChains[number],
+  ) {
     return new DataSourceBuilder(this, chain);
   }
 
-  public addEntity(entity: typeof BaseEntity) {
-    this.manifest.entities.push(entity);
+  public addEntity(entity: mongoose.Model<any>) {
+    this.manifest.entities.push({ model: entity, list: true });
     return this;
   }
 
-  public addEntities(entities: typeof BaseEntity[]) {
-    this.manifest.entities.push(...entities);
+  public addEntities(entities: mongoose.Model<any>[]) {
+    this.manifest.entities.push(...entities.map((entity) => ({
+      model: entity,
+      list: true,
+    })));
     return this;
   }
 

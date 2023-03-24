@@ -9,9 +9,8 @@ import {
   PublicClient,
 } from "../deps.ts";
 import { logger } from "../logger.ts";
-import { InfluxDBAdapter } from "../manager/providers/influxdb.ts";
-import { mockStatusProvider } from "../manager/providers/mock.ts";
-import { StatusProvider } from "../manager/providers/interfaces.ts";
+import { mockStatusProvider } from "./providers/mock.ts";
+import { StatusProvider } from "./providers/interfaces.ts";
 import {
   BlockHandler,
   Contract,
@@ -28,6 +27,8 @@ import {
   getEnv,
 } from "../utils.ts";
 import { Store } from "./store.ts";
+import { MongoStatusProvider } from "./providers/mongodb.ts";
+import { ArkiverMetadata } from "./entities.ts";
 
 interface NormalizedContracts {
   contracts: {
@@ -98,7 +99,9 @@ export class DataSource {
   private queueDelay = 500;
   private fetchInterval = 500;
   private maxStagingDelay = 1000;
-  private readonly store = new Store();
+  private readonly store = new Store({
+    max: 1000,
+  });
   private isLive = false;
 
   constructor(
@@ -125,12 +128,7 @@ export class DataSource {
     this.arkiveVersion = params.arkiveVersion;
     if (getEnv("DENO_ENV") === "PROD") {
       logger.info("Using InfluxDB status provider...");
-      this.statusProvider = new InfluxDBAdapter({
-        url: getEnv("INFLUXDB_URL"),
-        token: getEnv("INFLUXDB_TOKEN"),
-        bucket: getEnv("INFLUXDB_BUCKET"),
-        org: getEnv("INFLUXDB_ORG"),
-      });
+      this.statusProvider = new MongoStatusProvider();
     } else {
       logger.info("Using mock status provider...");
       this.statusProvider = mockStatusProvider;
@@ -271,7 +269,8 @@ export class DataSource {
     logger.info(`Fetching blocks from block ${fromBlock} to ${toBlock}...`);
     const blockToHandlers = new Map<bigint, BlockHandler[]>();
     const blockSources = this.blockSources.filter((source) =>
-      source.startBlockHeight <= toBlock ||
+      source.startBlockHeight !== "live" &&
+        source.startBlockHeight <= toBlock ||
       (source.startBlockHeight === "live" && this.isLive)
     );
     if (blockSources.length === 0) {
@@ -349,7 +348,7 @@ export class DataSource {
   }
 
   private async runProcessorLoop() {
-    const tempStore = new Store();
+    const tempStore = new Store({ max: 100 });
     while (this.eventLoops.processor) {
       const logs = this.stagingLogsQueue.get(this.processedBlockHeight);
       const logsPending = this.stagingQueuePending.logs.get(
@@ -426,7 +425,7 @@ export class DataSource {
           const event = decodeEventLog({
             abi: handler.abi,
             data: log.data,
-            topics: [log.topics[0], ...log.topics.slice(1)],
+            topics: [log.topics[0]!, ...log.topics.slice(1)],
           });
 
           try {
@@ -487,6 +486,19 @@ export class DataSource {
 
       this.processedBlockHeight = logs?.nextFromBlock ??
         blocks!.nextFromBlock;
+
+      const arkiverMetadata = await this.store.retrieve(
+        `${this.chain}:metadata`,
+        async () =>
+          await ArkiverMetadata.findOne({ chain: this.chain }) ??
+            new ArkiverMetadata({
+              processedBlockHeight: 0,
+              chain: this.chain,
+            }),
+      );
+      arkiverMetadata.processedBlockHeight = Number(this.processedBlockHeight);
+
+      this.store.set(`${this.chain}:metadata`, arkiverMetadata.save());
     }
   }
 

@@ -2,13 +2,19 @@ import { Arkive, ArkiveManifest } from "./types.ts";
 import { getRpcUrl } from "../utils.ts";
 import { logger } from "../logger.ts";
 import { DataSource } from "./data-source.ts";
-import { pg, TypeORMDataSource } from "../deps.ts";
+import { mongoose } from "../deps.ts";
 
 export class Arkiver extends EventTarget {
   private readonly manifest: ArkiveManifest;
   private arkiveData: Arkive;
   private sources: DataSource[] = [];
-  private db: TypeORMDataSource;
+  private dbConfig: {
+    database: string;
+    host: string;
+    password?: string;
+    port: number;
+    username?: string;
+  };
 
   constructor(
     manifest: ArkiveManifest,
@@ -16,8 +22,8 @@ export class Arkiver extends EventTarget {
       database: string;
       host: string;
       port: number;
-      username: string;
-      password: string;
+      username?: string;
+      password?: string;
     },
     arkiveData?: Arkive,
   ) {
@@ -39,20 +45,7 @@ export class Arkiver extends EventTarget {
       public: false,
       created_at: "",
     };
-
-    const { database, host, password, port, username } = dbConfig;
-
-    this.db = new TypeORMDataSource({
-      type: "postgres",
-      database,
-      host,
-      port,
-      username,
-      password,
-      entities: manifest.entities,
-      synchronize: true,
-      driver: pg,
-    });
+    this.dbConfig = dbConfig;
   }
 
   public async run() {
@@ -61,7 +54,17 @@ export class Arkiver extends EventTarget {
     );
     try {
       logger.info(`Connecting to database...`);
-      await this.db.initialize();
+      const { database, host, password, port, username } = this.dbConfig;
+      await mongoose.connect(
+        `mongodb://${username ?? ""}${username && password ? ":" : ""}${
+          password ?? ""
+        }${username && password ? "@" : ""}${host ?? "localhost"}:${
+          port ?? 27017
+        }/${
+          database ??
+            `${this.arkiveData.id}:${this.arkiveData.deployment.major_version}`
+        }`,
+      );
       await this.initSources();
     } catch (e) {
       logger.error(`Error running arkiver: ${e}`);

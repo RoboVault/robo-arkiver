@@ -1,18 +1,17 @@
 import "npm:reflect-metadata";
-import { Arkiver } from "../../src/arkiver/arkiver.ts";
-import { buildSchemaFromEntities } from "../../src/graphql/builder.ts";
-import { serve } from "https://deno.land/std@0.179.0/http/server.ts";
-import { $, createYoga, delay, join } from "../deps.ts";
+import { Arkiver, buildSchemaFromEntities } from "../../mod.ts";
+import { $, createYoga, delay, join, serve } from "../deps.ts";
+import { ArkiverMetadata } from "../../src/arkiver/entities.ts";
 
 export const action = async (
   options: {
     manifest?: string;
     rpcUrl?: string[];
-    pgHost?: string;
-    pgPort?: number;
-    pgUser?: string;
-    pgPassword?: string;
-    pgDatabase?: string;
+    mongoHost?: string;
+    mongoPort?: number;
+    mongoUser?: string;
+    mongoPassword?: string;
+    mongoDatabase?: string;
   },
   directory: string,
 ) => {
@@ -23,9 +22,9 @@ export const action = async (
     }
   }
 
-  Deno.env.set("DENO_ENV", "development");
+  Deno.env.set("DENO_ENV", "PROD");
 
-  if (!options.pgHost) {
+  if (!options.mongoHost) {
     const cleanup = async () => {
       console.log(`\nCleaning up...`);
       const stopRes = await $`docker stop ${
@@ -43,7 +42,7 @@ export const action = async (
     Deno.addSignalListener("SIGABRT", cleanup);
 
     const containerId =
-      await $`docker run --rm -d -p 5432:5432 -e POSTGRES_PASSWORD=password --name arkiver_local_db postgres`
+      await $`docker run --name arkiver_mongodb -d -p 27017:27017 --rm mongodb/mongodb-community-server:6.0-ubi8`
         .stdout("piped");
     await delay(3000); // wait for db to start
   }
@@ -64,39 +63,35 @@ export const action = async (
   }
 
   const arkiver = new Arkiver(manifest, {
-    database: options.pgDatabase ?? "postgres",
-    host: options.pgHost ?? "localhost",
-    port: options.pgPort ?? 5432,
-    username: options.pgUser ?? "postgres",
-    password: options.pgPassword ?? "password",
+    database: options.mongoDatabase ?? "arkiver",
+    host: options.mongoHost ?? "localhost",
+    port: options.mongoPort ?? 27017,
+    username: options.mongoUser,
+    password: options.mongoPassword,
   });
 
   await arkiver.run();
 
-  const entities = manifest.entities;
-
-  const schema = buildSchemaFromEntities(entities);
+  const schema = buildSchemaFromEntities(
+    [...manifest.entities, { model: ArkiverMetadata, list: false }],
+  );
 
   const yoga = createYoga({
     schema,
-    landingPage: false,
+    fetchAPI: {
+      Response,
+    },
     graphiql: {
       title: "Arkiver Playground",
     },
   });
 
-  await serve(
-    yoga,
-    {
-      port: 4000,
-      onListen: ({ hostname, port }) => {
-        console.log(
-          `Listening on ${new URL(
-            yoga.graphqlEndpoint,
-            `http://${hostname}:${port}`,
-          )}`,
-        );
-      },
+  await serve(yoga, {
+    port: 4000,
+    onListen: ({ hostname, port }) => {
+      console.log(
+        `🚀 Arkiver playground ready at http://${hostname}:${port}/graphql`,
+      );
     },
-  );
+  });
 };

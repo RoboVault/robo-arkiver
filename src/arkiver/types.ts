@@ -7,10 +7,10 @@ import {
   ExtractAbiEvent,
   ExtractAbiEventNames,
   Log,
+  mongoose,
   PublicClient,
   RpcLog,
 } from "../deps.ts";
-import { BaseEntity } from "../graphql/mod.ts";
 import { Store } from "./store.ts";
 
 export interface Arkive {
@@ -46,7 +46,8 @@ export interface ArkiveManifest {
       blockHandlers?: IBlockHandler[];
     }>
   >;
-  entities: typeof BaseEntity[];
+  // deno-lint-ignore no-explicit-any
+  entities: { model: mongoose.Model<any>; list: boolean }[];
 }
 
 export type DataSource = {

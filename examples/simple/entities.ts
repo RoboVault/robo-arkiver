@@ -1,16 +1,16 @@
-import { BaseEntity, Entity, Float, ID, String } from "./deps.ts";
+import { createEntity } from "./deps.ts";
 
-@Entity()
-export class Balance extends BaseEntity {
-  @ID()
-  id!: string;
-
-  @String()
-  account!: string;
-
-  @Float()
-  amount!: number;
-
-  @String()
-  token!: string;
+interface IBalance {
+  account: string;
+  amount: number;
+  token: string;
 }
+
+export const Balance = createEntity<IBalance>("Balance", {
+  account: String,
+  amount: {
+    type: Number,
+    index: true,
+  },
+  token: String,
+});
