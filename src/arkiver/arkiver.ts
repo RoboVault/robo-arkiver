@@ -1,5 +1,4 @@
 import { Arkive, ArkiveManifest } from "./types.ts";
-import { getRpcUrl } from "../utils.ts";
 import { logger } from "../logger.ts";
 import { DataSource } from "./data-source.ts";
 import { mongoose } from "../deps.ts";
@@ -15,19 +14,22 @@ export class Arkiver extends EventTarget {
     port: number;
     username?: string;
   };
+  private rpcUrls: Record<string, string>;
 
-  constructor(
-    manifest: ArkiveManifest,
+  constructor(params: {
+    manifest: ArkiveManifest;
     dbConfig: {
       database: string;
       host: string;
       port: number;
       username?: string;
       password?: string;
-    },
-    arkiveData?: Arkive,
-  ) {
+    };
+    arkiveData?: Arkive;
+    rpcUrls: Record<string, string>;
+  }) {
     super();
+    const { dbConfig, manifest, arkiveData, rpcUrls } = params;
     this.manifest = manifest;
     this.arkiveData = arkiveData ?? {
       id: 0,
@@ -46,6 +48,7 @@ export class Arkiver extends EventTarget {
       created_at: "",
     };
     this.dbConfig = dbConfig;
+    this.rpcUrls = rpcUrls;
   }
 
   public async run() {
@@ -75,13 +78,18 @@ export class Arkiver extends EventTarget {
     logger.info(`Initializing data sources...`);
     const { dataSources } = this.manifest;
     for (const [chain, source] of Object.entries(dataSources)) {
+      const rpcUrl = this.rpcUrls[chain];
+      if (rpcUrl === undefined) {
+        logger.error(`No RPC URL found for chain ${chain}`);
+        continue;
+      }
       const dataSource = new DataSource({
         arkiveId: this.arkiveData.id,
         arkiveVersion: this.arkiveData.deployment.major_version,
         blockRange: 3000n,
         chain,
         contracts: source.contracts ?? [],
-        rpcUrl: getRpcUrl(chain),
+        rpcUrl: this.rpcUrls[chain],
         blockSources: source.blockHandlers ?? [],
       });
       await dataSource.run();

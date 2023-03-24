@@ -59,7 +59,7 @@ command
   .option("--mongo-user <mongoUser:string>", "Postgres user")
   .option("--mongo-password <mongoPassword:string>", "Postgres password")
   .option("--mongo-database <mongoDatabase:string>", "Postgres database")
-  .option("--rpc-url <...rpcUrl:string>", "RPC URL")
+  .option("--rpc-url <...rpcUrl:string>", "RPC URL", { required: true })
   .action(start.action);
 
 //init

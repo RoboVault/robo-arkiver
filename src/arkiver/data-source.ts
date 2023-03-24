@@ -9,7 +9,6 @@ import {
   PublicClient,
 } from "../deps.ts";
 import { logger } from "../logger.ts";
-import { mockStatusProvider } from "./providers/mock.ts";
 import { StatusProvider } from "./providers/interfaces.ts";
 import {
   BlockHandler,
@@ -24,7 +23,6 @@ import {
   delay,
   formatLog,
   getChainObjFromChainName,
-  getEnv,
 } from "../utils.ts";
 import { Store } from "./store.ts";
 import { MongoStatusProvider } from "./providers/mongodb.ts";
@@ -126,13 +124,7 @@ export class DataSource {
     });
     this.arkiveId = params.arkiveId;
     this.arkiveVersion = params.arkiveVersion;
-    if (getEnv("DENO_ENV") === "PROD") {
-      logger.info("Using InfluxDB status provider...");
-      this.statusProvider = new MongoStatusProvider();
-    } else {
-      logger.info("Using mock status provider...");
-      this.statusProvider = mockStatusProvider;
-    }
+    this.statusProvider = new MongoStatusProvider();
   }
 
   public async run() {
