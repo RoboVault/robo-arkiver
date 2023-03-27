@@ -10,7 +10,7 @@ export class Store extends Cache<{}, {}> {
     key: string,
     defaultValueAccessor: () => TValue | Promise<TValue>,
     options?: Cache.SetOptions,
-  ) {
+  ): TValue | Promise<TValue> {
     const value = super.get(key) as TValue | Promise<TValue>;
     if (value) {
       return value;

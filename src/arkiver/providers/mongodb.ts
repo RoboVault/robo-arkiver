@@ -1,4 +1,4 @@
-import { ArkiverMetadata } from "../entities.ts";
+import { ArkiverMetadata } from "../arkive-metadata.ts";
 import { IndexedBlockHeightParams, StatusProvider } from "./interfaces.ts";
 
 export class MongoStatusProvider implements StatusProvider {
