@@ -26,7 +26,7 @@ import {
 } from "../utils.ts";
 import { Store } from "./store.ts";
 import { MongoStatusProvider } from "./providers/mongodb.ts";
-import { ArkiverMetadata } from "./entities.ts";
+import { ArkiverMetadata } from "./arkive-metadata.ts";
 
 interface NormalizedContracts {
   contracts: {

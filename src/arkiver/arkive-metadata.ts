@@ -8,7 +8,7 @@ interface IArkiverMetadata {
 }
 
 const arkiverMetadataSchema = new mongoose.Schema<IArkiverMetadata>({
-  processedBlockHeight: Number,
+  processedBlockHeight: { type: Number, index: true },
   chain: String,
   eventHandlerCalls: Number,
   blockHandlerCalls: Number,
