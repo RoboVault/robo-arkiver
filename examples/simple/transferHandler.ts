@@ -28,13 +28,14 @@ export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
     const [senderBalance, receiverBalance] = await Promise.all([
       await store.retrieve(
         `${from}:${address}:balance`,
-        async () =>
-          await Balance.findOne({ account: from }) ??
+        async () => {
+          return await Balance.findOne({ account: from }) ??
             new Balance({
               amount: 0,
               token: address,
               account: from,
-            }),
+            });
+        },
       ),
       await store.retrieve(
         `${to}:${address}:balance`,

@@ -1,12 +1,11 @@
-// deno-lint-ignore-file ban-types
 import { Cache } from "../deps.ts";
 
-export class Store extends Cache<{}, {}> {
-  constructor(options: Cache.Options<{}, {}>) {
+export class Store extends Cache<string, unknown> {
+  constructor(options: Cache.Options<string, unknown>) {
     super(options);
   }
 
-  retrieve<TValue extends {}>(
+  retrieve<TValue>(
     key: string,
     defaultValueAccessor: () => TValue | Promise<TValue>,
     options?: Cache.SetOptions,
