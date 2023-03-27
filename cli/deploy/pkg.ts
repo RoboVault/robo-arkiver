@@ -15,7 +15,6 @@ export const pkg = async (dir: string) => {
     process.status(),
     process.stderrOutput(),
   ]);
-  console.log(status);
   if (status.code !== 0) {
     const errMsg = `Failed to build package: ${new TextDecoder().decode(err)}`;
     throw new Error(errMsg);

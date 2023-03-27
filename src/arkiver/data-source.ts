@@ -98,7 +98,7 @@ export class DataSource {
   private fetchInterval = 500;
   private maxStagingDelay = 1000;
   private readonly store = new Store({
-    ttl: 10000,
+    ttl: 5000,
   });
   private isLive = false;
 
@@ -340,7 +340,6 @@ export class DataSource {
   }
 
   private async runProcessorLoop() {
-    const tempStore = new Store({ ttl: 10000 });
     while (this.eventLoops.processor) {
       const logs = this.stagingLogsQueue.get(this.processedBlockHeight);
       const logsPending = this.stagingQueuePending.logs.get(
@@ -425,7 +424,6 @@ export class DataSource {
               eventName: event.eventName,
               client: this.client,
               store: this.store,
-              tempStore,
               event: formatLog(log, event),
             });
           } catch (_e) {
@@ -433,7 +431,6 @@ export class DataSource {
               eventName: event.eventName,
               client: this.client,
               store: this.store,
-              tempStore,
               event: formatLog(log, event),
             }).catch((e) => {
               logger.error(`Error running event handler ${event}: ${e}`);
@@ -451,14 +448,12 @@ export class DataSource {
                 block: block.block,
                 client: this.client,
                 store: this.store,
-                tempStore,
               });
             } catch (_e) {
               handler({
                 block: block.block,
                 client: this.client,
                 store: this.store,
-                tempStore,
               }).catch((e) => {
                 logger.error(
                   `Error running block handler at ${block.block.number}: ${e}`,
@@ -467,30 +462,41 @@ export class DataSource {
             }
           }
         }
+
+        const arkiverMetadata = await this.store.retrieve(
+          `${this.chain}:${logOrBlock.blockNumber}:metadata`,
+          async () =>
+            await ArkiverMetadata.findOne({
+              chain: this.chain,
+              processedBlockHeight: Number(logOrBlock.blockNumber),
+            }) ??
+              new ArkiverMetadata({
+                processedBlockHeight: 0,
+                chain: this.chain,
+                blockHandlerCalls: 0,
+                eventHandlerCalls: 0,
+              }),
+        );
+        arkiverMetadata.processedBlockHeight = Number(
+          this.processedBlockHeight,
+        );
+        arkiverMetadata.blockHandlerCalls += logOrBlock.isBlock ? 1 : 0;
+        arkiverMetadata.eventHandlerCalls += logOrBlock.isBlock ? 0 : 1;
+
+        this.store.set(
+          `${this.chain}:${logOrBlock.blockNumber}:metadata`,
+          arkiverMetadata.save(),
+        );
       }
 
       this.stagingLogsQueue.delete(this.processedBlockHeight);
       this.stagingBlocksQueue.delete(this.processedBlockHeight);
       this.stagingQueuePending.logs.delete(this.processedBlockHeight);
       this.stagingQueuePending.blocks.delete(this.processedBlockHeight);
-      tempStore.clear();
       logger.info(`Processed block ${this.processedBlockHeight}...`);
 
       this.processedBlockHeight = logs?.nextFromBlock ??
         blocks!.nextFromBlock;
-
-      const arkiverMetadata = await this.store.retrieve(
-        `${this.chain}:metadata`,
-        async () =>
-          await ArkiverMetadata.findOne({ chain: this.chain }) ??
-            new ArkiverMetadata({
-              processedBlockHeight: 0,
-              chain: this.chain,
-            }),
-      );
-      arkiverMetadata.processedBlockHeight = Number(this.processedBlockHeight);
-
-      this.store.set(`${this.chain}:metadata`, arkiverMetadata.save());
     }
   }
 

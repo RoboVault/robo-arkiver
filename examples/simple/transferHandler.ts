@@ -1,4 +1,4 @@
-import { EventHandlerFor, formatUnits } from "./deps.ts";
+import { EventHandlerFor, formatUnits, logger } from "./deps.ts";
 import erc20 from "./erc20.ts";
 import { Balance } from "./entities.ts";
 
@@ -20,12 +20,13 @@ export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
           functionName: "decimals",
           address,
         }),
+      { ttl: 1000 * 60 * 60 * 24 * 7 },
     );
 
     const parsedValue = parseFloat(formatUnits(value, decimals));
 
     const [senderBalance, receiverBalance] = await Promise.all([
-      store.retrieve(
+      await store.retrieve(
         `${from}:${address}:balance`,
         async () =>
           await Balance.findOne({ account: from }) ??
@@ -35,7 +36,7 @@ export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
               account: from,
             }),
       ),
-      store.retrieve(
+      await store.retrieve(
         `${to}:${address}:balance`,
         async () =>
           await Balance.findOne({ account: to }) ??
@@ -50,6 +51,12 @@ export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
     senderBalance.amount -= parsedValue;
     receiverBalance.amount += parsedValue;
 
-    store.set(`${from}:${address}:balance`, senderBalance.save());
-    store.set(`${to}:${address}:balance`, receiverBalance.save());
+    store.set(
+      `${from}:${address}:balance`,
+      senderBalance.save().catch((e) => logger.error(e)),
+    );
+    store.set(
+      `${to}:${address}:balance`,
+      receiverBalance.save().catch((e) => logger.error(e)),
+    );
   };

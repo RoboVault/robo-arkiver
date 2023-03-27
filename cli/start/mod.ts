@@ -67,7 +67,7 @@ export const action = async (
   await arkiver.run();
 
   const schema = buildSchemaFromEntities(
-    [...manifest.entities, { model: ArkiverMetadata, list: false }],
+    [...manifest.entities, { model: ArkiverMetadata, list: true }],
   );
 
   const yoga = createYoga({

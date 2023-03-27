@@ -1,21 +1,18 @@
 // deno-lint-ignore-file ban-types
-import { LRU } from "../deps.ts";
+import { Cache } from "../deps.ts";
 
-export class Store extends LRU<{}, {}> {
-  constructor(options: LRU.Options<{}, {}>) {
+export class Store extends Cache<{}, {}> {
+  constructor(options: Cache.Options<{}, {}>) {
     super(options);
   }
 
-  async retrieve<TValue extends {}>(
+  retrieve<TValue extends {}>(
     key: string,
     defaultValueAccessor: () => TValue | Promise<TValue>,
-    options?: LRU.SetOptions,
-  ): Promise<TValue> {
+    options?: Cache.SetOptions,
+  ) {
     const value = super.get(key) as TValue | Promise<TValue>;
     if (value) {
-      if (value instanceof Promise) {
-        return await value;
-      }
       return value;
     }
 

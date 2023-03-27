@@ -94,14 +94,12 @@ export interface EventHandlerContext<
   eventName: TEventName;
   client: PublicClient;
   store: Store;
-  tempStore: Store;
 }
 
 export interface BlockHandlerContext {
   block: Block;
   client: PublicClient;
   store: Store;
-  tempStore: Store;
 }
 
 export type EventHandler<
