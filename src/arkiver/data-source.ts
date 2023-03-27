@@ -478,7 +478,7 @@ export class DataSource {
               }),
         );
         arkiverMetadata.processedBlockHeight = Number(
-          this.processedBlockHeight,
+          logOrBlock.blockNumber,
         );
         arkiverMetadata.blockHandlerCalls += logOrBlock.isBlock ? 1 : 0;
         arkiverMetadata.eventHandlerCalls += logOrBlock.isBlock ? 0 : 1;
