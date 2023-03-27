@@ -63,7 +63,7 @@ To deploy your Arkive to the Arkiver, make sure you have an account and have log
 arkiver deploy . my-first-arkive
 ```
 
-This will deploy your Arkive to the Arkiver and you can view it at https://arkiver.robolabs.biz/my-arkives/.
+This will deploy your Arkive to the Arkiver and you can view it at https://arkiver.robolabs.biz/username/arkive-name.
 
 ## Next steps
 

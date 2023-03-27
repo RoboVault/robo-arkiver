@@ -9,6 +9,7 @@ export class Store extends LRU<{}, {}> {
   async retrieve<TValue extends {}>(
     key: string,
     defaultValueAccessor: () => TValue | Promise<TValue>,
+    options?: LRU.SetOptions,
   ): Promise<TValue> {
     const value = super.get(key) as TValue | Promise<TValue>;
     if (value) {
@@ -20,7 +21,7 @@ export class Store extends LRU<{}, {}> {
 
     const defaultValue = defaultValueAccessor();
 
-    super.set(key, defaultValue);
+    super.set(key, defaultValue, options);
 
     return defaultValue;
   }

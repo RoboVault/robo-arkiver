@@ -1,6 +1,6 @@
 import { join } from "../deps.ts";
 
-export const action = (options: { overwrite?: boolean }, dir: string) => {
+export const action = async (options: { overwrite?: boolean }, dir: string) => {
   const newDir = join(Deno.cwd(), dir);
 
   mkDir(newDir);
@@ -23,25 +23,25 @@ export default manifest.build();`;
 
   writeFile(newDir, "manifest.ts", manifest, options.overwrite);
 
-  const entities =
-    `import { Entity, ID, String, Float, BaseEntity } from "../deps.ts";
+  const entities = `import { createEntity } from "../deps.ts";
 
-@Entity()
-export class Balance extends BaseEntity {
-	@ID()
-	id!: string;
+interface IBalance {
+  account: string;
+  amount: number;
+  token: string;
+}
 
-	@String()
-	account!: string;
+export const Balance = createEntity<IBalance>("Balance", {
+  account: String,
+  amount: {
+    type: Number,
+    index: true,
+  },
+  token: String,
+});
+`;
 
-	@Float()
-	amount!: number;
-
-	@String()
-	token!: string;
-}`;
-
-  mkDir(join(newDir, "entities"));
+  await mkDir(join(newDir, "entities"));
   writeFile(
     join(newDir, "entities"),
     "balance.ts",
@@ -49,7 +49,7 @@ export class Balance extends BaseEntity {
     options.overwrite,
   );
 
-  const handler = `import { EventHandlerFor, formatUnits } from "../deps.ts"; 
+  const handler = `import { EventHandlerFor, formatUnits } from "../deps.ts";
 import erc20 from "../abis/erc20.ts";
 import { Balance } from "../entities/balance.ts";
 
@@ -79,9 +79,8 @@ export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
       store.retrieve(
         \`\${from}:\${address}:balance\`,
         async () =>
-          await Balance.findOneBy({ id: \`\${from}:\${address}\` }) ??
-            Object.assign(new Balance(), {
-              id: \`\${from}:\${address}\`,
+          await Balance.findOne({ account: from }) ??
+            new Balance({
               amount: 0,
               token: address,
               account: from,
@@ -90,9 +89,8 @@ export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
       store.retrieve(
         \`\${to}:\${address}:balance\`,
         async () =>
-          await Balance.findOneBy({ id: \`\${to}:\${address}\` }) ??
-            Object.assign(new Balance(), {
-              id: \`\${to}:\${address}\`,
+          await Balance.findOne({ account: to }) ??
+            new Balance({
               amount: 0,
               token: address,
               account: to,
@@ -107,7 +105,7 @@ export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
     store.set(\`\${to}:\${address}:balance\`, receiverBalance.save());
   };`;
 
-  mkDir(join(newDir, "handlers"));
+  await mkDir(join(newDir, "handlers"));
   writeFile(
     join(newDir, "handlers"),
     "transfer.ts",
@@ -478,18 +476,14 @@ export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
 	"type": "function",
 }] as const;`;
 
-  mkDir(join(newDir, "abis"));
+  await mkDir(join(newDir, "abis"));
   writeFile(join(newDir, "abis"), "erc20.ts", abi, options.overwrite);
 
   const deps = `export { formatUnits } from "npm:viem";
 export {
-	BaseEntity,
-	Entity,
-	type EventHandlerFor,
-	Float,
-	ID,
-	Manifest,
-	String,
+  createEntity,
+  type EventHandlerFor,
+  Manifest,
 } from "https://deno.land/x/robo_arkiver/mod.ts";`;
 
   writeFile(newDir, "deps.ts", deps, options.overwrite);

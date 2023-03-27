@@ -27,30 +27,28 @@ const decimals = await store.retrieve(
 To further optimize your handler functions, batch data retrieval using Promise.all() can help reduce the number of asynchronous calls. This allows you to fetch multiple pieces of data concurrently, which can improve the performance of your handler functions.
 
 ```ts
-const [senderBalance, receiverBalance] = await Promise.all([
-  store.retrieve(
-    `${from}:${address}:balance`,
-    async () =>
-      await Balance.findOneBy({ id: `${from}:${address}` }) ??
-        Object.assign(new Balance(), {
-          id: `${from}:${address}`,
-          amount: 0,
-          token: address,
-          account: from,
-        }),
-  ),
-  store.retrieve(
-    `${to}:${address}:balance`,
-    async () =>
-      await Balance.findOneBy({ id: `${to}:${address}` }) ??
-        Object.assign(new Balance(), {
-          id: `${to}:${address}`,
-          amount: 0,
-          token: address,
-          account: to,
-        }),
-  ),
-]);
+    const [senderBalance, receiverBalance] = await Promise.all([
+      store.retrieve(
+        `${from}:${address}:balance`,
+        async () =>
+          await Balance.findOne({ account: from }) ??
+            new Balance({
+              amount: 0,
+              token: address,
+              account: from,
+            }),
+      ),
+      store.retrieve(
+        `${to}:${address}:balance`,
+        async () =>
+          await Balance.findOne({ account: to }) ??
+            new Balance({
+              amount: 0,
+              token: address,
+              account: to,
+            }),
+      ),
+    ]);
 ```
 
 3. Use `store.set()` to update the cache

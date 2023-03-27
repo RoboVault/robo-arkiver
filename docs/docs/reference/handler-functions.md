@@ -9,7 +9,7 @@ Handlers are functions responsible for processing incoming data from the data so
 ## Example handler function
 
 ```ts
-import { EventHandlerFor } from "https://raw.githubusercontent.com/RoboVault/arkiver/main/mod.ts";
+import { EventHandlerFor } from "https://deno.land/x/robo_arkiver/mod.ts";
 import erc20 from "../abis/erc20.ts";
 
 export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =

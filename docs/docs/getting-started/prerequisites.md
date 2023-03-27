@@ -30,3 +30,10 @@ You can install the Arkiver CLI by running the following command:
 ```bash
 deno install -A -n arkiver https://deno.land/x/robo_arkiver/cli.ts
 ```
+
+If you want to update the Arkiver CLI to the latest version, you can run the following commands:
+
+```bash
+deno uninstall arkiver
+deno install -A -n arkiver https://deno.land/x/robo_arkiver/cli.ts
+```

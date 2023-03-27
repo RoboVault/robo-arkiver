@@ -9,7 +9,7 @@ The `Manifest` class serves as the central configuration for your Arkive, allowi
 ## Example manifest
 
 ```ts title="manifest.ts"
-import { Manifest } from "https://raw.githubusercontent.com/RoboVault/arkiver/main/mod.ts";
+import { Manifest } from "https://deno.land/x/robo_arkiver/mod.ts";
 import { Balance } from "./entities/balance.ts";
 import { transfer } from "./handlers/transfer.ts";
 
