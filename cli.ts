@@ -55,7 +55,7 @@ command
     default: "./manifest.ts",
   })
   .option(
-    "--mongo-connection <mongoConnection:string>",
+    "-c, --mongo-connection <mongoConnection:string>",
     "MongoDB Connection String",
   )
   .option("--rpc-url <...rpcUrl:string>", "RPC URL", { required: true })

@@ -98,7 +98,7 @@ export class DataSource {
   private fetchInterval = 500;
   private maxStagingDelay = 1000;
   private readonly store = new Store({
-    max: 1000,
+    ttl: 1000,
   });
   private isLive = false;
 
@@ -340,7 +340,7 @@ export class DataSource {
   }
 
   private async runProcessorLoop() {
-    const tempStore = new Store({ max: 100 });
+    const tempStore = new Store({ ttl: 1000 });
     while (this.eventLoops.processor) {
       const logs = this.stagingLogsQueue.get(this.processedBlockHeight);
       const logsPending = this.stagingQueuePending.logs.get(

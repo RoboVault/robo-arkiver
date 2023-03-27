@@ -2,7 +2,7 @@
 import { LRU } from "../deps.ts";
 
 export class Store extends LRU<{}, {}> {
-  constructor(options: LRU.Options<{}, {}, unknown>) {
+  constructor(options: LRU.Options<{}, {}>) {
     super(options);
   }
 
