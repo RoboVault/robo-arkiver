@@ -115,9 +115,12 @@ export class ContractBuilder<
   }
 
   public addSource(
-    address: Address,
+    address: Address | "*",
     startBlockHeight: bigint,
   ) {
+    if (address === "*" && this.contract.sources.length > 0) {
+      throw new Error("Cannot add wildcard source after other sources.");
+    }
     this.contract.sources.push({
       address,
       startBlockHeight,
@@ -125,7 +128,14 @@ export class ContractBuilder<
     return this;
   }
 
-  public addSources(sources: Record<Address, bigint>) {
+  public addSources(sources: Record<Address | "*", bigint>) {
+    if (
+      sources["*"] !== undefined &&
+      (Object.keys(sources).length > 1 || this.contract.sources.length > 0)
+    ) {
+      throw new Error("Cannot add wildcard source after other sources.");
+    }
+
     for (const [address, startBlockHeight] of Object.entries(sources)) {
       this.addSource(address as Address, startBlockHeight);
     }

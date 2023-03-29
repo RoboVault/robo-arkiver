@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import {
   Abi,
   Block,
@@ -50,9 +51,12 @@ export class DataSource {
     contracts: [],
     signatureTopics: [],
   };
+  private readonly agnosticEvents: Map<
+    `0x${string}`,
+    { handler: EventHandler<any, any>; abi: Abi; startBlockHeight: bigint }
+  > = new Map(); // topic to handler and interface
   private readonly eventHandlers: Map<
     string,
-    // deno-lint-ignore no-explicit-any
     { handler: EventHandler<any, any>; abi: Abi }
   > = new Map(); // topic to handler and interface
   private readonly addressToId: Map<
@@ -66,11 +70,15 @@ export class DataSource {
   private liveBlockHeight = 0n;
   private processedBlockHeight = 0n;
   private fetchedBlockHeight = 0n;
-  private readonly stagingLogsQueue: Map<
+  private readonly logsQueue: Map<
     bigint,
     { logs: SafeRpcLog[]; nextFromBlock: bigint }
   > = new Map(); // from block to logs
-  private readonly stagingBlocksQueue: Map<
+  private readonly agnosticLogsQueue: Map<
+    bigint,
+    { logs: SafeRpcLog[]; nextFromBlock: bigint }
+  > = new Map(); // from block to logs
+  private readonly blocksQueue: Map<
     bigint,
     {
       blocks: {
@@ -80,23 +88,25 @@ export class DataSource {
       nextFromBlock: bigint;
     }
   > = new Map(); // from block to blocks
-  private readonly stagingQueuePending: {
+  private readonly queuePending: {
     logs: Map<bigint, boolean>;
     blocks: Map<bigint, boolean>;
+    agnosticLogs: Map<bigint, boolean>;
   } = {
     logs: new Map(),
     blocks: new Map(),
+    agnosticLogs: new Map(),
   }; // track if some logs or blocks are pending to be processed
   private readonly retryBlocks: Map<bigint, bigint> = new Map(); // blocks to retry
   private eventLoops = {
     fetcher: true,
     processor: true,
   };
-  private maxStageSize = 10;
+  private maxQueueSize = 10;
   private liveDelay = 2000;
   private queueDelay = 500;
   private fetchInterval = 500;
-  private maxStagingDelay = 1000;
+  private queueFullDelay = 1000;
   private readonly store = new Store({
     ttl: 5000,
   });
@@ -153,16 +163,18 @@ export class DataSource {
       for (const [retryFrom, retryTo] of this.retryBlocks) {
         this.fetchLogs(retryFrom, retryTo);
         this.fetchBlocks(retryFrom, retryTo);
+        this.fetchAgnosticLogs(retryFrom, retryTo);
       }
 
       if (
-        this.stagingLogsQueue.size > this.maxStageSize ||
-        this.stagingBlocksQueue.size > this.maxStageSize
+        this.logsQueue.size > this.maxQueueSize ||
+        this.blocksQueue.size > this.maxQueueSize ||
+        this.agnosticLogsQueue.size > this.maxQueueSize
       ) {
         logger.info(
-          `Staging queue size is logs - ${this.stagingLogsQueue.size}, blocks - ${this.stagingBlocksQueue.size}, waiting...`,
+          `Queue size is logs - ${this.logsQueue.size}, blocks - ${this.blocksQueue.size}, waiting...`,
         );
-        await delay(this.maxStagingDelay);
+        await delay(this.queueFullDelay);
         continue;
       }
 
@@ -182,6 +194,7 @@ export class DataSource {
       }
 
       this.fetchLogs(fromBlock, toBlock);
+      this.fetchAgnosticLogs(fromBlock, toBlock);
       this.fetchBlocks(fromBlock, toBlock);
 
       this.fetchedBlockHeight = toBlock + 1n;
@@ -191,8 +204,8 @@ export class DataSource {
   }
 
   private fetchLogs(fromBlock: bigint, toBlock: bigint) {
-    if (this.contracts.length === 0) {
-      this.stagingQueuePending.logs.set(fromBlock, false);
+    if (this.normalizedContracts.contracts.length === 0) {
+      this.queuePending.logs.set(fromBlock, false);
       return;
     }
 
@@ -203,7 +216,7 @@ export class DataSource {
     ).map((c) => c.address);
 
     if (addresses.length === 0) {
-      this.stagingQueuePending.logs.set(fromBlock, false);
+      this.queuePending.logs.set(fromBlock, false);
       return;
     }
 
@@ -238,7 +251,7 @@ export class DataSource {
       logger.info(
         `Fetched ${logs.length} logs from block ${fromBlock} to ${toBlock}...`,
       );
-      this.stagingLogsQueue.set(fromBlock, {
+      this.logsQueue.set(fromBlock, {
         logs: logs as SafeRpcLog[],
         nextFromBlock,
       });
@@ -250,12 +263,74 @@ export class DataSource {
       this.retryBlocks.set(fromBlock, toBlock);
     });
 
-    this.stagingQueuePending.logs.set(fromBlock, true);
+    this.queuePending.logs.set(fromBlock, true);
+  }
+
+  private fetchAgnosticLogs(fromBlock: bigint, toBlock: bigint) {
+    if (this.agnosticEvents.size === 0) {
+      this.queuePending.agnosticLogs.set(fromBlock, false);
+      return;
+    }
+
+    logger.info(
+      `Fetching agnostic logs from block ${fromBlock} to ${toBlock}...`,
+    );
+
+    const topics = Array.from(this.agnosticEvents.entries()).filter(
+      ([_, { startBlockHeight }]) => startBlockHeight <= toBlock,
+    ).map(([topic]) => topic);
+
+    if (topics.length === 0) {
+      this.queuePending.agnosticLogs.set(fromBlock, false);
+      return;
+    }
+
+    const nextFromBlock = toBlock + 1n;
+
+    this.client.request({
+      method: "eth_getLogs",
+      params: [
+        {
+          fromBlock: `0x${fromBlock.toString(16)}`,
+          toBlock: `0x${toBlock.toString(16)}`,
+          topics: [topics],
+        },
+      ],
+    }).then((logs) => {
+      if (
+        logs.some((l) => {
+          return l.blockHash === null ||
+            l.blockNumber === null ||
+            l.transactionHash === null ||
+            l.transactionIndex === null ||
+            l.logIndex === null;
+        })
+      ) {
+        logger.info(`Some logs still pending, retrying...`);
+        this.retryBlocks.set(fromBlock, toBlock);
+        return;
+      }
+      logger.info(
+        `Fetched ${logs.length} agnostic logs from block ${fromBlock} to ${toBlock}...`,
+      );
+      this.agnosticLogsQueue.set(fromBlock, {
+        logs: logs as SafeRpcLog[],
+        nextFromBlock,
+      });
+      this.retryBlocks.delete(fromBlock);
+    }).catch((e) => {
+      logger.error(
+        `Error fetching agnostic logs from block ${fromBlock} to ${toBlock} for ${this.chain}: ${e}, retrying...`,
+      );
+      this.retryBlocks.set(fromBlock, toBlock);
+    });
+
+    this.queuePending.agnosticLogs.set(fromBlock, true);
   }
 
   private fetchBlocks(fromBlock: bigint, toBlock: bigint) {
     if (this.blockSources.length === 0) {
-      this.stagingQueuePending.blocks.set(fromBlock, false);
+      this.queuePending.blocks.set(fromBlock, false);
       return;
     }
     logger.info(`Fetching blocks from block ${fromBlock} to ${toBlock}...`);
@@ -266,7 +341,7 @@ export class DataSource {
       (source.startBlockHeight === "live" && this.isLive)
     );
     if (blockSources.length === 0) {
-      this.stagingQueuePending.blocks.set(fromBlock, false);
+      this.queuePending.blocks.set(fromBlock, false);
       return;
     }
     for (const blockSource of blockSources) {
@@ -321,7 +396,7 @@ export class DataSource {
       logger.info(
         `Fetched ${blocks.length} blocks from block ${fromBlock} to ${toBlock}...`,
       );
-      this.stagingBlocksQueue.set(
+      this.blocksQueue.set(
         fromBlock,
         {
           blocks,
@@ -336,27 +411,37 @@ export class DataSource {
       this.retryBlocks.set(fromBlock, toBlock);
     });
 
-    this.stagingQueuePending.blocks.set(fromBlock, true);
+    this.queuePending.blocks.set(fromBlock, true);
   }
 
   private async runProcessorLoop() {
     while (this.eventLoops.processor) {
-      const logs = this.stagingLogsQueue.get(this.processedBlockHeight);
-      const logsPending = this.stagingQueuePending.logs.get(
+      const logs = this.logsQueue.get(this.processedBlockHeight);
+      const logsPending = this.queuePending.logs.get(
         this.processedBlockHeight,
       );
-      const blocks = this.stagingBlocksQueue.get(this.processedBlockHeight);
-      const blocksPending = this.stagingQueuePending.blocks.get(
+      const blocks = this.blocksQueue.get(this.processedBlockHeight);
+      const blocksPending = this.queuePending.blocks.get(
+        this.processedBlockHeight,
+      );
+      const agnosticLogs = this.agnosticLogsQueue.get(
+        this.processedBlockHeight,
+      );
+      const agnosticLogsPending = this.queuePending.agnosticLogs.get(
         this.processedBlockHeight,
       );
 
-      if (!logsPending && !blocksPending) {
+      if (!logsPending && !blocksPending && !agnosticLogsPending) {
+        logger.info(
+          `No logs or blocks to process for block ${this.processedBlockHeight}, waiting...`,
+        );
         await delay(this.queueDelay);
         continue;
       }
 
       if (
-        (!logs && logsPending) || (!blocks && blocksPending)
+        (!logs && logsPending) || (!blocks && blocksPending) ||
+        (!agnosticLogs && agnosticLogsPending)
       ) {
         logger.info(
           `No logs or blocks fetched yet to process for block ${this.processedBlockHeight}, waiting...`,
@@ -373,12 +458,17 @@ export class DataSource {
         ...logs?.logs.map((log) => ({
           ...log,
           blockNumber: log.blockNumber,
-          isBlock: false,
+          type: "log",
         })) ?? [],
         ...blocks?.blocks.map((block) => ({
           ...block,
           blockNumber: block.block.number,
-          isBlock: true,
+          type: "block",
+        })) ?? [],
+        ...agnosticLogs?.logs.map((log) => ({
+          ...log,
+          blockNumber: log.blockNumber,
+          type: "agnosticLog",
         })) ?? [],
       ];
 
@@ -395,7 +485,7 @@ export class DataSource {
       for (
         const logOrBlock of logsAndBlocks
       ) {
-        if (!logOrBlock.isBlock) {
+        if (logOrBlock.type === "log") {
           const log = logOrBlock as SafeRpcLog;
 
           const contractId = this.addressToId.get(log.address.toLowerCase());
@@ -436,7 +526,7 @@ export class DataSource {
               logger.error(`Error running event handler ${event}: ${e}`);
             });
           }
-        } else {
+        } else if (logOrBlock.type === "block") {
           const block = logOrBlock as {
             block: Block;
             handlers: BlockHandler[];
@@ -461,6 +551,45 @@ export class DataSource {
               });
             }
           }
+        } else if (logOrBlock.type === "agnosticLog") {
+          const log = logOrBlock as SafeRpcLog;
+
+          const topic = log.topics[0];
+
+          if (!topic) {
+            logger.error(`No topic found for log ${log}`);
+            continue;
+          }
+
+          const eventHandler = this.agnosticEvents.get(topic);
+          if (!eventHandler) {
+            logger.error(`No event found for log ${log}`);
+            continue;
+          }
+
+          const event = decodeEventLog({
+            abi: eventHandler.abi,
+            data: log.data,
+            topics: [log.topics[0]!, ...log.topics.slice(1)],
+          });
+
+          try {
+            await eventHandler.handler({
+              eventName: event.eventName,
+              client: this.client,
+              store: this.store,
+              event: formatLog(log, event),
+            });
+          } catch (_e) {
+            eventHandler.handler({
+              eventName: event.eventName,
+              client: this.client,
+              store: this.store,
+              event: formatLog(log, event),
+            }).catch((e) => {
+              logger.error(`Error running event handler ${event}: ${e}`);
+            });
+          }
         }
 
         const arkiverMetadata = await this.store.retrieve(
@@ -480,8 +609,11 @@ export class DataSource {
         arkiverMetadata.processedBlockHeight = Number(
           logOrBlock.blockNumber,
         );
-        arkiverMetadata.blockHandlerCalls += logOrBlock.isBlock ? 1 : 0;
-        arkiverMetadata.eventHandlerCalls += logOrBlock.isBlock ? 0 : 1;
+        if (logOrBlock.type === "block") {
+          arkiverMetadata.blockHandlerCalls++;
+        } else {
+          arkiverMetadata.eventHandlerCalls++;
+        }
 
         this.store.set(
           `${this.chain}:${logOrBlock.blockNumber}:metadata`,
@@ -489,10 +621,10 @@ export class DataSource {
         );
       }
 
-      this.stagingLogsQueue.delete(this.processedBlockHeight);
-      this.stagingBlocksQueue.delete(this.processedBlockHeight);
-      this.stagingQueuePending.logs.delete(this.processedBlockHeight);
-      this.stagingQueuePending.blocks.delete(this.processedBlockHeight);
+      this.logsQueue.delete(this.processedBlockHeight);
+      this.blocksQueue.delete(this.processedBlockHeight);
+      this.queuePending.logs.delete(this.processedBlockHeight);
+      this.queuePending.blocks.delete(this.processedBlockHeight);
       logger.info(`Processed block ${this.processedBlockHeight}...`);
 
       this.processedBlockHeight = logs?.nextFromBlock ??
@@ -566,6 +698,25 @@ export class DataSource {
         lowestBlockHeight < this.processedBlockHeight
       ) {
         this.processedBlockHeight = lowestBlockHeight;
+      }
+
+      if (sources.filter((s) => s.address === "*").length > 0) {
+        const source = sources.find((s) => s.address === "*")!;
+        for (const event of events) {
+          const topic = encodeEventTopics({
+            abi,
+            eventName: event.name,
+          })[0];
+          this.agnosticEvents.set(
+            topic,
+            {
+              abi,
+              handler: event.handler,
+              startBlockHeight: source.startBlockHeight,
+            },
+          );
+        }
+        continue;
       }
 
       for (const source of sources) {

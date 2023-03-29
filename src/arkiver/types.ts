@@ -58,7 +58,7 @@ export type DataSource = {
 export interface Contract {
   abi: Abi;
   sources: {
-    address: Address;
+    address: Address | "*";
     startBlockHeight: bigint;
   }[];
   events: EventSource[];
