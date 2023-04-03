@@ -10,7 +10,7 @@ export {
   type PublicClient,
   type RpcLog,
 } from "npm:viem";
-export { avalanche } from "npm:viem/chains";
+export { arbitrum, avalanche } from "npm:viem/chains";
 export {
   type Abi,
   type AbiEvent,

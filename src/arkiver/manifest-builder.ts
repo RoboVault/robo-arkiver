@@ -144,9 +144,13 @@ export class ContractBuilder<
 
   public addEventHandler<
     TEventName extends ExtractAbiEventNames<TAbi>,
+    TEventHandler extends EventHandler<
+      ExtractAbiEvent<TAbi, TEventName>,
+      TEventName
+    >,
   >(
-    name: TEventName | ExtractAbiEventNames<TAbi>,
-    handler: EventHandler<ExtractAbiEvent<TAbi, TEventName>, TEventName>,
+    name: TEventName,
+    handler: TEventHandler,
   ) {
     const existing = this.contract.events.find(
       (event) => event.name === name,

@@ -1,5 +1,5 @@
 import { SafeLog, SafeRpcLog } from "./arkiver/types.ts";
-import { avalanche } from "./deps.ts";
+import { arbitrum, avalanche } from "./deps.ts";
 
 export const delay = (durationMs: number) => {
   return new Promise((resolve) => {
@@ -11,6 +11,8 @@ export const getChainObjFromChainName = (chain: string) => {
   switch (chain) {
     case "avalanche":
       return avalanche;
+    case "arbitrum":
+      return arbitrum;
     default:
       throw new Error(`Unsupported chain: ${chain}`);
   }

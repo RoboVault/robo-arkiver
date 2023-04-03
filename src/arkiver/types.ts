@@ -97,10 +97,12 @@ export interface EventHandlerContext<
 }
 
 export interface BlockHandlerContext {
-  block: Block;
+  block: SafeBlock;
   client: PublicClient;
   store: Store;
 }
+
+export type SafeBlock = OneDeepNonNullable<Block>;
 
 export type EventHandler<
   TAbiEvent extends AbiEvent,

@@ -16,6 +16,7 @@ import {
   Contract,
   EventHandler,
   IBlockHandler,
+  SafeBlock,
   SafeRpcLog,
 } from "./types.ts";
 import {
@@ -399,6 +400,11 @@ export class DataSource {
     );
 
     Promise.all(blocksPromises).then((blocks) => {
+      if (blocks.some((b) => b.block === null)) {
+        logger.info(`Some blocks still pending, retrying...`);
+        this.retryBlocks.set(fromBlock, toBlock);
+        return;
+      }
       logger.info(
         `Fetched ${blocks.length} blocks from block ${fromBlock} to ${toBlock}...`,
       );
@@ -547,7 +553,7 @@ export class DataSource {
           }
         } else if (logOrBlock.type === "block") {
           const block = logOrBlock as {
-            block: Block;
+            block: SafeBlock;
             handlers: BlockHandler[];
           };
 
