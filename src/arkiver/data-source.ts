@@ -108,7 +108,7 @@ export class DataSource {
   private fetchInterval = 500;
   private queueFullDelay = 1000;
   private readonly store = new Store({
-    ttl: 5000,
+    max: 1000,
   });
   private isLive = false;
 
@@ -150,6 +150,7 @@ export class DataSource {
     this.loadContracts();
     this.loadBlockHandlers();
     await this.checkIndexedBlockHeights();
+    this.finalChecks();
     this.fetchedBlockHeight = this.processedBlockHeight;
   }
 
@@ -330,6 +331,7 @@ export class DataSource {
 
   private fetchBlocks(fromBlock: bigint, toBlock: bigint) {
     if (this.blockSources.length === 0) {
+      logger.info(`No block sources found for ${this.chain}...`);
       this.queuePending.blocks.set(fromBlock, false);
       return;
     }
@@ -337,10 +339,14 @@ export class DataSource {
     const blockToHandlers = new Map<bigint, BlockHandler[]>();
     const blockSources = this.blockSources.filter((source) =>
       source.startBlockHeight !== "live" &&
-        source.startBlockHeight <= toBlock ||
+        source.startBlockHeight <= toBlock &&
+        source.startBlockHeight >= fromBlock ||
       (source.startBlockHeight === "live" && this.isLive)
     );
     if (blockSources.length === 0) {
+      logger.info(
+        `No filtered block sources found for ${this.chain} at ${this.fetchedBlockHeight}`,
+      );
       this.queuePending.blocks.set(fromBlock, false);
       return;
     }
@@ -358,10 +364,10 @@ export class DataSource {
         blockSource.blockInterval;
       const arrayLength = Number(
         (toBlock - newFromBlock + 1n) /
-                  blockSource.blockInterval + arrayLengthRemainder ===
-            0n
-          ? 0n
-          : 1n,
+            blockSource.blockInterval + (arrayLengthRemainder ===
+              0n
+            ? 0n
+            : 1n),
       );
 
       const blocks = Array.from(
@@ -431,10 +437,23 @@ export class DataSource {
         this.processedBlockHeight,
       );
 
-      if (!logsPending && !blocksPending && !agnosticLogsPending) {
+      if (
+        logsPending === undefined && blocksPending === undefined &&
+        agnosticLogsPending === undefined
+      ) {
+        await delay(this.queueDelay);
+        continue;
+      }
+
+      if (
+        logsPending === false && blocksPending === false &&
+        agnosticLogsPending === false
+      ) {
         logger.info(
-          `No logs or blocks to process for block ${this.processedBlockHeight}, waiting...`,
+          `No logs or blocks to process for block ${this.processedBlockHeight}, continuing...`,
         );
+        this.processedBlockHeight = this.processedBlockHeight +
+          this.blockRange + 1n;
         await delay(this.queueDelay);
         continue;
       }
@@ -644,8 +663,34 @@ export class DataSource {
       `Indexed block height for ${this.chain}: ${indexedBlockHeight}...`,
     );
 
-    if (indexedBlockHeight && indexedBlockHeight > this.processedBlockHeight) {
-      this.processedBlockHeight = BigInt(indexedBlockHeight);
+    if (
+      indexedBlockHeight && (indexedBlockHeight + 1) > this.processedBlockHeight
+    ) {
+      logger.info(
+        `Setting processed block height to ${indexedBlockHeight + 1}...`,
+      );
+      this.processedBlockHeight = BigInt(indexedBlockHeight) + 1n;
+    }
+  }
+
+  private finalChecks() {
+    for (const blockSource of this.blockSources) {
+      if (
+        blockSource.startBlockHeight !== "live" &&
+        blockSource.startBlockHeight < this.processedBlockHeight
+      ) {
+        blockSource.startBlockHeight =
+          ((this.processedBlockHeight - blockSource.startBlockHeight) /
+                blockSource.blockInterval + 1n) * blockSource.blockInterval +
+          blockSource.startBlockHeight;
+      }
+    }
+    if (
+      this.blockSources.length > 0 &&
+      this.normalizedContracts.contracts.length === 0 &&
+      this.agnosticEvents.size === 0
+    ) {
+      this.fetchInterval = 100;
     }
   }
 

@@ -1,14 +1,15 @@
+// deno-lint-ignore-file no-explicit-any
 import { Cache } from "../deps.ts";
 
-export class Store extends Cache<string, unknown> {
-  constructor(options: Cache.Options<string, unknown>) {
+export class Store extends Cache<any, any> {
+  constructor(options: Cache.Options<any, any, unknown>) {
     super(options);
   }
 
   retrieve<TValue>(
     key: string,
     defaultValueAccessor: () => TValue | Promise<TValue>,
-    options?: Cache.SetOptions,
+    options?: Cache.SetOptions<any, any, unknown>,
   ): TValue | Promise<TValue> {
     const value = super.get(key) as TValue | Promise<TValue>;
     if (value) {

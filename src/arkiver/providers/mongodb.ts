@@ -7,8 +7,10 @@ export class MongoStatusProvider implements StatusProvider {
   ): Promise<number> {
     const { chain } = params;
 
-    const arkiverMetadata = await ArkiverMetadata.findOne({ chain });
+    const arkiverMetadata = await ArkiverMetadata.find({ chain }).sort({
+      processedBlockHeight: -1,
+    }).limit(1);
 
-    return arkiverMetadata?.processedBlockHeight || 0;
+    return arkiverMetadata[0]?.processedBlockHeight || 0;
   }
 }
