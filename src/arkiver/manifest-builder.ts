@@ -19,6 +19,13 @@ export class Manifest {
   public manifest: ArkiveManifest;
 
   constructor(name: string) {
+    if (name === undefined) {
+      this.manifest = {
+        dataSources: {},
+        entities: [],
+        name: "",
+      };
+    }
     if (name.search(/[^a-zA-Z0-9]/g) !== -1) {
       throw new Error(`Invalid name: ${name}`);
     }
