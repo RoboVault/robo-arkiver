@@ -1,3 +1,6 @@
+# v0.3.2
+- Fix a bug with passing undefined to the Manifest constructor
+
 # v0.3.1
 - Allow empty name to be passed to the Manifest constructor to allow for backwards compatibility.
 
