@@ -1,3 +1,6 @@
+# v0.3.1
+- Allow empty name to be passed to the Manifest constructor to allow for backwards compatibility.
+
 # v0.3.0
 ## Minor
 - The Manifest class now requires a name to be passed in the constructor. This name will be used to identify the Arkive when deploying.
