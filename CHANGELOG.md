@@ -1,3 +1,11 @@
+# v0.3.0
+## Minor
+- The Manifest class now requires a name to be passed in the constructor. This name will be used to identify the Arkive when deploying.
+- The Arkive name is no longer passed as a command line argument to the `arkiver deploy` command. Instead, it is passed in the manifest constructor.
+  
+## Bug Fixes
+- Fixed a bug in the `buildSchemaFromEntities` function
+
 # v0.2.0
 
 ## Patches

@@ -10,7 +10,7 @@ import erc20 from "./abis/erc20.ts";
 import { Balance } from "./entities/balance.ts";
 import { transferHandler } from "./handlers/transfer.ts";
 
-const manifest = new Manifest();
+const manifest = new Manifest("my-arkive");
 
 manifest
 	.addEntity(Balance)

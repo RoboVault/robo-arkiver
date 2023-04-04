@@ -13,7 +13,7 @@ import { Manifest } from "https://deno.land/x/robo_arkiver/mod.ts";
 import { Balance } from "./entities/balance.ts";
 import { transfer } from "./handlers/transfer.ts";
 
-const manifest = new Manifest();
+const manifest = new Manifest("my-arkive");
 
 manifest
   .addEntity(Balance)

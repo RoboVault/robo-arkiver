@@ -38,7 +38,7 @@ command
   .command("deploy", "Deploy arkive")
   .option("--public", "Make arkive public")
   .option("--major", "Deploy as major version")
-  .arguments("<dir:string> <arkiveName:string>")
+  .arguments("<dir:string>")
   .action(deploy.action);
 
 // delete

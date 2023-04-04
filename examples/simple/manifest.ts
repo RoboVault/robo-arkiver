@@ -3,7 +3,7 @@ import erc20 from "./erc20.ts";
 import { Balance } from "./entities.ts";
 import { transferHandler } from "./transferHandler.ts";
 
-const manifest = new Manifest();
+const manifest = new Manifest("simple");
 
 manifest
   .addEntity(Balance)

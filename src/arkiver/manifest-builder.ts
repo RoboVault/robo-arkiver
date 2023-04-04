@@ -16,10 +16,20 @@ import {
 } from "../deps.ts";
 
 export class Manifest {
-  public manifest: ArkiveManifest = {
-    dataSources: {},
-    entities: [],
-  };
+  public manifest: ArkiveManifest;
+
+  constructor(name: string) {
+    if (name.search(/[^a-zA-Z0-9]/g) !== -1) {
+      throw new Error(`Invalid name: ${name}`);
+    }
+    const formattedName = name.replace(" ", "-").toLowerCase();
+
+    this.manifest = {
+      dataSources: {},
+      entities: [],
+      name: formattedName,
+    };
+  }
 
   public addChain(
     chain: keyof typeof supportedChains,

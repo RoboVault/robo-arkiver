@@ -5,6 +5,7 @@ export const buildSchemaFromEntities = (
   entities: { model: mongoose.Model<any>; list: boolean }[],
 ) => {
   for (const { model, list } of entities) {
+    schemaComposer.delete(model.modelName);
     // deno-lint-ignore no-explicit-any
     const ModelTC = composeMongoose<any>(model);
 
