@@ -41,7 +41,7 @@ export interface IBlockHandler {
 
 export interface ArkiveManifest {
   dataSources: Partial<
-    Record<typeof supportedChains[number], {
+    Record<keyof typeof supportedChains, {
       contracts?: Contract[];
       blockHandlers?: IBlockHandler[];
     }>

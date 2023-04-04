@@ -1,5 +1,5 @@
 import { SafeLog, SafeRpcLog } from "./arkiver/types.ts";
-import { arbitrum, avalanche } from "./deps.ts";
+import { supportedChains } from "./chains.ts";
 
 export const delay = (durationMs: number) => {
   return new Promise((resolve) => {
@@ -7,16 +7,23 @@ export const delay = (durationMs: number) => {
   });
 };
 
-export const getChainObjFromChainName = (chain: string) => {
-  switch (chain) {
-    case "avalanche":
-      return avalanche;
-    case "arbitrum":
-      return arbitrum;
-    default:
-      throw new Error(`Unsupported chain: ${chain}`);
+export const getChainObjFromChainName = (
+  chain: keyof typeof supportedChains,
+) => {
+  const chainObj = supportedChains[chain];
+  if (!chainObj) {
+    throw new Error(`Unsupported chain: ${chain}`);
   }
+  return chainObj;
 };
+
+export function assertChain(
+  chain: string,
+): asserts chain is keyof typeof supportedChains {
+  if (!supportedChains[chain as keyof typeof supportedChains]) {
+    throw new Error(`Unsupported chain: ${chain}`);
+  }
+}
 
 export const bigIntMax = (...args: bigint[]) =>
   args.reduce((m, e) => e > m ? e : m);

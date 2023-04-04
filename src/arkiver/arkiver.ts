@@ -2,17 +2,18 @@ import { Arkive, ArkiveManifest } from "./types.ts";
 import { logger } from "../logger.ts";
 import { DataSource } from "./data-source.ts";
 import { mongoose } from "../deps.ts";
+import { assertChain } from "../utils.ts";
 
 export class Arkiver extends EventTarget {
   private readonly manifest: ArkiveManifest;
   private arkiveData: Arkive;
   private sources: DataSource[] = [];
-  private mongoConnection: string;
+  private mongoConnection?: string;
   private rpcUrls: Record<string, string>;
 
   constructor(params: {
     manifest: ArkiveManifest;
-    mongoConnection: string;
+    mongoConnection?: string;
     arkiveData?: Arkive;
     rpcUrls: Record<string, string>;
   }) {
@@ -44,13 +45,15 @@ export class Arkiver extends EventTarget {
       `Running Arkiver for arkive ID number ${this.arkiveData.id}...`,
     );
     try {
-      logger.info(`Connecting to database...`);
-      await mongoose.connect(this.mongoConnection, {
-        dbName:
-          `${this.arkiveData.id}-${this.arkiveData.deployment.major_version}`,
-        // deno-lint-ignore no-explicit-any
-      } as any);
-      logger.info(`Connected to database`);
+      if (this.mongoConnection !== undefined) {
+        logger.info(`Connecting to database...`);
+        await mongoose.connect(this.mongoConnection, {
+          dbName:
+            `${this.arkiveData.id}-${this.arkiveData.deployment.major_version}`,
+          // deno-lint-ignore no-explicit-any
+        } as any);
+        logger.info(`Connected to database`);
+      }
       await this.initSources();
     } catch (e) {
       logger.error(`Error running arkiver: ${e}`);
@@ -61,6 +64,12 @@ export class Arkiver extends EventTarget {
     logger.info(`Initializing data sources...`);
     const { dataSources } = this.manifest;
     for (const [chain, source] of Object.entries(dataSources)) {
+      try {
+        assertChain(chain);
+      } catch (_e) {
+        logger.error(`Invalid chain ${chain} in manifest, ignoring...`);
+        continue;
+      }
       const rpcUrl = this.rpcUrls[chain];
       if (rpcUrl === undefined) {
         logger.error(`No RPC URL found for chain ${chain}`);

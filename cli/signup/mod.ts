@@ -3,6 +3,7 @@ import {
   getEmail,
   getPassword,
   getSupabaseClient,
+  getUsername,
   validateEmail,
   validatePassword,
 } from "../utils.ts";
@@ -26,6 +27,10 @@ export const action = async (options: {
   }
   validatePassword(password);
 
+  if (!username) {
+    username = await getUsername();
+  }
+
   const supabase = getSupabaseClient();
 
   const spinner = wait("Signing up...").start();
@@ -36,6 +41,16 @@ export const action = async (options: {
   if (signUpRes.error) {
     spinner.fail("Signup failed");
     throw signUpRes.error;
+  }
+
+  const profileRes = await supabase.functions.invoke("update-profile", {
+    body: {
+      username,
+    },
+  });
+  if (profileRes.error) {
+    spinner.fail("Signup failed");
+    throw profileRes.error;
   }
 
   spinner.succeed(

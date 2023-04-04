@@ -9,6 +9,14 @@ export const getEmail = async () => {
   return email;
 };
 
+export const getUsername = async () => {
+  const username = await Input.prompt("👤 Username:");
+  if (!username) {
+    throw new Error("Username is required");
+  }
+  return username;
+};
+
 export const validateEmail = (email: string) => {
   const validateEmail = z.string().email();
   const emailValidation = validateEmail.safeParse(email);

@@ -4,4 +4,4 @@ export {
   type EventHandlerFor,
   logger,
   Manifest,
-} from "https://deno.land/x/robo_arkiver@v0.1.13/mod.ts";
+} from "../../mod.ts";

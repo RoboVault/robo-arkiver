@@ -29,6 +29,7 @@ import {
 import { Store } from "./store.ts";
 import { MongoStatusProvider } from "./providers/mongodb.ts";
 import { ArkiverMetadata } from "./arkive-metadata.ts";
+import { supportedChains } from "../chains.ts";
 
 interface NormalizedContracts {
   contracts: {
@@ -39,7 +40,7 @@ interface NormalizedContracts {
 }
 
 export class DataSource {
-  private readonly chain: string;
+  private readonly chain: keyof typeof supportedChains;
   private readonly rpcUrl: string;
   private readonly client: PublicClient<HttpTransport>;
   private readonly blockRange: bigint;
@@ -116,7 +117,7 @@ export class DataSource {
   constructor(
     params: {
       contracts: Contract[];
-      chain: string;
+      chain: keyof typeof supportedChains;
       rpcUrl: string;
       blockRange: bigint;
       arkiveId: number;

@@ -22,7 +22,7 @@ export class Manifest {
   };
 
   public addChain(
-    chain: typeof supportedChains[number],
+    chain: keyof typeof supportedChains,
   ) {
     return new DataSourceBuilder(this, chain);
   }
@@ -50,7 +50,7 @@ export class DataSourceBuilder {
 
   constructor(
     private builder: Manifest,
-    chain: typeof supportedChains[number],
+    chain: keyof typeof supportedChains,
   ) {
     if (this.builder.manifest.dataSources[chain] != undefined) {
       throw new Error(`Cannot add data source for ${chain} more than once.`);
@@ -58,7 +58,7 @@ export class DataSourceBuilder {
     this.builder.manifest.dataSources[chain] = this.dataSource;
   }
 
-  public addContract<TAbi extends Abi>(
+  public addContract<const TAbi extends Abi>(
     abi: TAbi,
   ) {
     if (this.dataSource.contracts == undefined) {
@@ -90,7 +90,7 @@ export class DataSourceBuilder {
 }
 
 export class ContractBuilder<
-  TAbi extends Abi,
+  const TAbi extends Abi,
 > {
   public contract: Contract;
 

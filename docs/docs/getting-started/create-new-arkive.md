@@ -43,17 +43,27 @@ my-arkive
 - `/deps.ts` - Contains the dependencies for your Arkive. This is where you import any third-party libraries and use them throughout your Arkive.
 ## Run your Arkive locally
 
-To run your Arkive locally for debugging, run the following command:
+To run your Arkive locally, run the following command:
 
 ```bash
-arkiver start . --rpc-url "ethereum=https://mainnet.infura.io/v3/<YOUR_INFURA_PROJECT_ID>"
+arkiver start . \
+	-c mongodb://localhost:27017 \
+	--rpc-url ethereum=https://mainnet.infura.io/v3/<YOUR_INFURA_PROJECT_ID>
 ```
 
-:::tip
-You can optionally set your rpc urls as environment variables and omit the `--rpc-url` flag. For example, you can set the `ETHEREUM_RPC_URL` environment variable to your Ethereum RPC URL.
+:::info
+You can easily [spin up a MongoDB instance locally with docker](https://www.mongodb.com/docs/v6.0/tutorial/install-mongodb-community-with-docker/). Or you can omit the `-c` flag and Arkiver will not connect to any MongoDB instance. In this case, you are free to use any database you want in your handler functions and Arkiver will not serve your data via GraphQL.
 :::
 
-This example Arkive queries the Ethereum blockchain for ERC20 transfers on the USDC contract, processes them through the handler function and saves the data to a postgres database. You can view the data by visiting the GraphQL playground at http://localhost:4000/graphql.
+:::tip
+To add multiple chains, use multiple `--rpc-url` flags. For example, to add Arbitrum:
+```bash
+arkiver start . \
+	-c mongodb://localhost:27017 \
+	--rpc-url ethereum=https://mainnet.infura.io/v3/<YOUR_INFURA_PROJECT_ID> \
+	--rpc-url arbitrum=https://arb1.arbitrum.io/rpc
+```
+:::
 
 ## Deploy your Arkive
 

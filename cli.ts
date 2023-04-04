@@ -58,7 +58,11 @@ command
     "-c, --mongo-connection <mongoConnection:string>",
     "MongoDB Connection String",
   )
-  .option("--rpc-url <...rpcUrl:string>", "RPC URL", { required: true })
+  .option("-r, --rpc-url <rpcUrl:string>", "RPC URL", {
+    collect: true,
+    required: true,
+  })
+  .option("--no-gql", "Disable GraphQL server")
   .action(start.action);
 
 //init
