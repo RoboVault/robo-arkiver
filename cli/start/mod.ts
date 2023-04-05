@@ -6,7 +6,7 @@ import { ArkiverMetadata } from "../../src/arkiver/arkive-metadata.ts";
 export const action = async (
   options: {
     manifest?: string;
-    rpcUrl: string[];
+    rpcUrl?: string[];
     mongoConnection?: string;
     gql: boolean;
   },
@@ -56,7 +56,7 @@ export const action = async (
     const [name, url] = rpc.split("=");
     acc[name] = url;
     return acc;
-  }, {} as Record<string, string>);
+  }, {} as Record<string, string>) ?? {};
 
   const arkiver = new Arkiver({
     manifest,

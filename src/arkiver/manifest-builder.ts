@@ -3,6 +3,7 @@ import { supportedChains } from "../chains.ts";
 import {
   ArkiveManifest,
   BlockHandler,
+  ChainOptions,
   Contract,
   DataSource,
   EventHandler,
@@ -14,6 +15,7 @@ import {
   ExtractAbiEventNames,
   mongoose,
 } from "../deps.ts";
+import { getChainObjFromChainName } from "../utils.ts";
 
 export class Manifest {
   public manifest: ArkiveManifest;
@@ -41,8 +43,9 @@ export class Manifest {
 
   public addChain(
     chain: keyof typeof supportedChains,
+    options?: Partial<ChainOptions>,
   ) {
-    return new DataSourceBuilder(this, chain);
+    return new DataSourceBuilder(this, chain, options);
   }
 
   public addEntity(entity: mongoose.Model<any>) {
@@ -64,16 +67,24 @@ export class Manifest {
 }
 
 export class DataSourceBuilder {
-  public dataSource: DataSource = {};
+  public dataSource: DataSource;
 
   constructor(
     private builder: Manifest,
     chain: keyof typeof supportedChains,
+    options: Partial<ChainOptions> = {},
   ) {
     if (this.builder.manifest.dataSources[chain] != undefined) {
       throw new Error(`Cannot add data source for ${chain} more than once.`);
     }
-    this.builder.manifest.dataSources[chain] = this.dataSource;
+    const dataSource: DataSource = {
+      options: {
+        blockRange: 3000n,
+        rpcUrl: getChainObjFromChainName(chain).rpcUrls.public.http[0],
+        ...options,
+      },
+    };
+    this.builder.manifest.dataSources[chain] = this.dataSource = dataSource;
   }
 
   public addContract<const TAbi extends Abi>(

@@ -39,12 +39,14 @@ export interface IBlockHandler {
   blockInterval: bigint;
 }
 
+export interface ChainOptions {
+  blockRange: bigint;
+  rpcUrl: string;
+}
+
 export interface ArkiveManifest {
   dataSources: Partial<
-    Record<keyof typeof supportedChains, {
-      contracts?: Contract[];
-      blockHandlers?: IBlockHandler[];
-    }>
+    Record<keyof typeof supportedChains, DataSource>
   >;
   // deno-lint-ignore no-explicit-any
   entities: { model: mongoose.Model<any>; list: boolean }[];
@@ -54,6 +56,7 @@ export interface ArkiveManifest {
 export type DataSource = {
   contracts?: Contract[];
   blockHandlers?: IBlockHandler[];
+  options: ChainOptions;
 };
 
 export interface Contract {

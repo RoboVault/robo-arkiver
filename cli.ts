@@ -60,7 +60,6 @@ command
   )
   .option("-r, --rpc-url <rpcUrl:string>", "RPC URL", {
     collect: true,
-    required: true,
   })
   .option("--no-gql", "Disable GraphQL server")
   .action(start.action);
