@@ -44,6 +44,14 @@ export const action = async (options: {
     },
   });
   if (signUpRes.error) {
+    if (
+      signUpRes.error.message.includes(
+        "Username already exists!",
+      )
+    ) {
+      spinner.fail("Username already taken, please try another one");
+      Deno.exit(1);
+    }
     spinner.fail("Signup failed");
     throw signUpRes.error;
   }
