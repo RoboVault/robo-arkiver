@@ -7,12 +7,15 @@ import {
   remove,
   signup,
   start,
+  upgrade,
 } from "./cli/mod.ts";
 import "https://deno.land/std@0.179.0/dotenv/load.ts";
 
+export const version = "v0.3.5";
+
 const command = new Command()
   .name("arkiver")
-  .version("0.1.0")
+  .version(version)
   .description("The CLI tool for RoboArkiver");
 
 // login
@@ -70,6 +73,10 @@ command
   .arguments("<dir:string>")
   .option("--overwrite", "Overwrite existing files")
   .action(init.action);
+
+command
+  .command("upgrade", "Upgrade arkiver to latest version")
+  .action(async () => await upgrade.action(version));
 
 if (import.meta.main) {
   await command.parse(Deno.args);

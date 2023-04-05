@@ -1,4 +1,3 @@
-import "npm:reflect-metadata";
 import { Arkiver, buildSchemaFromEntities } from "../../mod.ts";
 import { $, createYoga, delay, join, serve } from "../deps.ts";
 import { ArkiverMetadata } from "../../src/arkiver/arkive-metadata.ts";
