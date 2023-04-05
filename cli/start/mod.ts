@@ -67,7 +67,7 @@ export const action = async (
 
   await arkiver.run();
 
-  if (!options.gql || !options.mongoConnection) {
+  if (!options.gql) {
     return;
   }
 

@@ -37,20 +37,15 @@ export const action = async (options: {
   const signUpRes = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      data: {
+        username,
+      },
+    },
   });
   if (signUpRes.error) {
     spinner.fail("Signup failed");
     throw signUpRes.error;
-  }
-
-  const profileRes = await supabase.functions.invoke("update-profile", {
-    body: {
-      username,
-    },
-  });
-  if (profileRes.error) {
-    spinner.fail("Signup failed");
-    throw profileRes.error;
   }
 
   spinner.succeed(

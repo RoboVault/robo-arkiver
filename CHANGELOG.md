@@ -1,3 +1,7 @@
+# v0.3.4
+- Signing up now requires a username
+- Fixed a bug where the `arkiver start` command would not start the GraphQL server if no `-c` flag was passed
+
 # v0.3.3
 - Re-add automatic mongodb spin up on `arkiver start` command
 
