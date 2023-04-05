@@ -13,13 +13,14 @@ import { transferHandler } from "./handlers/transfer.ts";
 const manifest = new Manifest("my-arkive");
 
 manifest
-	.addEntity(Balance)
-	.addChain("avalanche")
-	.addContract(erc20)
-	.addSource("0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664", 27347402n)
-	.addEventHandler("Transfer", transferHandler);
+	.chain("avalanche")
+	.contract(erc20)
+	.addSources({ "0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664": 27347402n })
+	.addEventHandlers({ "Transfer": transferHandler });
 
-export default manifest.build();`;
+export default manifest
+	.addEntity(Balance)
+	.build();`;
 
   writeFile(newDir, "manifest.ts", manifest, options.overwrite);
 
