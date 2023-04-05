@@ -4,6 +4,7 @@ import {
   ArkiveManifest,
   BlockHandler,
   ChainOptions,
+  CheckManifestName,
   Contract,
   DataSource,
   EventHandler,
@@ -17,19 +18,14 @@ import {
 } from "../deps.ts";
 import { getChainObjFromChainName } from "../utils.ts";
 
-export class Manifest {
+export class Manifest<TName extends string = ""> {
   public manifest: ArkiveManifest;
 
-  constructor(name: string) {
+  constructor(name: CheckManifestName<TName, TName>) {
     if (name === undefined) {
-      this.manifest = {
-        dataSources: {},
-        entities: [],
-        name: "",
-      };
-      return;
+      throw new Error("Manifest name is required.");
     }
-    if (name.search(/[^a-zA-Z0-9]/g) !== -1) {
+    if (name.search(/[^a-zA-Z0-9_-]/g) !== -1) {
       throw new Error(`Invalid name: ${name}`);
     }
     const formattedName = name.replace(" ", "-").toLowerCase();
@@ -45,7 +41,7 @@ export class Manifest {
     chain: keyof typeof supportedChains,
     options?: Partial<ChainOptions>,
   ) {
-    return new DataSourceBuilder(this, chain, options);
+    return new DataSourceBuilder<TName>(this, chain, options);
   }
 
   public addEntity(entity: mongoose.Model<any>) {
@@ -66,11 +62,11 @@ export class Manifest {
   }
 }
 
-export class DataSourceBuilder {
+export class DataSourceBuilder<TName extends string> {
   public dataSource: DataSource;
 
   constructor(
-    private builder: Manifest,
+    private builder: Manifest<TName>,
     chain: keyof typeof supportedChains,
     options: Partial<ChainOptions> = {},
   ) {
@@ -93,7 +89,7 @@ export class DataSourceBuilder {
     if (this.dataSource.contracts == undefined) {
       this.dataSource.contracts = [];
     }
-    return new ContractBuilder(this, abi);
+    return new ContractBuilder<TAbi, TName>(this, abi);
   }
 
   public addBlockHandler(
@@ -120,11 +116,12 @@ export class DataSourceBuilder {
 
 export class ContractBuilder<
   const TAbi extends Abi,
+  TName extends string,
 > {
   public contract: Contract;
 
   constructor(
-    private builder: DataSourceBuilder,
+    private builder: DataSourceBuilder<TName>,
     abi: TAbi,
   ) {
     const existing = this.builder.dataSource.contracts?.find(

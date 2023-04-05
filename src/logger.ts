@@ -1,4 +1,4 @@
-import * as log from "https://deno.land/std@0.177.0/log/mod.ts";
+import { log } from "./deps.ts";
 log.setup({
   handlers: {
     console: new log.handlers.ConsoleHandler("DEBUG"),

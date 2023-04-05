@@ -1,8 +1,13 @@
+# v0.3.5
+- feat: The name passed to the `Manifest` constructor now typechecks
+- fix: Properly use passed in RPC URL in `addChain` method
+
 # v0.3.4
 - Signing up now requires a username
 - Fixed a bug where the `arkiver start` command would not start the GraphQL server if no `-c` flag was passed
 - Add options parameter to `Manifest`'s `addChain` method. This allows you to specify the chain's querying blockrange and the chain's RPC URL.
 - Add rpcUrl field to `ChainOptions`. You can now omit passing in `--rpc-url` to the `arkiver start` command and instead pass in the RPC URL in the `addChain` method. If no RPC URL is passed in, the default public RPC URL for the chain will be used.
+- Small enhancements to CLI error messages
 
 # v0.3.3
 - Re-add automatic mongodb spin up on `arkiver start` command

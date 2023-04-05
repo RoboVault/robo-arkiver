@@ -23,3 +23,4 @@ export { default as mongoose, Schema, Types } from "npm:mongoose";
 export { schemaComposer } from "npm:graphql-compose";
 export { composeMongoose } from "npm:graphql-compose-mongoose";
 export { default as Cache } from "npm:lru-cache";
+export * as log from "https://deno.land/std@0.179.0/log/mod.ts";

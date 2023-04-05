@@ -70,7 +70,7 @@ export class Arkiver extends EventTarget {
         logger.error(`Invalid chain ${chain} in manifest, ignoring...`);
         continue;
       }
-      const rpcUrl = this.rpcUrls[chain];
+      const rpcUrl = this.rpcUrls[chain] ?? source.options.rpcUrl;
       if (rpcUrl === undefined) {
         logger.error(`No RPC URL found for chain ${chain}`);
         continue;
@@ -81,7 +81,7 @@ export class Arkiver extends EventTarget {
         blockRange: source.options.blockRange,
         chain,
         contracts: source.contracts ?? [],
-        rpcUrl: this.rpcUrls[chain] ?? source.options.rpcUrl,
+        rpcUrl: rpcUrl,
         blockSources: source.blockHandlers ?? [],
       });
       await dataSource.run();
