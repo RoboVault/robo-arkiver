@@ -2,7 +2,6 @@ import { supportedChains } from "../chains.ts";
 import {
   Abi,
   AbiEvent,
-  Address,
   Block,
   ExtractAbiEvent,
   ExtractAbiEventNames,
@@ -62,7 +61,7 @@ export type DataSource = {
 export interface Contract {
   abi: Abi;
   sources: {
-    address: Address | "*";
+    address: string;
     startBlockHeight: bigint;
   }[];
   events: EventSource[];
@@ -161,3 +160,52 @@ export type CheckManifestName<Name extends string, FullName extends string> =
       ? CheckManifestName<Rest, FullName>
     : `Invalid character in manifest name: ${First}`
     : FullName;
+
+export type HexString<Str extends string, Length extends number> = Str extends
+  `0x${infer Rest}`
+  ? InnerHexStr<Rest, Length> extends number
+    ? InnerHexStr<Rest, Length> extends Length ? Str
+    : `Invalid hex string length. Expected ${Length}, got ${InnerHexStr<
+      Rest,
+      Length
+    >}`
+  : `Invalid hex character in string: ${InnerHexStr<Rest, Length>}`
+  : "Missing 0x prefix";
+
+type InnerHexStr<
+  Str extends string,
+  Length extends number,
+  LengthStore extends never[] = [],
+> = Str extends `${infer First}${infer Rest}`
+  ? First extends HexChars | Capitalize<HexChars>
+    ? InnerHexStr<Rest, Length, [...LengthStore, never]>
+  : First
+  : LengthStore["length"] extends Length ? Length
+  : LengthStore["length"];
+
+type HexChars =
+  | "0"
+  | "1"
+  | "2"
+  | "3"
+  | "4"
+  | "5"
+  | "6"
+  | "7"
+  | "8"
+  | "9"
+  | "a"
+  | "b"
+  | "c"
+  | "d"
+  | "e"
+  | "f";
+
+export type ValidateSourcesObject<Sources extends Record<string, bigint>> =
+  keyof Sources extends string
+    ? keyof Sources extends HexString<keyof Sources, 40> | "*"
+      ? keyof Sources extends "*" ? Sources
+      : keyof Sources extends HexString<keyof Sources, 40> ? Sources
+      : "Can't mix wildcard and specific addresses"
+    : HexString<keyof Sources, 40>
+    : `Source addresses must be strings`;

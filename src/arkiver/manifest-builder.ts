@@ -8,10 +8,11 @@ import {
   Contract,
   DataSource,
   EventHandler,
+  HexString,
+  ValidateSourcesObject,
 } from "./types.ts";
 import {
   Abi,
-  Address,
   ExtractAbiEvent,
   ExtractAbiEventNames,
   mongoose,
@@ -37,7 +38,7 @@ export class Manifest<TName extends string = ""> {
     };
   }
 
-  public addChain(
+  public chain(
     chain: keyof typeof supportedChains,
     options?: Partial<ChainOptions>,
   ) {
@@ -83,7 +84,7 @@ export class DataSourceBuilder<TName extends string> {
     this.builder.manifest.dataSources[chain] = this.dataSource = dataSource;
   }
 
-  public addContract<const TAbi extends Abi>(
+  public contract<const TAbi extends Abi>(
     abi: TAbi,
   ) {
     if (this.dataSource.contracts == undefined) {
@@ -140,35 +141,40 @@ export class ContractBuilder<
     }
   }
 
-  public addSource(
-    address: Address | "*",
+  private addSource<TAddress extends string>(
+    address: HexString<TAddress, 40> | "*",
     startBlockHeight: bigint,
   ) {
     if (address === "*" && this.contract.sources.length > 0) {
       throw new Error("Cannot add wildcard source after other sources.");
     }
     this.contract.sources.push({
-      address,
+      address: address,
       startBlockHeight,
     });
     return this;
   }
 
-  public addSources(sources: Record<Address | "*", bigint>) {
+  public addSources<TSources extends Record<string, bigint>>(
+    sources: ValidateSourcesObject<TSources>,
+  ) {
+    if (typeof sources !== "object") {
+      throw new Error("Sources must be an object.");
+    }
     if (
-      sources["*"] !== undefined &&
+      (sources as Record<string, bigint>)["*"] !== undefined &&
       (Object.keys(sources).length > 1 || this.contract.sources.length > 0)
     ) {
       throw new Error("Cannot add wildcard source after other sources.");
     }
 
     for (const [address, startBlockHeight] of Object.entries(sources)) {
-      this.addSource(address as Address, startBlockHeight);
+      this.addSource(address as any, startBlockHeight);
     }
     return this;
   }
 
-  public addEventHandler<
+  private addEventHandler<
     TEventName extends ExtractAbiEventNames<TAbi>,
     TEventHandler extends EventHandler<
       ExtractAbiEvent<TAbi, TEventName>,
@@ -190,6 +196,25 @@ export class ContractBuilder<
       name,
       handler,
     });
+    return this;
+  }
+
+  public addEventHandlers(
+    handlers: Partial<
+      {
+        [eventName in ExtractAbiEventNames<TAbi>]: EventHandler<
+          ExtractAbiEvent<TAbi, eventName>,
+          eventName
+        >;
+      }
+    >,
+  ) {
+    if (typeof handlers !== "object") {
+      throw new Error("Event handlers must be an object.");
+    }
+    for (const [name, handler] of Object.entries(handlers)) {
+      this.addEventHandler(name, handler as any);
+    }
     return this;
   }
 }
