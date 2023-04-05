@@ -44,7 +44,7 @@ following commands:
 
 ```bash
 deno uninstall arkiver
-deno install -A --unstable -n arkiver https://deno.land/x/robo_arkiver/cli.ts
+deno install --reload -A --unstable -n arkiver https://deno.land/x/robo_arkiver/cli.ts
 ```
 
 Check that the installation was successful by running the following command:
