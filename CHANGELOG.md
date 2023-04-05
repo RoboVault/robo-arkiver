@@ -1,3 +1,6 @@
+# v0.3.3
+- Re-add automatic mongodb spin up on `arkiver start` command
+
 # v0.3.2
 - Fix a bug with passing undefined to the Manifest constructor
 

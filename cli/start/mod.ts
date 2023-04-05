@@ -1,6 +1,6 @@
 import "npm:reflect-metadata";
 import { Arkiver, buildSchemaFromEntities } from "../../mod.ts";
-import { createYoga, join, serve } from "../deps.ts";
+import { $, createYoga, delay, join, serve } from "../deps.ts";
 import { ArkiverMetadata } from "../../src/arkiver/arkive-metadata.ts";
 
 export const action = async (
@@ -13,6 +13,29 @@ export const action = async (
   directory: string,
 ) => {
   Deno.env.set("DENO_ENV", "PROD");
+
+  if (!options.mongoConnection) {
+    const cleanup = async () => {
+      console.log(`\nCleaning up...`);
+      const stopRes = await $`docker stop ${
+        containerId.stdout.substring(0, 12)
+      }`
+        .stdout("piped");
+      Deno.exit(stopRes.code);
+    };
+
+    Deno.addSignalListener("SIGINT", cleanup);
+    Deno.addSignalListener("SIGHUP", cleanup);
+    Deno.addSignalListener("SIGTERM", cleanup);
+    Deno.addSignalListener("SIGQUIT", cleanup);
+    Deno.addSignalListener("SIGTSTP", cleanup);
+    Deno.addSignalListener("SIGABRT", cleanup);
+
+    const containerId =
+      await $`docker run --name arkiver_mongodb -d -p 27017:27017 --rm mongodb/mongodb-community-server:6.0-ubi8`
+        .stdout("piped");
+    await delay(3000); // wait for db to start
+  }
 
   const { manifest: manifestPath } = options;
   const dir = `file://${
@@ -37,7 +60,8 @@ export const action = async (
 
   const arkiver = new Arkiver({
     manifest,
-    mongoConnection: options.mongoConnection,
+    mongoConnection: options.mongoConnection ??
+      "mongodb://localhost:27017",
     rpcUrls,
   });
 
