@@ -1,7 +1,19 @@
-import { arbitrum, avalanche, mainnet } from "npm:viem/chains";
+import { 
+	arbitrum,
+	avalanche,
+	mainnet,
+	optimism,
+	fantom,
+	polygon,
+	polygonMumbai
+} from "npm:viem/chains";
 
 export const supportedChains = {
-  "avalanche": avalanche,
   "ethereum": mainnet,
-  "arbitrum": arbitrum,
+  avalanche,
+  arbitrum,
+  optimism,
+  fantom,
+  polygon,
+  mumbai: polygonMumbai
 } as const;
