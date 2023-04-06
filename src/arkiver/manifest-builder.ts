@@ -38,6 +38,16 @@ export class Manifest<TName extends string = ""> {
     };
   }
 
+  /**
+   * @deprecated Use `chain` instead.
+   */
+  public addChain(
+    chain: keyof typeof supportedChains,
+    options?: Partial<ChainOptions>,
+  ) {
+    return new DataSourceBuilder<TName>(this, chain, options);
+  }
+
   public chain(
     chain: keyof typeof supportedChains,
     options?: Partial<ChainOptions>,
@@ -82,6 +92,15 @@ export class DataSourceBuilder<TName extends string> {
       },
     };
     this.builder.manifest.dataSources[chain] = this.dataSource = dataSource;
+  }
+
+  /**
+   * @deprecated Use `contract` instead.
+   */
+  public addContract<TAbi extends Abi>(
+    abi: TAbi,
+  ) {
+    return this.contract(abi);
   }
 
   public contract<const TAbi extends Abi>(
@@ -141,7 +160,10 @@ export class ContractBuilder<
     }
   }
 
-  private addSource<TAddress extends string>(
+  /**
+   * @deprecated Use `addSources` instead.
+   */
+  public addSource<TAddress extends string>(
     address: HexString<TAddress, 40> | "*",
     startBlockHeight: bigint,
   ) {
@@ -174,7 +196,10 @@ export class ContractBuilder<
     return this;
   }
 
-  private addEventHandler<
+  /**
+   * @deprecated Use `addEventHandlers` instead.
+   */
+  public addEventHandler<
     TEventName extends ExtractAbiEventNames<TAbi>,
     TEventHandler extends EventHandler<
       ExtractAbiEvent<TAbi, TEventName>,

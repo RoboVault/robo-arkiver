@@ -1,16 +1,14 @@
-# v0.4.0
-
-## This update introduces some breaking changes to the Manifest API
+# v0.3.5
 
 - feat: The name passed to the `Manifest` constructor now typechecks
 - feat: Added `arkiver upgrade` command to automatically update to the latest
   version
 - feat: Various improvements to the Manifest Builder API. More typesafety and
   clearer intention:
-  - Removed `addSource` and `addEventHandler`. Use `addSources` and
+  - Deprecating `addSource` and `addEventHandler`. Use `addSources` and
     `addEventHandlers` instead. This enables more checks at the type-level that
     weren't possible before.
-  - Renamed `addChain` and `addContract` to `chain` and `contract`,
+  - Deprecating `addChain` and `addContract`, renamed to `chain` and `contract`,
     respectively. This is to better communicate the fact that those two methods
     instantiate a new chain and contract builder, instead of building upon the
     manifest builder itself, reducing the possibility of confusion when trying
