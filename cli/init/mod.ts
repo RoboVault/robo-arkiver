@@ -1,46 +1,63 @@
 import { join } from "../deps.ts";
+import { version } from "../../cli.ts";
 
 export const action = async (options: { overwrite?: boolean }, dir: string) => {
 	const newDir = join(Deno.cwd(), dir);
 
-	mkDir(newDir);
+	await mkDir(newDir);
+
+	const vscode = `{
+	"deno.enable": true,
+	"deno.unstable": true
+}`;
+
+	await mkDir(join(newDir, ".vscode"));
+	writeFile(
+		join(newDir, ".vscode"),
+		"settings.json",
+		vscode,
+		options.overwrite,
+	);
 
 	const manifest = `import { Manifest } from "./deps.ts";
-import erc20 from "./abis/erc20.ts";
-import { Balance } from "./entities/balance.ts";
-import { transferHandler } from "./handlers/transfer.ts";
-
-const manifest = new Manifest("my-arkive");
-
+import erc20 from "./erc20.ts";
+import { Balance } from "./entities.ts";
+import { transferHandler } from "./transferHandler.ts";
+	
+const manifest = new Manifest("simple");
+	
 manifest
-	.chain("avalanche")
+	.addEntity(Balance)
+	.chain("mainnet", { blockRange: 100n })
 	.contract(erc20)
-	.addSources({ "0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664": 27347402n })
+	.addSources({ "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2": 16986910n })
 	.addEventHandlers({ "Transfer": transferHandler });
 
-export default manifest
-	.addEntity(Balance)
-	.build();`;
+export default manifest.build();`;
 
 	writeFile(newDir, "manifest.ts", manifest, options.overwrite);
 
-	const entities = `import { createEntity } from "../deps.ts";
+	const entities = `import { createEntity } from "./deps.ts";
 
 interface IBalance {
-  account: string;
-  amount: number;
-  token: string;
+	account: string;
+	amount: number;
+	token: string;
+	timestamp: number;
 }
 
 export const Balance = createEntity<IBalance>("Balance", {
-  account: String,
-  amount: {
-    type: Number,
-    index: true,
-  },
-  token: String,
-});
-`;
+	account: String,
+	amount: {
+		type: Number,
+		index: true,
+	},
+	token: String,
+	timestamp: {
+		type: Number,
+		index: true,
+	},
+});`;
 
 	await mkDir(join(newDir, "entities"));
 	writeFile(
@@ -50,61 +67,80 @@ export const Balance = createEntity<IBalance>("Balance", {
 		options.overwrite,
 	);
 
-	const handler = `import { EventHandlerFor, formatUnits } from "../deps.ts";
-import erc20 from "../abis/erc20.ts";
-import { Balance } from "../entities/balance.ts";
+	const handler = `import { EventHandlerFor, formatUnits } from "./deps.ts";
+import erc20 from "./erc20.ts";
+import { Balance } from "./entities.ts";
 
 export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
-  async (
-    { event, client, store },
-  ) => {
-    const { from, to, value } = event.args;
+	async (
+		{ event, client, store },
+	) => {
+		const { from, to, value } = event.args;
 
-    const address = event.address;
+		const address = event.address;
 
-    // store.retrieve() is a wrapper around Map.get() that will
-    // call the provided function if the key is not found in the store.
-    const decimals = await store.retrieve(
-      \`\${address}:decimals\`,
-      async () =>
-        await client.readContract({
-          abi: erc20,
-          functionName: "decimals",
-          address,
-        }),
-    );
+		// store.retrieve() will return the value if it exists in the store, otherwise it will run the function and store the result
+		const decimals = await store.retrieve(
+			\`\${address}:decimals\`,
+			async () =>
+				await client.readContract({
+					abi: erc20,
+					functionName: "decimals",
+					address,
+				}),
+		);
 
-    const parsedValue = parseFloat(formatUnits(value, decimals));
+		// reduce rpc calls in case you have multiple events in the same block
+		const timestamp = await store.retrieve(
+			\`\${event.blockHash}:timestamp\`,
+			async () => {
+				const block = await client.getBlock({ blockHash: event.blockHash });
+				return Number(block.timestamp);
+			},
+		);
 
-    const [senderBalance, receiverBalance] = await Promise.all([
-      store.retrieve(
-        \`\${from}:\${address}:balance\`,
-        async () =>
-          await Balance.findOne({ account: from }) ??
-            new Balance({
-              amount: 0,
-              token: address,
-              account: from,
-            }),
-      ),
-      store.retrieve(
-        \`\${to}:\${address}:balance\`,
-        async () =>
-          await Balance.findOne({ account: to }) ??
-            new Balance({
-              amount: 0,
-              token: address,
-              account: to,
-            }),
-      ),
-    ]);
+		const parsedValue = parseFloat(formatUnits(value, decimals));
 
-    senderBalance.amount -= parsedValue;
-    receiverBalance.amount += parsedValue;
+		const [senderBalance, receiverBalance] = await Promise.all([
+			await store.retrieve(
+				\`\${from}:\${address}:balance\`,
+				async () => {
+					const balance = await Balance
+						.find({ account: from, token: address })
+						.sort({ timestamp: -1 })
+						.limit(1);
+					return balance[0]?.amount ?? 0;
+				},
+			),
+			await store.retrieve(
+				\`\${to}:\${address}:balance\`,
+				async () => {
+					const balance = await Balance
+						.find({ account: from, token: address })
+						.sort({ timestamp: -1 })
+						.limit(1);
+					return balance[0]?.amount ?? 0;
+				},
+			),
+		]);
 
-    store.set(\`\${from}:\${address}:balance\`, senderBalance.save());
-    store.set(\`\${to}:\${address}:balance\`, receiverBalance.save());
-  };`;
+		const senderNewBalance = senderBalance - parsedValue;
+		const receiverNewBalance = receiverBalance + parsedValue;
+
+		// save the new balances to the database
+		Balance.create({
+			account: from,
+			amount: senderNewBalance,
+			token: address,
+			timestamp,
+		});
+		Balance.create({
+			account: to,
+			amount: receiverNewBalance,
+			token: address,
+			timestamp,
+		});
+	};`;
 
 	await mkDir(join(newDir, "handlers"));
 	writeFile(
@@ -485,7 +521,7 @@ export {
   createEntity,
   type EventHandlerFor,
   Manifest,
-} from "https://deno.land/x/robo_arkiver/mod.ts";`;
+} from "https://deno.land/x/robo_arkiver@${version}/mod.ts";`;
 
 	writeFile(newDir, "deps.ts", deps, options.overwrite);
 };

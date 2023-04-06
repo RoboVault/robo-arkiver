@@ -6,4 +6,6 @@ export * as remove from "./remove/mod.ts";
 export * as start from "./start/mod.ts";
 export * as init from "./init/mod.ts";
 export * as upgrade from "./upgrade/mod.ts";
+export * as util from "./utils.ts";
+export { checkVersion } from "./check-version/mod.ts";
 export { Command } from "./deps.ts";

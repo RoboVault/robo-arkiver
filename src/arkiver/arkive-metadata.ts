@@ -5,6 +5,7 @@ interface IArkiverMetadata {
 	chain: string;
 	eventHandlerCalls: number;
 	blockHandlerCalls: number;
+	errors: string[];
 }
 
 const arkiverMetadataSchema = new mongoose.Schema<IArkiverMetadata>({
@@ -12,6 +13,7 @@ const arkiverMetadataSchema = new mongoose.Schema<IArkiverMetadata>({
 	chain: String,
 	eventHandlerCalls: Number,
 	blockHandlerCalls: Number,
+	errors: [String],
 });
 
 export const ArkiverMetadata = mongoose.model<IArkiverMetadata>(

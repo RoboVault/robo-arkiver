@@ -6,11 +6,10 @@ import { transferHandler } from "./transferHandler.ts";
 const manifest = new Manifest("simple");
 
 manifest
-	.chain("avalanche")
+	.addEntity(Balance)
+	.chain("mainnet", { blockRange: 100n })
 	.contract(erc20)
-	.addSources({ "0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664": 27347402n })
+	.addSources({ "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2": 16986910n })
 	.addEventHandlers({ "Transfer": transferHandler });
 
-export default manifest
-	.addEntity(Balance)
-	.build();
+export default manifest.build();

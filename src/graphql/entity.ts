@@ -1,7 +1,7 @@
 import { mongoose } from "../deps.ts";
 
 export function createEntity<
-	TEnforcedDocType = unknown,
+	TEnforcedDocType = undefined,
 >(
 	name: string,
 	schemaDefinition: mongoose.SchemaDefinition<

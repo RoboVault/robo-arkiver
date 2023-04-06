@@ -1,3 +1,10 @@
+# v0.3.7
+- fix: Fixed a bug where arkive would crash if you used event wildcards
+- feat: Updated init template to show clearer example
+- feat: Added `--no-db` flag to `arkiver start` command to disable connecting to
+	MongoDB and serving data via GraphQL
+- feat: Check for new version of Arkiver CLI on every command
+
 # v0.3.6
 - Added more chains: Optimism, Polygon Mumbai, Polygon, Fantom, and Binance Smart Chain
 

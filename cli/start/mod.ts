@@ -7,13 +7,14 @@ export const action = async (
 		manifest?: string;
 		rpcUrl?: string[];
 		mongoConnection?: string;
+		db: boolean;
 		gql: boolean;
 	},
 	directory: string,
 ) => {
 	Deno.env.set("DENO_ENV", "PROD");
 
-	if (!options.mongoConnection) {
+	if (!options.mongoConnection && options.db) {
 		const cleanup = async () => {
 			console.log(`\nCleaning up...`);
 			const stopRes = await $`docker stop ${
@@ -59,14 +60,16 @@ export const action = async (
 
 	const arkiver = new Arkiver({
 		manifest,
-		mongoConnection: options.mongoConnection ??
-			"mongodb://localhost:27017",
+		mongoConnection: options.db
+			? options.mongoConnection ??
+				"mongodb://localhost:27017"
+			: undefined,
 		rpcUrls,
 	});
 
 	await arkiver.run();
 
-	if (!options.gql) {
+	if (!options.gql || !options.db) {
 		return;
 	}
 

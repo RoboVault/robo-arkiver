@@ -508,6 +508,8 @@ export class DataSource {
 				return Number((a.blockNumber ?? 0n) - (b.blockNumber ?? 0n));
 			});
 
+			let error: string | undefined;
+
 			for (
 				const logOrBlock of logsAndBlocks
 			) {
@@ -542,15 +544,10 @@ export class DataSource {
 							store: this.store,
 							event: formatLog(log, event),
 						});
-					} catch (_e) {
-						handler.handler({
-							eventName: event.eventName,
-							client: this.client,
-							store: this.store,
-							event: formatLog(log, event),
-						}).catch((e) => {
-							logger.error(`Error running event handler ${event}: ${e}`);
-						});
+					} catch (e) {
+						error =
+							`${handler.handler.name} at ${log.blockNumber} with log:\n${log}\n\nError:\n${e}`;
+						logger.error(`Error running event handler ${event}: ${e}`);
 					}
 				} else if (logOrBlock.type === "block") {
 					const block = logOrBlock as {
@@ -565,16 +562,12 @@ export class DataSource {
 								client: this.client,
 								store: this.store,
 							});
-						} catch (_e) {
-							handler({
-								block: block.block,
-								client: this.client,
-								store: this.store,
-							}).catch((e) => {
-								logger.error(
-									`Error running block handler at ${block.block.number}: ${e}`,
-								);
-							});
+						} catch (e) {
+							error =
+								`${handler.name} at ${block.block.number} with block:\n${block.block}\n\nError:\n${e}`;
+							logger.error(
+								`Error running block handler at ${block.block.number}: ${e}`,
+							);
 						}
 					}
 				} else if (logOrBlock.type === "agnosticLog") {
@@ -606,15 +599,10 @@ export class DataSource {
 							store: this.store,
 							event: formatLog(log, event),
 						});
-					} catch (_e) {
-						eventHandler.handler({
-							eventName: event.eventName,
-							client: this.client,
-							store: this.store,
-							event: formatLog(log, event),
-						}).catch((e) => {
-							logger.error(`Error running event handler ${event}: ${e}`);
-						});
+					} catch (e) {
+						error =
+							`${eventHandler.handler.name} at ${log.blockNumber} with log:\n${log}\n\nError:\n${e}`;
+						logger.error(`Error running event handler ${event}: ${e}`);
 					}
 				}
 
@@ -640,6 +628,9 @@ export class DataSource {
 				} else {
 					arkiverMetadata.eventHandlerCalls++;
 				}
+				if (error !== undefined) {
+					arkiverMetadata.errors.push(error);
+				}
 
 				this.store.set(
 					`${this.chain}:${logOrBlock.blockNumber}:metadata`,
@@ -654,6 +645,7 @@ export class DataSource {
 			logger.info(`Processed block ${this.processedBlockHeight}...`);
 
 			this.processedBlockHeight = logs?.nextFromBlock ??
+				agnosticLogs?.nextFromBlock ??
 				blocks!.nextFromBlock;
 		}
 	}

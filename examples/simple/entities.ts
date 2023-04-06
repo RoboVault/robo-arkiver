@@ -4,6 +4,7 @@ interface IBalance {
 	account: string;
 	amount: number;
 	token: string;
+	timestamp: number;
 }
 
 export const Balance = createEntity<IBalance>("Balance", {
@@ -13,4 +14,8 @@ export const Balance = createEntity<IBalance>("Balance", {
 		index: true,
 	},
 	token: String,
+	timestamp: {
+		type: Number,
+		index: true,
+	},
 });

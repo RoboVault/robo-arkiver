@@ -56,3 +56,28 @@ export const getSupabaseClient = () => {
 		auth: { storage: localStorage },
 	});
 };
+
+export const logHeader = (version: string) => {
+	const colors = ["#8be9fd", "#50fa7b", "#ffb86c", "#ff79c6", "#bd93f9"];
+
+	const colorIdx = Math.floor(Math.random() * colors.length);
+	const style = `color: ${colors[colorIdx]}; font-weight: bold;`;
+	const footerStyle = `color: ${colors[(colorIdx + 1) % colors.length]};`;
+
+	console.log(
+		`%c\n\n  ▄████████    ▄████████    ▄█   ▄█▄  ▄█   ▄█    █▄     ▄████████    ▄████████ 
+  ███    ███   ███    ███   ███ ▄███▀ ███  ███    ███   ███    ███   ███    ███ 
+  ███    ███   ███    ███   ███▐██▀   ███▌ ███    ███   ███    █▀    ███    ███ 
+  ███    ███  ▄███▄▄▄▄██▀  ▄█████▀    ███▌ ███    ███  ▄███▄▄▄      ▄███▄▄▄▄██▀ 
+▀███████████ ▀▀███▀▀▀▀▀   ▀▀█████▄    ███▌ ███    ███ ▀▀███▀▀▀     ▀▀███▀▀▀▀▀   
+  ███    ███ ▀███████████   ███▐██▄   ███  ███    ███   ███    █▄  ▀███████████ 
+  ███    ███   ███    ███   ███ ▀███▄ ███  ███    ███   ███    ███   ███    ███ 
+  ███    █▀    ███    ███   ███   ▀█▀ █▀    ▀██████▀    ██████████   ███    ███ 
+               ███    ███   ▀                                        ███    ███ \n\n`,
+		style,
+	);
+	console.log(
+		`%c          -----===== Arkiver ${version} - https://arkiver.net =====-----\n`,
+		footerStyle,
+	);
+};
