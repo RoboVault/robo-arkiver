@@ -1,3 +1,6 @@
+# v0.3.6
+- Added more chains: Optimism, Polygon Mumbai, Polygon, Fantom, and Binance Smart Chain
+
 # v0.3.5
 
 - feat: The name passed to the `Manifest` constructor now typechecks
