@@ -1,7 +1,12 @@
 {
-  "tasks": {
-    "dev": "DENO_ENV=DEV deno run -A --unstable main.ts",
-    "start": "DENO_ENV=PROD deno run -A --unstable main.ts",
+	"tasks": {
+		"dev": "DENO_ENV=DEV deno run -A --unstable main.ts",
+		"start": "DENO_ENV=PROD deno run -A --unstable main.ts",
 		"cli": "deno run -A --unstable cli.ts"
-  }
+	},
+	"fmt": {
+		"options": {
+			"useTabs": true
+		}
+	}
 }

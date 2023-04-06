@@ -1,58 +1,56 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
-const lightCodeTheme = require('prism-react-renderer/themes/github');
-const darkCodeTheme = require('prism-react-renderer/themes/dracula');
+const lightCodeTheme = require("prism-react-renderer/themes/github");
+const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-	title: 'ARKIVER',
-	tagline: 'Cybernetically Enhanced Blockchain Indexing',
-	favicon: 'img/favicon.ico',
+	title: "ARKIVER",
+	tagline: "Cybernetically Enhanced Blockchain Indexing",
+	favicon: "img/favicon.ico",
 
 	// Set the production url of your site here
-	url: 'https://docs.arkiver.robolabs.biz',
+	url: "https://docs.arkiver.robolabs.biz",
 	// Set the /<baseUrl>/ pathname under which your site is served
 	// For GitHub pages deployment, it is often '/<projectName>/'
-	baseUrl: '/',
+	baseUrl: "/",
 
 	// GitHub pages deployment config.
 	// If you aren't using GitHub pages, you don't need these.
-	organizationName: 'RoboVault', // Usually your GitHub org/user name.
-	projectName: 'robo-arkiver', // Usually your repo name.
+	organizationName: "RoboVault", // Usually your GitHub org/user name.
+	projectName: "robo-arkiver", // Usually your repo name.
 
-	onBrokenLinks: 'throw',
-	onBrokenMarkdownLinks: 'warn',
+	onBrokenLinks: "throw",
+	onBrokenMarkdownLinks: "warn",
 
 	// Even if you don't use internalization, you can use this field to set useful
 	// metadata like html lang. For example, if your site is Chinese, you may want
 	// to replace "en" with "zh-Hans".
 	i18n: {
-		defaultLocale: 'en',
-		locales: ['en'],
+		defaultLocale: "en",
+		locales: ["en"],
 	},
 
 	presets: [
 		[
-			'classic',
+			"classic",
 			/** @type {import('@docusaurus/preset-classic').Options} */
 			({
 				docs: {
-					sidebarPath: require.resolve('./sidebars.js'),
+					sidebarPath: require.resolve("./sidebars.js"),
 					// Please change this to your repo.
 					// Remove this to remove the "edit this page" links.
-					editUrl:
-						'https://github.com/RoboVault/robo-arkiver',
+					editUrl: "https://github.com/RoboVault/robo-arkiver",
 				},
 				blog: {
 					showReadingTime: true,
 					// Please change this to your repo.
 					// Remove this to remove the "edit this page" links.
-					editUrl:
-						'https://github.com/RoboVault/robo-arkiver',
+					editUrl: "https://github.com/RoboVault/robo-arkiver",
 				},
 				theme: {
-					customCss: require.resolve('./src/css/custom.css'),
+					customCss: require.resolve("./src/css/custom.css"),
 				},
 			}),
 		],
@@ -62,63 +60,65 @@ const config = {
 		/** @type {import('@docusaurus/preset-classic').ThemeConfig} */
 		({
 			// Replace with your project's social card
-			image: 'img/docusaurus-social-card.jpg',
+			image: "img/docusaurus-social-card.jpg",
 			navbar: {
-				title: 'Arkiver',
+				title: "Arkiver",
 				logo: {
-					alt: 'Arkiver',
-					src: 'img/logo.svg',
+					alt: "Arkiver",
+					src: "img/logo.svg",
 				},
 				items: [
 					{
-						type: 'doc',
-						docId: 'intro',
-						position: 'left',
-						label: 'Getting Started',
+						type: "doc",
+						docId: "intro",
+						position: "left",
+						label: "Getting Started",
 					},
 					{
-						href: 'https://github.com/RoboVault/robo-arkiver',
-						label: 'GitHub',
-						position: 'right',
+						href: "https://github.com/RoboVault/robo-arkiver",
+						label: "GitHub",
+						position: "right",
 					},
 				],
 			},
 			footer: {
-				style: 'dark',
+				style: "dark",
 				links: [
 					{
-						title: 'Docs',
+						title: "Docs",
 						items: [
 							{
-								label: 'Tutorial',
-								to: '/docs/intro',
+								label: "Tutorial",
+								to: "/docs/intro",
 							},
 						],
 					},
 					{
-						title: 'Community',
+						title: "Community",
 						items: [
 							{
-								label: 'Discord',
-								href: 'https://discord.gg/eJvmehB3je',
+								label: "Discord",
+								href: "https://discord.gg/eJvmehB3je",
 							},
 							{
-								label: 'Twitter',
-								href: 'https://twitter.com/robo_vault',
+								label: "Twitter",
+								href: "https://twitter.com/robo_vault",
 							},
 						],
 					},
 					{
-						title: 'More',
+						title: "More",
 						items: [
 							{
-								label: 'GitHub',
-								href: 'https://github.com/facebook/RoboVault',
+								label: "GitHub",
+								href: "https://github.com/facebook/RoboVault",
 							},
 						],
 					},
 				],
-				copyright: `Copyright © ${new Date().getFullYear()} RoboLabs. Built with Docusaurus.`,
+				copyright: `Copyright © ${
+					new Date().getFullYear()
+				} RoboLabs. Built with Docusaurus.`,
 			},
 			prism: {
 				theme: lightCodeTheme,
