@@ -12,21 +12,27 @@ information within your Arkive.
 
 ## Example entity
 
-```ts title="entities/balance.ts"
-import { createEntity } from "./deps.ts";
+```ts title="entities/transfer.ts"
+import { createEntity } from "https://deno.land/x/robo_arkiver/mod.ts";
 
-interface IBalance {
-  account: string;
-  amount: number;
-  token: string;
+interface ITransfer {
+	account: string;
+	amount: number;
+	token: string;
+	timestamp: number;
 }
 
-export const Balance = createEntity<IBalance>("Balance", {
-  account: String,
-  amount: {
-    type: Number,
-    index: true,
-  },
-  token: String,
+export const Transfer = createEntity<ITransfer>("Transfer", {
+	account: String,
+	amount: {
+		type: Number,
+		index: true,
+	},
+	token: String,
+	timestamp: {
+		type: Number,
+		index: true,
+	},
 });
+
 ```

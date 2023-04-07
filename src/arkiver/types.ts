@@ -5,6 +5,7 @@ import {
 	Block,
 	ExtractAbiEvent,
 	ExtractAbiEventNames,
+	GetContractReturnType,
 	Log,
 	mongoose,
 	PublicClient,
@@ -71,13 +72,13 @@ export interface Contract {
 interface EventSource {
 	name: string;
 	// deno-lint-ignore no-explicit-any
-	handler: EventHandler<any, any>;
+	handler: EventHandler<any, any, any>;
 }
 
 export type EventHandlerFor<
 	TAbi extends Abi,
 	TEventName extends ExtractAbiEventNames<TAbi>,
-> = EventHandler<ExtractAbiEvent<TAbi, TEventName>, TEventName>;
+> = EventHandler<ExtractAbiEvent<TAbi, TEventName>, TEventName, TAbi>;
 
 type OneDeepNonNullable<T> = {
 	[K in keyof T]: NonNullable<T[K]>;
@@ -92,11 +93,13 @@ export type SafeRpcLog = OneDeepNonNullable<RpcLog>;
 export interface EventHandlerContext<
 	TAbiEvent extends AbiEvent,
 	TEventName extends string,
+	TAbi extends Abi,
 > {
 	event: SafeLog<TAbiEvent>;
 	eventName: TEventName;
 	client: PublicClient;
 	store: Store;
+	contract: GetContractReturnType<TAbi, PublicClient>;
 }
 
 export interface BlockHandlerContext {
@@ -110,7 +113,8 @@ export type SafeBlock = OneDeepNonNullable<Block>;
 export type EventHandler<
 	TAbiEvent extends AbiEvent,
 	TEventName extends string,
-> = (ctx: EventHandlerContext<TAbiEvent, TEventName>) => Promise<void>;
+	TAbi extends Abi,
+> = (ctx: EventHandlerContext<TAbiEvent, TEventName, TAbi>) => Promise<void>;
 
 export type BlockHandler = (ctx: BlockHandlerContext) => Promise<void>;
 

@@ -14,18 +14,18 @@ manifest that outlines your entire Arkive configuration.
 
 ```ts title="manifest.ts"
 import { Manifest } from "https://deno.land/x/robo_arkiver/mod.ts";
-import { Balance } from "./entities/balance.ts";
-import { transfer } from "./handlers/transfer.ts";
+import erc20 from "./abis/erc20.ts";
+import { Transfer } from "./entities/transfer.ts";
+import { transferHandler } from "./handlers/transferHandler.ts";
 
 const manifest = new Manifest("my-arkive");
 
 manifest
-	.chain("avalanche")
+	.addEntity(Transfer)
+	.chain("mainnet", { blockRange: 100n })
 	.contract(erc20)
-	.addSources({ "0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664": 27347402n })
+	.addSources({ "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2": 16989911n })
 	.addEventHandlers({ "Transfer": transferHandler });
 
-export default manifest
-	.addEntity(Balance)
-	.build();
+export default manifest.build();
 ```

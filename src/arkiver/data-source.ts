@@ -5,6 +5,7 @@ import {
 	createPublicClient,
 	decodeEventLog,
 	encodeEventTopics,
+	getContract,
 	http,
 	HttpTransport,
 	PublicClient,
@@ -28,7 +29,6 @@ import {
 } from "../utils.ts";
 import { Store } from "./store.ts";
 import { MongoStatusProvider } from "./providers/mongodb.ts";
-import { ArkiverMetadata } from "./arkive-metadata.ts";
 import { supportedChains } from "../chains.ts";
 
 interface NormalizedContracts {
@@ -55,11 +55,11 @@ export class DataSource {
 	};
 	private readonly agnosticEvents: Map<
 		`0x${string}`,
-		{ handler: EventHandler<any, any>; abi: Abi; startBlockHeight: bigint }
+		{ handler: EventHandler<any, any, Abi>; abi: Abi; startBlockHeight: bigint }
 	> = new Map(); // topic to handler and interface
 	private readonly eventHandlers: Map<
 		string,
-		{ handler: EventHandler<any, any>; abi: Abi }
+		{ handler: EventHandler<any, any, Abi>; abi: Abi }
 	> = new Map(); // topic to handler and interface
 	private readonly addressToId: Map<
 		string,
@@ -113,6 +113,7 @@ export class DataSource {
 		max: 1000,
 	});
 	private isLive = false;
+	private noDb: boolean;
 
 	constructor(
 		params: {
@@ -123,6 +124,7 @@ export class DataSource {
 			arkiveId: number;
 			arkiveVersion: number;
 			blockSources: IBlockHandler[];
+			noDb: boolean;
 		},
 	) {
 		this.chain = params.chain;
@@ -137,6 +139,7 @@ export class DataSource {
 		this.arkiveId = params.arkiveId;
 		this.arkiveVersion = params.arkiveVersion;
 		this.statusProvider = new MongoStatusProvider();
+		this.noDb = params.noDb;
 	}
 
 	public async run() {
@@ -333,7 +336,6 @@ export class DataSource {
 
 	private fetchBlocks(fromBlock: bigint, toBlock: bigint) {
 		if (this.blockSources.length === 0) {
-			logger.info(`No block sources found for ${this.chain}...`);
 			this.queuePending.blocks.set(fromBlock, false);
 			return;
 		}
@@ -543,6 +545,11 @@ export class DataSource {
 							client: this.client,
 							store: this.store,
 							event: formatLog(log, event),
+							contract: getContract({
+								abi: handler.abi,
+								address: log.address,
+								publicClient: this.client,
+							}),
 						});
 					} catch (e) {
 						error =
@@ -598,6 +605,11 @@ export class DataSource {
 							client: this.client,
 							store: this.store,
 							event: formatLog(log, event),
+							contract: getContract({
+								abi: eventHandler.abi,
+								address: log.address,
+								publicClient: this.client,
+							}),
 						});
 					} catch (e) {
 						error =
@@ -606,36 +618,15 @@ export class DataSource {
 					}
 				}
 
-				const arkiverMetadata = await this.store.retrieve(
-					`${this.chain}:${logOrBlock.blockNumber}:metadata`,
-					async () =>
-						await ArkiverMetadata.findOne({
-							chain: this.chain,
-							processedBlockHeight: Number(logOrBlock.blockNumber),
-						}) ??
-							new ArkiverMetadata({
-								processedBlockHeight: 0,
-								chain: this.chain,
-								blockHandlerCalls: 0,
-								eventHandlerCalls: 0,
-							}),
-				);
-				arkiverMetadata.processedBlockHeight = Number(
-					logOrBlock.blockNumber,
-				);
-				if (logOrBlock.type === "block") {
-					arkiverMetadata.blockHandlerCalls++;
-				} else {
-					arkiverMetadata.eventHandlerCalls++;
+				if (!this.noDb) {
+					await this.statusProvider.saveArkiveMetadata({
+						chain: this.chain,
+						blockNumber: Number(logOrBlock.blockNumber),
+						error,
+						store: this.store,
+						type: logOrBlock.type,
+					});
 				}
-				if (error !== undefined) {
-					arkiverMetadata.errors.push(error);
-				}
-
-				this.store.set(
-					`${this.chain}:${logOrBlock.blockNumber}:metadata`,
-					arkiverMetadata.save(),
-				);
 			}
 
 			this.logsQueue.delete(this.processedBlockHeight);
@@ -651,6 +642,7 @@ export class DataSource {
 	}
 
 	private async checkIndexedBlockHeights() {
+		if (this.noDb) return;
 		const indexedBlockHeight = await this.statusProvider
 			.getIndexedBlockHeight({
 				chain: this.chain,

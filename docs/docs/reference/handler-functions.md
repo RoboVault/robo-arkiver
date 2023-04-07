@@ -12,13 +12,33 @@ and stored, allowing you to tailor the system to your specific needs.
 
 ## Example handler function
 
-```ts
+```ts title="handlers/transferHandler.ts"
 import { EventHandlerFor } from "https://deno.land/x/robo_arkiver/mod.ts";
+import { formatUnits } from "npm:viem";
+import { Transfer } from "../entities/transfer.ts";
 import erc20 from "../abis/erc20.ts";
 
 export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
-	async ({ event }) => {
+	async ({ event, contract }) => {
 		const { from, to, value } = event.args;
-		// Your data processing and transformation logic here
+
+		const decimals = await contract.read.decimals();
+
+		const formattedValue = parseFloat(formatUnits(value, decimals));
+
+		const timestamp = Number((await client.getBlock({ blockHash: event.blockHash })).timestamp);
+
+		Transfer.create({
+			account: from,
+			amount: -formattedValue,
+			token: event.address,
+			timestamp,
+		});
+		Transfer.create({
+			account: to,
+			amount: formattedValue,
+			token: event.address,
+			timestamp,
+		});
 	};
 ```

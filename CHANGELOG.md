@@ -1,3 +1,6 @@
+# v0.3.8
+- feat: Pass in viem contract instance to event handlers. You no longer need to call `getContract` in your event handlers.
+
 # v0.3.7
 - fix: Fixed a bug where arkive would crash if you used event wildcards
 - fix: Fixed a bug where entities from other arkvies would show up in other arkives graphql schema

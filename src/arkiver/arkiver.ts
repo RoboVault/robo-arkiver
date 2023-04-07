@@ -83,6 +83,7 @@ export class Arkiver extends EventTarget {
 				contracts: source.contracts ?? [],
 				rpcUrl: rpcUrl,
 				blockSources: source.blockHandlers ?? [],
+				noDb: this.mongoConnection === undefined,
 			});
 			await dataSource.run();
 			this.sources.push(dataSource);

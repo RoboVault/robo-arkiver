@@ -4,6 +4,8 @@ export {
 	createPublicClient,
 	decodeEventLog,
 	encodeEventTopics,
+	getContract,
+	type GetContractReturnType,
 	http,
 	type HttpTransport,
 	type Log,

@@ -4,7 +4,7 @@ import { Balance } from "./entities.ts";
 
 export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
 	async (
-		{ event, client, store },
+		{ event, client, store, contract },
 	) => {
 		const { from, to, value } = event.args;
 
@@ -13,12 +13,7 @@ export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
 		// store.retrieve() will return the value if it exists in the store, otherwise it will run the function and store the result
 		const decimals = await store.retrieve(
 			`${address}:decimals`,
-			async () =>
-				await client.readContract({
-					abi: erc20,
-					functionName: "decimals",
-					address,
-				}),
+			contract.read.decimals,
 		);
 
 		// reduce rpc calls in case you have multiple events in the same block
