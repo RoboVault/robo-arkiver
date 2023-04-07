@@ -1,11 +1,11 @@
-import { mongoose } from "../deps.ts";
+import { mongoose } from '../deps.ts'
 
 interface IArkiverMetadata {
-	processedBlockHeight: number;
-	chain: string;
-	eventHandlerCalls: number;
-	blockHandlerCalls: number;
-	errors: string[];
+	processedBlockHeight: number
+	chain: string
+	eventHandlerCalls: number
+	blockHandlerCalls: number
+	errors: string[]
 }
 
 const arkiverMetadataSchema = new mongoose.Schema<IArkiverMetadata>({
@@ -14,11 +14,11 @@ const arkiverMetadataSchema = new mongoose.Schema<IArkiverMetadata>({
 	eventHandlerCalls: Number,
 	blockHandlerCalls: Number,
 	errors: [String],
-});
+})
 
 export const ArkiverMetadata = mongoose.model<IArkiverMetadata>(
-	"ArkiveMetadata",
+	'ArkiveMetadata',
 	arkiverMetadataSchema,
 	undefined,
 	{ overwriteModels: true },
-);
+)

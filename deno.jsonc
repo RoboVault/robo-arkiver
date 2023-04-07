@@ -6,7 +6,9 @@
 	},
 	"fmt": {
 		"options": {
-			"useTabs": true
+			"useTabs": true,
+			"semiColons": false,
+			"singleQuote": true
 		}
 	}
 }

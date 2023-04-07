@@ -9,9 +9,9 @@ import {
 	http,
 	HttpTransport,
 	PublicClient,
-} from "../deps.ts";
-import { logger } from "../logger.ts";
-import { StatusProvider } from "./providers/interfaces.ts";
+} from '../deps.ts'
+import { logger } from '../logger.ts'
+import { StatusProvider } from './providers/interfaces.ts'
 import {
 	BlockHandler,
 	Contract,
@@ -19,157 +19,157 @@ import {
 	IBlockHandler,
 	SafeBlock,
 	SafeRpcLog,
-} from "./types.ts";
+} from './types.ts'
 import {
 	bigIntMax,
 	bigIntMin,
 	delay,
 	formatLog,
 	getChainObjFromChainName,
-} from "../utils.ts";
-import { Store } from "./store.ts";
-import { MongoStatusProvider } from "./providers/mongodb.ts";
-import { supportedChains } from "../chains.ts";
+} from '../utils.ts'
+import { Store } from './store.ts'
+import { MongoStatusProvider } from './providers/mongodb.ts'
+import { supportedChains } from '../chains.ts'
 
 interface NormalizedContracts {
 	contracts: {
-		address: string;
-		startBlockHeight: bigint;
-	}[];
-	signatureTopics: string[];
+		address: string
+		startBlockHeight: bigint
+	}[]
+	signatureTopics: string[]
 }
 
 export class DataSource {
-	private readonly chain: keyof typeof supportedChains;
-	private readonly rpcUrl: string;
-	private readonly client: PublicClient<HttpTransport>;
-	private readonly blockRange: bigint;
-	private readonly arkiveId: number;
-	private readonly arkiveVersion: number;
-	private readonly statusProvider: StatusProvider;
-	private readonly contracts: Contract[];
-	private readonly blockSources: IBlockHandler[];
+	private readonly chain: keyof typeof supportedChains
+	private readonly rpcUrl: string
+	private readonly client: PublicClient<HttpTransport>
+	private readonly blockRange: bigint
+	private readonly arkiveId: number
+	private readonly arkiveVersion: number
+	private readonly statusProvider: StatusProvider
+	private readonly contracts: Contract[]
+	private readonly blockSources: IBlockHandler[]
 	private normalizedContracts: NormalizedContracts = {
 		contracts: [],
 		signatureTopics: [],
-	};
+	}
 	private readonly agnosticEvents: Map<
 		`0x${string}`,
 		{ handler: EventHandler<any, any, Abi>; abi: Abi; startBlockHeight: bigint }
-	> = new Map(); // topic to handler and interface
+	> = new Map() // topic to handler and interface
 	private readonly eventHandlers: Map<
 		string,
 		{ handler: EventHandler<any, any, Abi>; abi: Abi }
-	> = new Map(); // topic to handler and interface
+	> = new Map() // topic to handler and interface
 	private readonly addressToId: Map<
 		string,
 		string
-	> = new Map(); // address to uuid
+	> = new Map() // address to uuid
 	private readonly blockHandlers: Map<
 		string,
 		BlockHandler
-	> = new Map(); // block handler  to block handler
-	private liveBlockHeight = 0n;
-	private processedBlockHeight = 0n;
-	private fetchedBlockHeight = 0n;
+	> = new Map() // block handler  to block handler
+	private liveBlockHeight = 0n
+	private processedBlockHeight = 0n
+	private fetchedBlockHeight = 0n
 	private readonly logsQueue: Map<
 		bigint,
 		{ logs: SafeRpcLog[]; nextFromBlock: bigint }
-	> = new Map(); // from block to logs
+	> = new Map() // from block to logs
 	private readonly agnosticLogsQueue: Map<
 		bigint,
 		{ logs: SafeRpcLog[]; nextFromBlock: bigint }
-	> = new Map(); // from block to logs
+	> = new Map() // from block to logs
 	private readonly blocksQueue: Map<
 		bigint,
 		{
 			blocks: {
-				block: Block;
-				handlers: BlockHandler[];
-			}[];
-			nextFromBlock: bigint;
+				block: Block
+				handlers: BlockHandler[]
+			}[]
+			nextFromBlock: bigint
 		}
-	> = new Map(); // from block to blocks
+	> = new Map() // from block to blocks
 	private readonly queuePending: {
-		logs: Map<bigint, boolean>;
-		blocks: Map<bigint, boolean>;
-		agnosticLogs: Map<bigint, boolean>;
+		logs: Map<bigint, boolean>
+		blocks: Map<bigint, boolean>
+		agnosticLogs: Map<bigint, boolean>
 	} = {
 		logs: new Map(),
 		blocks: new Map(),
 		agnosticLogs: new Map(),
-	}; // track if some logs or blocks are pending to be processed
-	private readonly retryBlocks: Map<bigint, bigint> = new Map(); // blocks to retry
+	} // track if some logs or blocks are pending to be processed
+	private readonly retryBlocks: Map<bigint, bigint> = new Map() // blocks to retry
 	private eventLoops = {
 		fetcher: true,
 		processor: true,
-	};
-	private maxQueueSize = 10;
-	private liveDelay = 2000;
-	private queueDelay = 500;
-	private fetchInterval = 500;
-	private queueFullDelay = 1000;
+	}
+	private maxQueueSize = 10
+	private liveDelay = 2000
+	private queueDelay = 500
+	private fetchInterval = 500
+	private queueFullDelay = 1000
 	private readonly store = new Store({
 		max: 1000,
-	});
-	private isLive = false;
-	private noDb: boolean;
+	})
+	private isLive = false
+	private noDb: boolean
 
 	constructor(
 		params: {
-			contracts: Contract[];
-			chain: keyof typeof supportedChains;
-			rpcUrl: string;
-			blockRange: bigint;
-			arkiveId: number;
-			arkiveVersion: number;
-			blockSources: IBlockHandler[];
-			noDb: boolean;
+			contracts: Contract[]
+			chain: keyof typeof supportedChains
+			rpcUrl: string
+			blockRange: bigint
+			arkiveId: number
+			arkiveVersion: number
+			blockSources: IBlockHandler[]
+			noDb: boolean
 		},
 	) {
-		this.chain = params.chain;
-		this.rpcUrl = params.rpcUrl;
-		this.blockRange = params.blockRange;
-		this.contracts = params.contracts;
-		this.blockSources = params.blockSources;
+		this.chain = params.chain
+		this.rpcUrl = params.rpcUrl
+		this.blockRange = params.blockRange
+		this.contracts = params.contracts
+		this.blockSources = params.blockSources
 		this.client = createPublicClient({
 			chain: getChainObjFromChainName(this.chain),
 			transport: http(this.rpcUrl),
-		});
-		this.arkiveId = params.arkiveId;
-		this.arkiveVersion = params.arkiveVersion;
-		this.statusProvider = new MongoStatusProvider();
-		this.noDb = params.noDb;
+		})
+		this.arkiveId = params.arkiveId
+		this.arkiveVersion = params.arkiveVersion
+		this.statusProvider = new MongoStatusProvider()
+		this.noDb = params.noDb
 	}
 
 	public async run() {
-		logger.info(`Running data source for ${this.chain}...`);
-		await this.init();
-		this.runFetcherLoop();
-		this.runProcessorLoop();
+		logger.info(`Running data source for ${this.chain}...`)
+		await this.init()
+		this.runFetcherLoop()
+		this.runProcessorLoop()
 	}
 
 	private async init() {
-		logger.info(`Initializing data source for ${this.chain}...`);
-		await this.getLiveBlockHeight();
-		this.loadContracts();
-		this.loadBlockHandlers();
-		await this.checkIndexedBlockHeights();
-		this.finalChecks();
-		this.fetchedBlockHeight = this.processedBlockHeight;
+		logger.info(`Initializing data source for ${this.chain}...`)
+		await this.getLiveBlockHeight()
+		this.loadContracts()
+		this.loadBlockHandlers()
+		await this.checkIndexedBlockHeights()
+		this.finalChecks()
+		this.fetchedBlockHeight = this.processedBlockHeight
 	}
 
 	public stop() {
-		this.eventLoops.fetcher = false;
-		this.eventLoops.processor = false;
+		this.eventLoops.fetcher = false
+		this.eventLoops.processor = false
 	}
 
 	private async runFetcherLoop() {
 		while (this.eventLoops.fetcher) {
 			for (const [retryFrom, retryTo] of this.retryBlocks) {
-				this.fetchLogs(retryFrom, retryTo);
-				this.fetchBlocks(retryFrom, retryTo);
-				this.fetchAgnosticLogs(retryFrom, retryTo);
+				this.fetchLogs(retryFrom, retryTo)
+				this.fetchBlocks(retryFrom, retryTo)
+				this.fetchAgnosticLogs(retryFrom, retryTo)
 			}
 
 			if (
@@ -179,57 +179,57 @@ export class DataSource {
 			) {
 				logger.info(
 					`Queue size is logs - ${this.logsQueue.size}, blocks - ${this.blocksQueue.size}, waiting...`,
-				);
-				await delay(this.queueFullDelay);
-				continue;
+				)
+				await delay(this.queueFullDelay)
+				continue
 			}
 
-			await this.getLiveBlockHeight();
+			await this.getLiveBlockHeight()
 
-			const fromBlock = this.fetchedBlockHeight;
+			const fromBlock = this.fetchedBlockHeight
 			const toBlock = bigIntMin(
 				fromBlock + this.blockRange,
 				this.liveBlockHeight,
-			);
+			)
 
-			if (toBlock === this.liveBlockHeight && !this.isLive) this.isLive = true;
+			if (toBlock === this.liveBlockHeight && !this.isLive) this.isLive = true
 
 			if (fromBlock > toBlock) {
-				await delay(this.liveDelay);
-				continue;
+				await delay(this.liveDelay)
+				continue
 			}
 
-			this.fetchLogs(fromBlock, toBlock);
-			this.fetchAgnosticLogs(fromBlock, toBlock);
-			this.fetchBlocks(fromBlock, toBlock);
+			this.fetchLogs(fromBlock, toBlock)
+			this.fetchAgnosticLogs(fromBlock, toBlock)
+			this.fetchBlocks(fromBlock, toBlock)
 
-			this.fetchedBlockHeight = toBlock + 1n;
+			this.fetchedBlockHeight = toBlock + 1n
 
-			await delay(this.fetchInterval);
+			await delay(this.fetchInterval)
 		}
 	}
 
 	private fetchLogs(fromBlock: bigint, toBlock: bigint) {
 		if (this.normalizedContracts.contracts.length === 0) {
-			this.queuePending.logs.set(fromBlock, false);
-			return;
+			this.queuePending.logs.set(fromBlock, false)
+			return
 		}
 
-		logger.info(`Fetching logs from block ${fromBlock} to ${toBlock}...`);
+		logger.info(`Fetching logs from block ${fromBlock} to ${toBlock}...`)
 
 		const addresses = this.normalizedContracts.contracts.filter((c) =>
 			c.startBlockHeight <= toBlock
-		).map((c) => c.address);
+		).map((c) => c.address)
 
 		if (addresses.length === 0) {
-			this.queuePending.logs.set(fromBlock, false);
-			return;
+			this.queuePending.logs.set(fromBlock, false)
+			return
 		}
 
-		const nextFromBlock = toBlock + 1n;
+		const nextFromBlock = toBlock + 1n
 
 		this.client.request({
-			method: "eth_getLogs",
+			method: 'eth_getLogs',
 			params: [
 				{
 					address: addresses as `0x${string}`[],
@@ -247,54 +247,54 @@ export class DataSource {
 						l.blockNumber === null ||
 						l.transactionHash === null ||
 						l.transactionIndex === null ||
-						l.logIndex === null;
+						l.logIndex === null
 				})
 			) {
-				logger.info(`Some logs still pending, retrying...`);
-				this.retryBlocks.set(fromBlock, toBlock);
-				return;
+				logger.info(`Some logs still pending, retrying...`)
+				this.retryBlocks.set(fromBlock, toBlock)
+				return
 			}
 			logger.info(
 				`Fetched ${logs.length} logs from block ${fromBlock} to ${toBlock}...`,
-			);
+			)
 			this.logsQueue.set(fromBlock, {
 				logs: logs as SafeRpcLog[],
 				nextFromBlock,
-			});
-			this.retryBlocks.delete(fromBlock);
+			})
+			this.retryBlocks.delete(fromBlock)
 		}).catch((e) => {
 			logger.error(
 				`Error fetching logs from block ${fromBlock} to ${toBlock} for ${this.chain}: ${e}, retrying...`,
-			);
-			this.retryBlocks.set(fromBlock, toBlock);
-		});
+			)
+			this.retryBlocks.set(fromBlock, toBlock)
+		})
 
-		this.queuePending.logs.set(fromBlock, true);
+		this.queuePending.logs.set(fromBlock, true)
 	}
 
 	private fetchAgnosticLogs(fromBlock: bigint, toBlock: bigint) {
 		if (this.agnosticEvents.size === 0) {
-			this.queuePending.agnosticLogs.set(fromBlock, false);
-			return;
+			this.queuePending.agnosticLogs.set(fromBlock, false)
+			return
 		}
 
 		logger.info(
 			`Fetching agnostic logs from block ${fromBlock} to ${toBlock}...`,
-		);
+		)
 
 		const topics = Array.from(this.agnosticEvents.entries()).filter(
 			([_, { startBlockHeight }]) => startBlockHeight <= toBlock,
-		).map(([topic]) => topic);
+		).map(([topic]) => topic)
 
 		if (topics.length === 0) {
-			this.queuePending.agnosticLogs.set(fromBlock, false);
-			return;
+			this.queuePending.agnosticLogs.set(fromBlock, false)
+			return
 		}
 
-		const nextFromBlock = toBlock + 1n;
+		const nextFromBlock = toBlock + 1n
 
 		this.client.request({
-			method: "eth_getLogs",
+			method: 'eth_getLogs',
 			params: [
 				{
 					fromBlock: `0x${fromBlock.toString(16)}`,
@@ -309,86 +309,86 @@ export class DataSource {
 						l.blockNumber === null ||
 						l.transactionHash === null ||
 						l.transactionIndex === null ||
-						l.logIndex === null;
+						l.logIndex === null
 				})
 			) {
-				logger.info(`Some logs still pending, retrying...`);
-				this.retryBlocks.set(fromBlock, toBlock);
-				return;
+				logger.info(`Some logs still pending, retrying...`)
+				this.retryBlocks.set(fromBlock, toBlock)
+				return
 			}
 			logger.info(
 				`Fetched ${logs.length} agnostic logs from block ${fromBlock} to ${toBlock}...`,
-			);
+			)
 			this.agnosticLogsQueue.set(fromBlock, {
 				logs: logs as SafeRpcLog[],
 				nextFromBlock,
-			});
-			this.retryBlocks.delete(fromBlock);
+			})
+			this.retryBlocks.delete(fromBlock)
 		}).catch((e) => {
 			logger.error(
 				`Error fetching agnostic logs from block ${fromBlock} to ${toBlock} for ${this.chain}: ${e}, retrying...`,
-			);
-			this.retryBlocks.set(fromBlock, toBlock);
-		});
+			)
+			this.retryBlocks.set(fromBlock, toBlock)
+		})
 
-		this.queuePending.agnosticLogs.set(fromBlock, true);
+		this.queuePending.agnosticLogs.set(fromBlock, true)
 	}
 
 	private fetchBlocks(fromBlock: bigint, toBlock: bigint) {
 		if (this.blockSources.length === 0) {
-			this.queuePending.blocks.set(fromBlock, false);
-			return;
+			this.queuePending.blocks.set(fromBlock, false)
+			return
 		}
-		logger.info(`Fetching blocks from block ${fromBlock} to ${toBlock}...`);
-		const blockToHandlers = new Map<bigint, BlockHandler[]>();
+		logger.info(`Fetching blocks from block ${fromBlock} to ${toBlock}...`)
+		const blockToHandlers = new Map<bigint, BlockHandler[]>()
 		const blockSources = this.blockSources.filter((source) =>
-			source.startBlockHeight !== "live" &&
+			source.startBlockHeight !== 'live' &&
 				source.startBlockHeight <= toBlock &&
 				source.startBlockHeight >= fromBlock ||
-			(source.startBlockHeight === "live" && this.isLive)
-		);
+			(source.startBlockHeight === 'live' && this.isLive)
+		)
 		if (blockSources.length === 0) {
 			logger.info(
 				`No filtered block sources found for ${this.chain} at ${this.fetchedBlockHeight}`,
-			);
-			this.queuePending.blocks.set(fromBlock, false);
-			return;
+			)
+			this.queuePending.blocks.set(fromBlock, false)
+			return
 		}
 		for (const blockSource of blockSources) {
-			if (blockSource.startBlockHeight === "live") {
-				blockSource.startBlockHeight = this.liveBlockHeight;
+			if (blockSource.startBlockHeight === 'live') {
+				blockSource.startBlockHeight = this.liveBlockHeight
 			}
 
 			const newFromBlock = bigIntMax(
 				blockSource.startBlockHeight,
 				fromBlock,
-			);
+			)
 
 			const arrayLengthRemainder = (toBlock - newFromBlock + 1n) %
-				blockSource.blockInterval;
+				blockSource.blockInterval
 			const arrayLength = Number(
 				(toBlock - newFromBlock + 1n) /
 						blockSource.blockInterval + (arrayLengthRemainder ===
 							0n
 						? 0n
 						: 1n),
-			);
+			)
 
 			const blocks = Array.from(
 				{
 					length: arrayLength,
 				},
 				(_, i) => BigInt(i) * blockSource.blockInterval + newFromBlock,
-			);
+			)
 			blocks.forEach((block) => {
-				const handlers = blockToHandlers.get(block) || [];
-				blockToHandlers.set(block, [...handlers, blockSource.handler]);
-			});
+				const handlers = blockToHandlers.get(block) || []
+				blockToHandlers.set(block, [...handlers, blockSource.handler])
+			})
 			blockSource.startBlockHeight = blocks[blocks.length - 1] +
-				blockSource.blockInterval;
+				blockSource.blockInterval
 		}
 
-		const nextFromBlock = toBlock + 1n;
+		const nextFromBlock = toBlock + 1n
 
 		const blocksPromises = Array.from(blockToHandlers.entries()).map(
 			async ([block, handlers]) => {
@@ -398,60 +398,60 @@ export class DataSource {
 						includeTransactions: true,
 					}),
 					handlers,
-				};
+				}
 			},
-		);
+		)
 
 		Promise.all(blocksPromises).then((blocks) => {
 			if (blocks.some((b) => b.block === null)) {
-				logger.info(`Some blocks still pending, retrying...`);
-				this.retryBlocks.set(fromBlock, toBlock);
-				return;
+				logger.info(`Some blocks still pending, retrying...`)
+				this.retryBlocks.set(fromBlock, toBlock)
+				return
 			}
 			logger.info(
 				`Fetched ${blocks.length} blocks from block ${fromBlock} to ${toBlock}...`,
-			);
+			)
 			this.blocksQueue.set(
 				fromBlock,
 				{
 					blocks,
 					nextFromBlock,
 				},
-			);
-			this.retryBlocks.delete(fromBlock);
+			)
+			this.retryBlocks.delete(fromBlock)
 		}).catch((e) => {
 			logger.error(
 				`Error fetching blocks from block ${fromBlock} to ${toBlock} for ${this.chain}: ${e}, retrying...`,
-			);
-			this.retryBlocks.set(fromBlock, toBlock);
-		});
+			)
+			this.retryBlocks.set(fromBlock, toBlock)
+		})
 
-		this.queuePending.blocks.set(fromBlock, true);
+		this.queuePending.blocks.set(fromBlock, true)
 	}
 
 	private async runProcessorLoop() {
 		while (this.eventLoops.processor) {
-			const logs = this.logsQueue.get(this.processedBlockHeight);
+			const logs = this.logsQueue.get(this.processedBlockHeight)
 			const logsPending = this.queuePending.logs.get(
 				this.processedBlockHeight,
-			);
-			const blocks = this.blocksQueue.get(this.processedBlockHeight);
+			)
+			const blocks = this.blocksQueue.get(this.processedBlockHeight)
 			const blocksPending = this.queuePending.blocks.get(
 				this.processedBlockHeight,
-			);
+			)
 			const agnosticLogs = this.agnosticLogsQueue.get(
 				this.processedBlockHeight,
-			);
+			)
 			const agnosticLogsPending = this.queuePending.agnosticLogs.get(
 				this.processedBlockHeight,
-			);
+			)
 
 			if (
 				logsPending === undefined && blocksPending === undefined &&
 				agnosticLogsPending === undefined
 			) {
-				await delay(this.queueDelay);
-				continue;
+				await delay(this.queueDelay)
+				continue
 			}
 
 			if (
@@ -460,11 +460,11 @@ export class DataSource {
 			) {
 				logger.info(
 					`No logs or blocks to process for block ${this.processedBlockHeight}, continuing...`,
-				);
+				)
 				this.processedBlockHeight = this.processedBlockHeight +
-					this.blockRange + 1n;
-				await delay(this.queueDelay);
-				continue;
+					this.blockRange + 1n
+				await delay(this.queueDelay)
+				continue
 			}
 
 			if (
@@ -473,71 +473,71 @@ export class DataSource {
 			) {
 				logger.info(
 					`No logs or blocks fetched yet to process for block ${this.processedBlockHeight}, waiting...`,
-				);
-				await delay(this.queueDelay);
-				continue;
+				)
+				await delay(this.queueDelay)
+				continue
 			}
 
 			logger.info(
 				`Processing logs and blocks from block ${this.processedBlockHeight}...`,
-			);
+			)
 
 			const logsAndBlocks = [
 				...logs?.logs.map((log) => ({
 					...log,
 					blockNumber: log.blockNumber,
-					type: "log",
+					type: 'log',
 				})) ?? [],
 				...blocks?.blocks.map((block) => ({
 					...block,
 					blockNumber: block.block.number,
-					type: "block",
+					type: 'block',
 				})) ?? [],
 				...agnosticLogs?.logs.map((log) => ({
 					...log,
 					blockNumber: log.blockNumber,
-					type: "agnosticLog",
+					type: 'agnosticLog',
 				})) ?? [],
-			];
+			]
 
 			logsAndBlocks.sort((a, b) => {
-				a.blockNumber = !(typeof a.blockNumber === "bigint")
+				a.blockNumber = !(typeof a.blockNumber === 'bigint')
 					? BigInt(a.blockNumber ?? 0)
-					: a.blockNumber;
-				b.blockNumber = !(typeof b.blockNumber === "bigint")
+					: a.blockNumber
+				b.blockNumber = !(typeof b.blockNumber === 'bigint')
 					? BigInt(b.blockNumber ?? 0)
-					: b.blockNumber;
-				return Number((a.blockNumber ?? 0n) - (b.blockNumber ?? 0n));
-			});
+					: b.blockNumber
+				return Number((a.blockNumber ?? 0n) - (b.blockNumber ?? 0n))
+			})
 
-			let error: string | undefined;
+			let error: string | undefined
 
 			for (
 				const logOrBlock of logsAndBlocks
 			) {
-				if (logOrBlock.type === "log") {
-					const log = logOrBlock as SafeRpcLog;
+				if (logOrBlock.type === 'log') {
+					const log = logOrBlock as SafeRpcLog
 
-					const contractId = this.addressToId.get(log.address.toLowerCase());
+					const contractId = this.addressToId.get(log.address.toLowerCase())
 					if (!contractId) {
-						logger.error(`No contract ID found for log ${log}`);
-						continue;
+						logger.error(`No contract ID found for log ${log}`)
+						continue
 					}
 					const handler = this.eventHandlers.get(
 						`${log.topics[0]}-${contractId}`,
-					);
+					)
 
 					if (!handler) {
 						throw new Error(
 							`No handler set for topic ${log.topics[0]}-${contractId}`,
-						);
+						)
 					}
 
 					const event = decodeEventLog({
 						abi: handler.abi,
 						data: log.data,
 						topics: [log.topics[0]!, ...log.topics.slice(1)],
-					});
+					})
 
 					try {
 						await handler.handler({
@@ -550,17 +550,17 @@ export class DataSource {
 								address: log.address,
 								publicClient: this.client,
 							}),
-						});
+						})
 					} catch (e) {
 						error =
-							`${handler.handler.name} at ${log.blockNumber} with log:\n${log}\n\nError:\n${e}`;
-						logger.error(`Error running event handler ${event}: ${e}`);
+							`${handler.handler.name} at ${log.blockNumber} with log:\n${log}\n\nError:\n${e}`
+						logger.error(`Error running event handler ${event}: ${e}`)
 					}
-				} else if (logOrBlock.type === "block") {
+				} else if (logOrBlock.type === 'block') {
 					const block = logOrBlock as {
-						block: SafeBlock;
-						handlers: BlockHandler[];
-					};
+						block: SafeBlock
+						handlers: BlockHandler[]
+					}
 
 					for (const handler of block.handlers) {
 						try {
@@ -568,36 +568,36 @@ export class DataSource {
 								block: block.block,
 								client: this.client,
 								store: this.store,
-							});
+							})
 						} catch (e) {
 							error =
-								`${handler.name} at ${block.block.number} with block:\n${block.block}\n\nError:\n${e}`;
+								`${handler.name} at ${block.block.number} with block:\n${block.block}\n\nError:\n${e}`
 							logger.error(
 								`Error running block handler at ${block.block.number}: ${e}`,
-							);
+							)
 						}
 					}
-				} else if (logOrBlock.type === "agnosticLog") {
-					const log = logOrBlock as SafeRpcLog;
+				} else if (logOrBlock.type === 'agnosticLog') {
+					const log = logOrBlock as SafeRpcLog
 
-					const topic = log.topics[0];
+					const topic = log.topics[0]
 
 					if (!topic) {
-						logger.error(`No topic found for log ${log}`);
-						continue;
+						logger.error(`No topic found for log ${log}`)
+						continue
 					}
 
-					const eventHandler = this.agnosticEvents.get(topic);
+					const eventHandler = this.agnosticEvents.get(topic)
 					if (!eventHandler) {
-						logger.error(`No event found for log ${log}`);
-						continue;
+						logger.error(`No event found for log ${log}`)
+						continue
 					}
 
 					const event = decodeEventLog({
 						abi: eventHandler.abi,
 						data: log.data,
 						topics: [log.topics[0]!, ...log.topics.slice(1)],
-					});
+					})
 
 					try {
 						await eventHandler.handler({
@@ -610,11 +610,11 @@ export class DataSource {
 								address: log.address,
 								publicClient: this.client,
 							}),
-						});
+						})
 					} catch (e) {
 						error =
-							`${eventHandler.handler.name} at ${log.blockNumber} with log:\n${log}\n\nError:\n${e}`;
-						logger.error(`Error running event handler ${event}: ${e}`);
+							`${eventHandler.handler.name} at ${log.blockNumber} with log:\n${log}\n\nError:\n${e}`
+						logger.error(`Error running event handler ${event}: ${e}`)
 					}
 				}
 
@@ -625,55 +625,55 @@ export class DataSource {
 						error,
 						store: this.store,
 						type: logOrBlock.type,
-					});
+					})
 				}
 			}
 
-			this.logsQueue.delete(this.processedBlockHeight);
-			this.blocksQueue.delete(this.processedBlockHeight);
-			this.queuePending.logs.delete(this.processedBlockHeight);
-			this.queuePending.blocks.delete(this.processedBlockHeight);
-			logger.info(`Processed block ${this.processedBlockHeight}...`);
+			this.logsQueue.delete(this.processedBlockHeight)
+			this.blocksQueue.delete(this.processedBlockHeight)
+			this.queuePending.logs.delete(this.processedBlockHeight)
+			this.queuePending.blocks.delete(this.processedBlockHeight)
+			logger.info(`Processed block ${this.processedBlockHeight}...`)
 
 			this.processedBlockHeight = logs?.nextFromBlock ??
 				agnosticLogs?.nextFromBlock ??
-				blocks!.nextFromBlock;
+				blocks!.nextFromBlock
 		}
 	}
 
 	private async checkIndexedBlockHeights() {
-		if (this.noDb) return;
+		if (this.noDb) return
 		const indexedBlockHeight = await this.statusProvider
 			.getIndexedBlockHeight({
 				chain: this.chain,
 				arkiveId: this.arkiveId.toString(),
 				arkiveVersion: this.arkiveVersion.toString(),
-			});
+			})
 
 		logger.info(
 			`Indexed block height for ${this.chain}: ${indexedBlockHeight}...`,
-		);
+		)
 
 		if (
 			indexedBlockHeight && (indexedBlockHeight + 1) > this.processedBlockHeight
 		) {
 			logger.info(
 				`Setting processed block height to ${indexedBlockHeight + 1}...`,
-			);
-			this.processedBlockHeight = BigInt(indexedBlockHeight) + 1n;
+			)
+			this.processedBlockHeight = BigInt(indexedBlockHeight) + 1n
 		}
 	}
 
 	private finalChecks() {
 		for (const blockSource of this.blockSources) {
 			if (
-				blockSource.startBlockHeight !== "live" &&
+				blockSource.startBlockHeight !== 'live' &&
 				blockSource.startBlockHeight < this.processedBlockHeight
 			) {
 				blockSource.startBlockHeight =
 					((this.processedBlockHeight - blockSource.startBlockHeight) /
 								blockSource.blockInterval + 1n) * blockSource.blockInterval +
-					blockSource.startBlockHeight;
+					blockSource.startBlockHeight
 			}
 		}
 		if (
@@ -681,36 +681,36 @@ export class DataSource {
 			this.normalizedContracts.contracts.length === 0 &&
 			this.agnosticEvents.size === 0
 		) {
-			this.fetchInterval = 100;
+			this.fetchInterval = 100
 		}
 	}
 
 	private async getLiveBlockHeight() {
 		if (this.fetchedBlockHeight + this.blockRange < this.liveBlockHeight) {
-			return;
+			return
 		}
-		logger.info(`Fetching live block height...`);
-		const block = await this.client.getBlockNumber();
-		logger.info(`Live block height for ${this.chain}: ${block}...`);
-		this.liveBlockHeight = block;
+		logger.info(`Fetching live block height...`)
+		const block = await this.client.getBlockNumber()
+		logger.info(`Live block height for ${this.chain}: ${block}...`)
+		this.liveBlockHeight = block
 	}
 
 	private loadBlockHandlers() {
-		if (this.blockSources.length === 0) return;
-		logger.info(`Loading block handlers for ${this.chain}...`);
+		if (this.blockSources.length === 0) return
+		logger.info(`Loading block handlers for ${this.chain}...`)
 		for (const blockSource of this.blockSources) {
-			if (blockSource.startBlockHeight === "live") {
+			if (blockSource.startBlockHeight === 'live') {
 				if (this.processedBlockHeight === 0n) {
-					this.processedBlockHeight = this.liveBlockHeight;
+					this.processedBlockHeight = this.liveBlockHeight
 				}
-				continue;
+				continue
 			}
 
 			if (
 				this.processedBlockHeight === 0n ||
 				blockSource.startBlockHeight < this.processedBlockHeight
 			) {
-				this.processedBlockHeight = blockSource.startBlockHeight;
+				this.processedBlockHeight = blockSource.startBlockHeight
 			}
 		}
 	}
@@ -718,31 +718,31 @@ export class DataSource {
 	private loadContracts() {
 		logger.info(
 			`Processing raw contracts for ${this.chain}...`,
-		);
+		)
 
 		for (const contract of this.contracts) {
-			const { abi, events, sources, id } = contract;
+			const { abi, events, sources, id } = contract
 
 			const lowestBlockHeight = bigIntMin(
 				...sources.map((s) => {
-					return s.startBlockHeight;
+					return s.startBlockHeight
 				}),
-			);
+			)
 
 			if (
 				this.processedBlockHeight === 0n ||
 				lowestBlockHeight < this.processedBlockHeight
 			) {
-				this.processedBlockHeight = lowestBlockHeight;
+				this.processedBlockHeight = lowestBlockHeight
 			}
 
-			if (sources.filter((s) => s.address === "*").length > 0) {
-				const source = sources.find((s) => s.address === "*")!;
+			if (sources.filter((s) => s.address === '*').length > 0) {
+				const source = sources.find((s) => s.address === '*')!
 				for (const event of events) {
 					const topic = encodeEventTopics({
 						abi,
 						eventName: event.name,
-					})[0];
+					})[0]
 					this.agnosticEvents.set(
 						topic,
 						{
@@ -750,35 +750,35 @@ export class DataSource {
 							handler: event.handler,
 							startBlockHeight: source.startBlockHeight,
 						},
-					);
+					)
 				}
-				continue;
+				continue
 			}
 
 			for (const source of sources) {
-				this.normalizedContracts.contracts.push(source);
-				this.addressToId.set(source.address.toLowerCase(), id);
+				this.normalizedContracts.contracts.push(source)
+				this.addressToId.set(source.address.toLowerCase(), id)
 			}
 
 			for (const event of events) {
-				const { name, handler } = event;
+				const { name, handler } = event
 
 				const topic = encodeEventTopics({
 					abi,
 					eventName: name,
-				})[0];
+				})[0]
 
 				const handlerAndAbi = {
 					handler,
 					abi,
-				};
+				}
 
 				this.eventHandlers.set(
 					`${topic}-${id}`,
 					handlerAndAbi,
-				);
+				)
 
-				this.normalizedContracts.signatureTopics.push(topic);
+				this.normalizedContracts.signatureTopics.push(topic)
 			}
 		}
 	}

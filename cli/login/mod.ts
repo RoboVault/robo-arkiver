@@ -1,59 +1,59 @@
-import { SupabaseClient, wait } from "../deps.ts";
+import { SupabaseClient, wait } from '../deps.ts'
 import {
 	getEmail,
 	getPassword,
 	getSupabaseClient,
 	validateEmail,
-} from "../utils.ts";
+} from '../utils.ts'
 
 export const action = async (options: {
-	email?: string;
-	password?: string;
+	email?: string
+	password?: string
 }) => {
-	const supabase = getSupabaseClient();
+	const supabase = getSupabaseClient()
 
-	const { data } = await supabase.auth.getSession();
+	const { data } = await supabase.auth.getSession()
 	if (data.session) {
-		console.log("✅ Already logged in");
-		Deno.exit(0);
+		console.log('✅ Already logged in')
+		Deno.exit(0)
 	}
 
-	await login(options, supabase);
+	await login(options, supabase)
 
-	Deno.exit(0);
-};
+	Deno.exit(0)
+}
 
 export const login = async (
 	options: {
-		email?: string;
-		password?: string;
+		email?: string
+		password?: string
 	},
 	supabaseClient: SupabaseClient,
 ) => {
-	console.log("🔒 Login to RoboArkiver");
+	console.log('🔒 Login to RoboArkiver')
 
-	let { email, password } = options;
+	let { email, password } = options
 
 	if (!email) {
-		email = await getEmail();
+		email = await getEmail()
 	}
-	validateEmail(email);
+	validateEmail(email)
 
 	if (!password) {
-		password = await getPassword();
+		password = await getPassword()
 	}
 
-	const spinner = wait("Logging in...").start();
+	const spinner = wait('Logging in...').start()
 	const signInRes = await supabaseClient.auth.signInWithPassword({
 		email,
 		password,
-	});
+	})
 	if (signInRes.error) {
-		spinner.fail("Login failed");
-		throw signInRes.error;
+		spinner.fail('Login failed')
+		throw signInRes.error
 	}
 
-	spinner.succeed("Logged in successfully!");
+	spinner.succeed('Logged in successfully!')
 
-	return signInRes;
-};
+	return signInRes
+}

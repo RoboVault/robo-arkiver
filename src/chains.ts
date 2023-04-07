@@ -6,7 +6,7 @@ import {
 	optimism,
 	polygon,
 	polygonMumbai,
-} from "npm:viem/chains";
+} from 'npm:viem/chains'
 
 export const supportedChains = {
 	avalanche,
@@ -16,4 +16,4 @@ export const supportedChains = {
 	polygon,
 	optimism,
 	mumbai: polygonMumbai,
-} as const;
+} as const

@@ -1,4 +1,4 @@
-import { wait } from "../deps.ts";
+import { wait } from '../deps.ts'
 import {
 	getEmail,
 	getPassword,
@@ -6,34 +6,34 @@ import {
 	getUsername,
 	validateEmail,
 	validatePassword,
-} from "../utils.ts";
+} from '../utils.ts'
 
 export const action = async (options: {
-	email?: string;
-	password?: string;
-	username?: string;
+	email?: string
+	password?: string
+	username?: string
 }) => {
-	console.log("Signup to RoboArkiver 🔒");
+	console.log('Signup to RoboArkiver 🔒')
 
-	let { email, password, username } = options;
+	let { email, password, username } = options
 
 	if (!email) {
-		email = await getEmail();
+		email = await getEmail()
 	}
-	validateEmail(email);
+	validateEmail(email)
 
 	if (!password) {
-		password = await getPassword();
+		password = await getPassword()
 	}
-	validatePassword(password);
+	validatePassword(password)
 
 	if (!username) {
-		username = await getUsername();
+		username = await getUsername()
 	}
 
-	const supabase = getSupabaseClient();
+	const supabase = getSupabaseClient()
 
-	const spinner = wait("Signing up...").start();
+	const spinner = wait('Signing up...').start()
 	const signUpRes = await supabase.auth.signUp({
 		email,
 		password,
@@ -42,21 +42,21 @@ export const action = async (options: {
 				username,
 			},
 		},
-	});
+	})
 	if (signUpRes.error) {
 		if (
 			signUpRes.error.message.includes(
-				"Username already exists!",
+				'Username already exists!',
 			)
 		) {
-			spinner.fail("Username already taken, please try another one");
-			Deno.exit(1);
+			spinner.fail('Username already taken, please try another one')
+			Deno.exit(1)
 		}
-		spinner.fail("Signup failed");
-		throw signUpRes.error;
+		spinner.fail('Signup failed')
+		throw signUpRes.error
 	}
 
 	spinner.succeed(
-		"Signed up successfully! Please check your email for a confirmation link.",
-	);
-};
+		'Signed up successfully! Please check your email for a confirmation link.',
+	)
+}

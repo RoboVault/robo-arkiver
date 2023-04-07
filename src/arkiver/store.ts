@@ -1,9 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
-import { Cache } from "../deps.ts";
+import { Cache } from '../deps.ts'
 
 export class Store extends Cache<any, any> {
 	constructor(options: Cache.Options<any, any, unknown>) {
-		super(options);
+		super(options)
 	}
 
 	retrieve<TValue>(
@@ -11,15 +11,15 @@ export class Store extends Cache<any, any> {
 		defaultValueAccessor: () => TValue | Promise<TValue>,
 		options?: Cache.SetOptions<any, any, unknown>,
 	): TValue | Promise<TValue> {
-		const value = super.get(key) as TValue | Promise<TValue>;
+		const value = super.get(key) as TValue | Promise<TValue>
 		if (value) {
-			return value;
+			return value
 		}
 
-		const defaultValue = defaultValueAccessor();
+		const defaultValue = defaultValueAccessor()
 
-		super.set(key, defaultValue, options);
+		super.set(key, defaultValue, options)
 
-		return defaultValue;
+		return defaultValue
 	}
 }

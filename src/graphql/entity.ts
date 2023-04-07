@@ -1,4 +1,4 @@
-import { mongoose } from "../deps.ts";
+import { mongoose } from '../deps.ts'
 
 export function createEntity<
 	TEnforcedDocType = undefined,
@@ -8,10 +8,10 @@ export function createEntity<
 		mongoose.SchemaDefinitionType<TEnforcedDocType>
 	>,
 ) {
-	const schema = new mongoose.Schema<TEnforcedDocType>(schemaDefinition);
+	const schema = new mongoose.Schema<TEnforcedDocType>(schemaDefinition)
 	const model = mongoose.model<TEnforcedDocType>(name, schema, undefined, {
 		overwriteModels: true,
-	});
+	})
 
-	return model;
+	return model
 }

@@ -1,6 +1,6 @@
-import { getSupabaseClient } from "../utils.ts";
-import { login } from "../login/mod.ts";
-import { SUPABASE_FUNCTIONS_URL } from "../constants.ts";
+import { getSupabaseClient } from '../utils.ts'
+import { login } from '../login/mod.ts'
+import { SUPABASE_FUNCTIONS_URL } from '../constants.ts'
 
 export const upload = async (
 	pkgName: string,
@@ -8,45 +8,45 @@ export const upload = async (
 	arkiveName: string,
 	options: { public?: true; major?: true },
 ) => {
-	const supabase = getSupabaseClient();
-	const sessionRes = await supabase.auth.getSession();
+	const supabase = getSupabaseClient()
+	const sessionRes = await supabase.auth.getSession()
 
 	if (!sessionRes.data.session) {
-		await login({}, supabase);
+		await login({}, supabase)
 	}
 
 	if (!sessionRes.data.session) {
-		throw new Error("Not logged in");
+		throw new Error('Not logged in')
 	}
 
-	const formData = new FormData();
-	formData.append("name", arkiveName);
-	const filePath = new URL(`file://${tempPath}/${pkgName}`);
+	const formData = new FormData()
+	formData.append('name', arkiveName)
+	const filePath = new URL(`file://${tempPath}/${pkgName}`)
 	formData.append(
-		"pkg",
+		'pkg',
 		new File([await Deno.readFile(filePath)], pkgName),
-	);
+	)
 	if (options.public) {
-		formData.append("isPublic", "on");
+		formData.append('isPublic', 'on')
 	}
 	if (options.major) {
-		formData.append("update", "major");
+		formData.append('update', 'major')
 	} else {
-		formData.append("update", "minor");
+		formData.append('update', 'minor')
 	}
 
-	const headers = new Headers();
+	const headers = new Headers()
 	headers.append(
-		"Authorization",
+		'Authorization',
 		`Bearer ${sessionRes.data.session.access_token}`,
-	);
+	)
 	const res = await fetch(
-		new URL("/arkives", SUPABASE_FUNCTIONS_URL),
+		new URL('/arkives', SUPABASE_FUNCTIONS_URL),
 		{
-			method: "POST",
+			method: 'POST',
 			body: formData,
 			headers,
 		},
-	);
-	console.log("Deployed successfully: ", await res.json());
-};
+	)
+	console.log('Deployed successfully: ', await res.json())
+}

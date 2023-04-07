@@ -1,7 +1,7 @@
-export { formatUnits } from "npm:viem";
+export { formatUnits } from 'npm:viem'
 export {
 	createEntity,
 	type EventHandlerFor,
 	logger,
 	Manifest,
-} from "../../mod.ts";
+} from '../../mod.ts'

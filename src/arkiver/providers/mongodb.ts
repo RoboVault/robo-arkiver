@@ -1,21 +1,21 @@
-import { ArkiverMetadata } from "../arkive-metadata.ts";
+import { ArkiverMetadata } from '../arkive-metadata.ts'
 import {
 	IndexedBlockHeightParams,
 	SaveArkiveMetadataParams,
 	StatusProvider,
-} from "./interfaces.ts";
+} from './interfaces.ts'
 
 export class MongoStatusProvider implements StatusProvider {
 	async getIndexedBlockHeight(
 		params: IndexedBlockHeightParams,
 	): Promise<number> {
-		const { chain } = params;
+		const { chain } = params
 
 		const arkiverMetadata = await ArkiverMetadata.find({ chain }).sort({
 			processedBlockHeight: -1,
-		}).limit(1);
+		}).limit(1)
 
-		return arkiverMetadata[0]?.processedBlockHeight || 0;
+		return arkiverMetadata[0]?.processedBlockHeight || 0
 	}
 
 	async saveArkiveMetadata(
@@ -34,22 +34,22 @@ export class MongoStatusProvider implements StatusProvider {
 						blockHandlerCalls: 0,
 						eventHandlerCalls: 0,
 					}),
-		);
+		)
 		arkiverMetadata.processedBlockHeight = Number(
 			params.blockNumber,
-		);
-		if (params.type === "block") {
-			arkiverMetadata.blockHandlerCalls++;
+		)
+		if (params.type === 'block') {
+			arkiverMetadata.blockHandlerCalls++
 		} else {
-			arkiverMetadata.eventHandlerCalls++;
+			arkiverMetadata.eventHandlerCalls++
 		}
 		if (params.error !== undefined) {
-			arkiverMetadata.errors.push(params.error);
+			arkiverMetadata.errors.push(params.error)
 		}
 
 		params.store.set(
 			`${params.chain}:${params.blockNumber}:metadata`,
 			arkiverMetadata.save(),
-		);
+		)
 	}
 }

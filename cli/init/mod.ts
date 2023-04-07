@@ -1,23 +1,23 @@
-import { join } from "../deps.ts";
-import { version } from "../../cli.ts";
+import { join } from '../deps.ts'
+import { version } from '../../cli.ts'
 
 export const action = async (options: { overwrite?: boolean }, dir: string) => {
-	const newDir = join(Deno.cwd(), dir);
+	const newDir = join(Deno.cwd(), dir)
 
-	await mkDir(newDir);
+	await mkDir(newDir)
 
 	const vscode = `{
 	"deno.enable": true,
 	"deno.unstable": true
-}`;
+}`
 
-	await mkDir(join(newDir, ".vscode"));
+	await mkDir(join(newDir, '.vscode'))
 	writeFile(
-		join(newDir, ".vscode"),
-		"settings.json",
+		join(newDir, '.vscode'),
+		'settings.json',
 		vscode,
 		options.overwrite,
-	);
+	)
 
 	const manifest = `import { Manifest } from "./deps.ts";
 import erc20 from "./erc20.ts";
@@ -33,9 +33,9 @@ manifest
 	.addSources({ "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2": 16987911n })
 	.addEventHandlers({ "Transfer": transferHandler });
 
-export default manifest.build();`;
+export default manifest.build();`
 
-	writeFile(newDir, "manifest.ts", manifest, options.overwrite);
+	writeFile(newDir, 'manifest.ts', manifest, options.overwrite)
 
 	const entities = `import { createEntity } from "./deps.ts";
 
@@ -57,15 +57,15 @@ export const Balance = createEntity<IBalance>("Balance", {
 		type: Number,
 		index: true,
 	},
-});`;
+});`
 
-	await mkDir(join(newDir, "entities"));
+	await mkDir(join(newDir, 'entities'))
 	writeFile(
-		join(newDir, "entities"),
-		"balance.ts",
+		join(newDir, 'entities'),
+		'balance.ts',
 		entities,
 		options.overwrite,
-	);
+	)
 
 	const handler = `import { EventHandlerFor, formatUnits } from "./deps.ts";
 import erc20 from "./erc20.ts";
@@ -135,15 +135,15 @@ export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
 			token: address,
 			timestamp,
 		});
-	};`;
+	};`
 
-	await mkDir(join(newDir, "handlers"));
+	await mkDir(join(newDir, 'handlers'))
 	writeFile(
-		join(newDir, "handlers"),
-		"transfer.ts",
+		join(newDir, 'handlers'),
+		'transfer.ts',
 		handler,
 		options.overwrite,
-	);
+	)
 
 	const abi = `export default [{
 	"inputs": [],
@@ -506,22 +506,22 @@ export const transferHandler: EventHandlerFor<typeof erc20, "Transfer"> =
 	"outputs": [],
 	"stateMutability": "nonpayable",
 	"type": "function",
-}] as const;`;
+}] as const;`
 
-	await mkDir(join(newDir, "abis"));
-	writeFile(join(newDir, "abis"), "erc20.ts", abi, options.overwrite);
+	await mkDir(join(newDir, 'abis'))
+	writeFile(join(newDir, 'abis'), 'erc20.ts', abi, options.overwrite)
 
 	const deps = `export { formatUnits } from "npm:viem";
 export {
   createEntity,
   type EventHandlerFor,
   Manifest,
-} from "https://deno.land/x/robo_arkiver@${version}/mod.ts";`;
+} from "https://deno.land/x/robo_arkiver@${version}/mod.ts";`
 
-	writeFile(newDir, "deps.ts", deps, options.overwrite);
-};
+	writeFile(newDir, 'deps.ts', deps, options.overwrite)
+}
 
-const encoder = new TextEncoder();
+const encoder = new TextEncoder()
 
 const writeFile = async (
 	dir: string,
@@ -534,22 +534,22 @@ const writeFile = async (
 			join(dir, filename),
 			encoder.encode(content),
 			{ createNew: !overwrite },
-		);
+		)
 	} catch (e) {
 		if (e instanceof Deno.errors.AlreadyExists) {
-			console.error(`File ${filename} already exists.`);
-			Deno.exit(1);
+			console.error(`File ${filename} already exists.`)
+			Deno.exit(1)
 		}
-		throw e;
+		throw e
 	}
-};
+}
 
 const mkDir = async (dir: string) => {
 	try {
-		await Deno.mkdir(dir);
+		await Deno.mkdir(dir)
 	} catch (e) {
 		if (!(e instanceof Deno.errors.AlreadyExists)) {
-			throw e;
+			throw e
 		}
 	}
-};
+}
