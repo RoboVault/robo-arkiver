@@ -1,5 +1,7 @@
 # v0.3.7
 - fix: Fixed a bug where arkive would crash if you used event wildcards
+- fix: Fixed a bug where entities from other arkvies would show up in other arkives graphql schema
+- fix: Fixed a bug where reading source.options would return undefined
 - feat: Updated init template to show clearer example
 - feat: Added `--no-db` flag to `arkiver start` command to disable connecting to
 	MongoDB and serving data via GraphQL

@@ -78,7 +78,7 @@ export class Arkiver extends EventTarget {
 			const dataSource = new DataSource({
 				arkiveId: this.arkiveData.id,
 				arkiveVersion: this.arkiveData.deployment.major_version,
-				blockRange: source.options.blockRange,
+				blockRange: source.options?.blockRange ?? 100n,
 				chain,
 				contracts: source.contracts ?? [],
 				rpcUrl: rpcUrl,
