@@ -13,7 +13,7 @@ import {
 } from './cli/mod.ts'
 import 'https://deno.land/std@0.179.0/dotenv/load.ts'
 
-export const version = 'v0.3.8'
+export const version = 'v0.4.0'
 
 const command = new Command()
 	.name('arkiver')
@@ -92,7 +92,6 @@ command
 // init
 command
 	.command('init', 'Initialize a new arkive project')
-	.arguments('<dir:string>')
 	.option('--overwrite', 'Overwrite existing files')
 	.action(async (opts, ...args) => {
 		util.logHeader(version)

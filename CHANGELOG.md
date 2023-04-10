@@ -3,6 +3,7 @@
 - feat: Loggers are now passed to event handlers instead of being global.
 - feat: You can now configure custom loggers by calling `log.setup` before running the Arkiver instance.
 - feat: You can now configure the log level for the default console logger by passing in the `--log-level` flag to the `arkiver start` command.
+- feat: Enhanced the `arkiver init` command. You can now choose which template you want to initialize your arkive with. Templates are stored in the `examples` directory.
 - chore: Clean up logging
 - fix: several bugfixes related to wildcard event handlers
 
