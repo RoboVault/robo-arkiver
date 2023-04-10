@@ -30,12 +30,14 @@ export const action = async (
 
 	spinner.stop()
 
+	const defaultPath = './cool-new-arkive'
+
 	const arkive = await prompt([
 		{
 			name: 'dir',
 			message: 'Where should we create your arkive?',
 			type: Input,
-			default: './cool-new-arkive',
+			default: defaultPath,
 			validate: (dir: string) => {
 				if (!dir) return 'Please enter a path.'
 				if (dir[0] !== '.') return 'Please enter a relative path.'
@@ -57,19 +59,33 @@ export const action = async (
 		},
 	])
 
-	const dir = join(Deno.cwd(), arkive.dir ?? './cool-new-arkive')
+	const newDir = join(Deno.cwd(), arkive.dir ?? defaultPath)
 	const template = arkive.template ?? templateNames[0].value
 
 	spinner = wait('Initializing arkive...').start()
 
 	const initRes = await $`svn export ${
 		options.overwrite ? `--force ` : ''
-	}https://github.com/RoboVault/robo-arkiver/trunk/examples/${template} ${dir}`
+	}https://github.com/RoboVault/robo-arkiver/trunk/examples/${template} ${newDir}`
 		.captureCombined(true)
 
 	if (initRes.code !== 0) {
 		spinner.fail(`Error initializing arkive: ${initRes.stderr}`)
 		return
+	}
+
+	if (arkive.vscode) {
+		const dir = arkive.dir ?? defaultPath
+		await Deno.mkdir(join(Deno.cwd(), dir, '.vscode'))
+
+		const vscode = `{
+	"deno.enable": true,
+	"deno.unstable": true
+}`
+		await Deno.writeTextFile(
+			join(Deno.cwd(), dir, '.vscode', 'settings.json'),
+			vscode,
+		)
 	}
 
 	spinner.succeed('Initialized arkive')
