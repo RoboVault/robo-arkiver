@@ -1,5 +1,10 @@
-import { Arkiver, buildSchemaFromEntities } from '../../mod.ts'
-import { $, createYoga, delay, join, serve } from '../deps.ts'
+import {
+	ArkiveConsoleLogHandler,
+	Arkiver,
+	buildSchemaFromEntities,
+	defaultArkiveData,
+} from '../../mod.ts'
+import { $, createYoga, delay, join, log, serve } from '../deps.ts'
 import { ArkiverMetadata } from '../../src/arkiver/arkive-metadata.ts'
 
 export const action = async (
@@ -9,6 +14,7 @@ export const action = async (
 		mongoConnection?: string
 		db: boolean
 		gql: boolean
+		logLevel: string
 	},
 	directory: string,
 ) => {
@@ -58,6 +64,20 @@ export const action = async (
 		return acc
 	}, {} as Record<string, string>) ?? {}
 
+	log.setup({
+		handlers: {
+			console: new ArkiveConsoleLogHandler(options.logLevel as log.LevelName, {
+				arkiveName: manifest.name ?? 'my-arkive',
+			}),
+		},
+		loggers: {
+			arkiver: {
+				level: options.logLevel as log.LevelName,
+				handlers: ['console'],
+			},
+		},
+	})
+
 	const arkiver = new Arkiver({
 		manifest,
 		mongoConnection: options.db
@@ -65,6 +85,10 @@ export const action = async (
 				'mongodb://localhost:27017'
 			: undefined,
 		rpcUrls,
+		arkiveData: {
+			...defaultArkiveData,
+			name: manifest.name ?? 'my-arkive',
+		},
 	})
 
 	await arkiver.run()

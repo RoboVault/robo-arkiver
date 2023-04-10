@@ -1,4 +1,4 @@
-import { SafeLog, SafeRpcLog } from './arkiver/types.ts'
+import { Arkive, SafeLog, SafeRpcLog } from './arkiver/types.ts'
 import { supportedChains } from './chains.ts'
 
 export const delay = (durationMs: number) => {
@@ -45,4 +45,34 @@ export function formatLog(
 		...(eventName ? { args, eventName } : {}),
 		// deno-lint-ignore no-explicit-any
 	} as SafeLog<any>
+}
+
+export const defaultArkiveData: Arkive = {
+	id: 0,
+	deployment: {
+		id: 0,
+		arkive_id: 0,
+		major_version: 0,
+		minor_version: 0,
+		created_at: '',
+		status: 'pending',
+		file_path: '',
+	},
+	user_id: '',
+	name: '',
+	public: false,
+	created_at: '',
+}
+
+export const getBlocksPerSecond = (params: {
+	startTime: number
+	endTime: number
+	blockRange: number
+	items: number
+}) => {
+	const { startTime, endTime, blockRange, items } = params
+	const timeElapsed = endTime - startTime
+	const blocksPerSecond = blockRange / (timeElapsed / 1000)
+	const itemsPerSecond = items / (timeElapsed / 1000)
+	return { blocksPerSecond, itemsPerSecond }
 }

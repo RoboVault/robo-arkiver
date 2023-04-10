@@ -24,5 +24,10 @@ export {
 export { default as mongoose, Schema, Types } from 'npm:mongoose'
 export { schemaComposer } from 'npm:graphql-compose'
 export { composeMongoose } from 'npm:graphql-compose-mongoose'
-export { default as Cache } from 'npm:lru-cache'
-export * as log from 'https://deno.land/std@0.179.0/log/mod.ts'
+export { LRUCache as Cache } from 'npm:lru-cache'
+export * as log from 'https://deno.land/std@0.181.0/log/mod.ts'
+export * as colors from 'https://deno.land/std@0.181.0/fmt/colors.ts'
+export {
+	BaseHandler,
+	ConsoleHandler,
+} from 'https://deno.land/std@0.181.0/log/handlers.ts'

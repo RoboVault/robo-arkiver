@@ -7,6 +7,7 @@ import {
 	ExtractAbiEventNames,
 	GetContractReturnType,
 	Log,
+	log,
 	mongoose,
 	PublicClient,
 	RpcLog,
@@ -100,12 +101,14 @@ export interface EventHandlerContext<
 	client: PublicClient
 	store: Store
 	contract: GetContractReturnType<TAbi, PublicClient>
+	logger: log.Logger
 }
 
 export interface BlockHandlerContext {
 	block: SafeBlock
 	client: PublicClient
 	store: Store
+	logger: log.Logger
 }
 
 export type SafeBlock = OneDeepNonNullable<Block>

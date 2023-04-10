@@ -1,5 +1,10 @@
-# v0.3.8
+# v0.4.0
 - feat: Pass in viem contract instance to event handlers. You no longer need to call `getContract` in your event handlers.
+- feat: Loggers are now passed to event handlers instead of being global.
+- feat: You can now configure custom loggers by calling `log.setup` before running the Arkiver instance.
+- feat: You can now configure the log level for the default console logger by passing in the `--log-level` flag to the `arkiver start` command.
+- chore: Clean up logging
+- fix: several bugfixes related to wildcard event handlers
 
 # v0.3.7
 - fix: Fixed a bug where arkive would crash if you used event wildcards

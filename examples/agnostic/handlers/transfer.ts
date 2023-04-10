@@ -1,16 +1,14 @@
-import { EventHandlerFor, formatUnits, logger } from '../deps.ts'
+import { EventHandlerFor, formatUnits } from '../deps.ts'
 import erc20 from '../abis/erc20.ts'
 
 export const transferHandler: EventHandlerFor<typeof erc20, 'Transfer'> =
 	async (
-		{ event, client, store },
+		{ event, client, store, logger },
 	) => {
 		const { from, to, value } = event.args
 
 		const address = event.address
 
-		// store.retrieve() is a wrapper around Map.get() that will
-		// call the provided function if the key is not found in the store.
 		let decimals = 18
 		try {
 			decimals = await store.retrieve(

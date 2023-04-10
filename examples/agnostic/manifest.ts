@@ -5,7 +5,7 @@ import { transferHandler } from './handlers/transfer.ts'
 const manifest = new Manifest('agnostic-events')
 
 manifest
-	.chain('avalanche')
+	.chain('avalanche', { blockRange: 100n })
 	.contract(erc20)
 	.addSources({ '*': 27347402n })
 	.addEventHandlers({ 'Transfer': transferHandler })
