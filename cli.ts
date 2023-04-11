@@ -58,10 +58,13 @@ command
 // delete
 command
 	.command('delete', 'Delete arkive')
-	.arguments('<id:number>')
-	.action(async (_, id) => {
+	.arguments('<dir:string>')
+	.option('-m, --manifest <manifest:string>', 'Path to manifest file', {
+		default: './manifest.ts',
+	})
+	.action(async (opts, dir) => {
 		await checkVersion(version)
-		await remove.action(id)
+		await remove.action(opts, dir)
 	})
 
 // start

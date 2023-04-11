@@ -1,12 +1,36 @@
 import { SUPABASE_FUNCTIONS_URL } from '../constants.ts'
-import { wait } from '../deps.ts'
+import { join, wait } from '../deps.ts'
 import { login } from '../login/mod.ts'
 import { getSupabaseClient } from '../utils.ts'
 
-export const action = async (id: number) => {
+export const action = async (
+	options: { manifest: string },
+	directory: string,
+) => {
 	const spinner = wait('Deleting...').start()
 
 	try {
+		const { manifest: manifestPath } = options
+		const dir = `file://${
+			join(Deno.cwd(), directory, manifestPath ?? 'manifest.ts')
+		}`
+
+		const manifestImport = await import(dir)
+
+		const manifest = manifestImport.default ?? manifestImport.manifest
+
+		if (!manifest) {
+			throw new Error(
+				`Manifest file must export a default or manifest object.`,
+			)
+		}
+
+		const arkiveName = manifest.name
+
+		if (!arkiveName) {
+			throw new Error('Manifest must have a name')
+		}
+
 		// delete package
 		const supabase = getSupabaseClient()
 		const sessionRes = await supabase.auth.getSession()
@@ -31,7 +55,7 @@ export const action = async (id: number) => {
 		)
 
 		const deleteRes = await fetch(
-			new URL(`/arkives/${id}`, SUPABASE_FUNCTIONS_URL),
+			new URL(`/arkives/${arkiveName}`, SUPABASE_FUNCTIONS_URL),
 			{
 				method: 'DELETE',
 				headers,
