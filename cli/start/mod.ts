@@ -68,6 +68,8 @@ export const action = async (
 		handlers: {
 			console: new ArkiveConsoleLogHandler(options.logLevel as log.LevelName, {
 				arkiveName: manifest.name ?? 'my-arkive',
+				arkiveId: 0,
+				arkiveVersion: 1,
 			}),
 		},
 		loggers: {
