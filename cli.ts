@@ -3,6 +3,7 @@ import {
 	Command,
 	deploy,
 	init,
+	list,
 	login,
 	logout,
 	remove,
@@ -13,7 +14,7 @@ import {
 } from './cli/mod.ts'
 import 'https://deno.land/std@0.179.0/dotenv/load.ts'
 
-export const version = 'v0.4.0'
+export const version = 'v0.4.1'
 
 const command = new Command()
 	.name('arkiver')
@@ -106,6 +107,14 @@ command
 command
 	.command('upgrade', 'Upgrade arkiver to latest version')
 	.action(async () => await upgrade.action(version))
+
+// list
+command
+	.command('list', 'List all your arkives')
+	.action(async () => {
+		await checkVersion(version)
+		await list.action()
+	})
 
 if (import.meta.main) {
 	await command.parse(Deno.args)

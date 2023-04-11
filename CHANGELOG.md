@@ -1,3 +1,7 @@
+# v0.4.1
+- feat: change `arkiver remove` command to use the arkive name specified in the manifest instead of passing an the deployed arkive id.
+- feat: added `arkiver list` command to list all your arkives
+
 # v0.4.0
 - feat: Pass in viem contract instance to event handlers. You no longer need to call `getContract` in your event handlers.
 - feat: Loggers are now passed to event handlers instead of being global.
