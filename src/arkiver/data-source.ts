@@ -487,11 +487,11 @@ export class DataSource {
 				blocks.nextFromBlock
 
 			if (logsAndBlocks.length === 0) {
-				this.processedBlockHeight = nextFromBlock
-
 				this.logsQueue.delete(this.processedBlockHeight)
 				this.blocksQueue.delete(this.processedBlockHeight)
 				this.agnosticLogsQueue.delete(this.processedBlockHeight)
+
+				this.processedBlockHeight = nextFromBlock
 
 				logger().debug(
 					`No logs or blocks found for block ${this.processedBlockHeight}, skipping...`,
