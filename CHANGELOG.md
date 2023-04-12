@@ -1,4 +1,4 @@
-# v0.4.2 (unreleased)
+# v0.4.2
 
 - fix: fixed a bug with the indexing logic
 - chore: slight adustment to the console logger
