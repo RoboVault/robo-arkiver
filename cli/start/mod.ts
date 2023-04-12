@@ -66,11 +66,17 @@ export const action = async (
 
 	log.setup({
 		handlers: {
-			console: new ArkiveConsoleLogHandler(options.logLevel as log.LevelName, {
-				arkiveName: manifest.name ?? 'my-arkive',
-				arkiveId: 0,
-				arkiveVersion: 1,
-			}),
+			console: new ArkiveConsoleLogHandler(
+				options.logLevel.toUpperCase() as log.LevelName,
+				{
+					arkive: {
+						name: manifest.name ?? 'my-arkive',
+						id: 0,
+						majorVersion: 1,
+						minorVersion: 0,
+					},
+				},
+			),
 		},
 		loggers: {
 			arkiver: {

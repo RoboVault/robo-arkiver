@@ -183,7 +183,12 @@ export class DataSource {
 				this.liveBlockHeight,
 			)
 
-			if (toBlock === this.liveBlockHeight && !this.isLive) this.isLive = true
+			if (toBlock === this.liveBlockHeight && !this.isLive) {
+				this.isLive = true
+				logger().info(
+					`Start live arkiving for ${this.chain} at ${this.liveBlockHeight}`,
+				)
+			}
 
 			if (fromBlock > toBlock) {
 				await delay(this.liveDelay)
@@ -359,9 +364,6 @@ export class DataSource {
 			(source.startBlockHeight === 'live' && this.isLive)
 		)
 		if (blockSources.length === 0) {
-			logger().debug(
-				`No filtered block sources found for ${this.chain} at ${this.fetchedBlockHeight}`,
-			)
 			this.blocksQueue.set(
 				fromBlock,
 				{

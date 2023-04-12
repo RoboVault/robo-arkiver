@@ -1,35 +1,36 @@
-import { colors, ConsoleHandler, log } from "./deps.ts";
+import { colors, ConsoleHandler, log } from './deps.ts'
 
-export class ArkiveConsoleLogHandler extends ConsoleHandler {
-  private arkiveName: string;
-  private arkiveId: number;
-  private arkiveVersion: number;
-
-  constructor(
-    levelName: log.LevelName,
-    options: log.HandlerOptions & {
-      arkiveName: string;
-      arkiveId: number;
-      arkiveVersion: number;
-    },
-  ) {
-    super(levelName, options);
-    this.arkiveName = options.arkiveName;
-    this.arkiveId = options.arkiveId;
-    this.arkiveVersion = options.arkiveVersion;
-  }
-
-  override format(logRecord: log.LogRecord): string {
-    let msg = super.format(logRecord);
-
-    msg = `${
-      colors.blue(
-        `[${this.arkiveId}-${this.arkiveName}@v${this.arkiveVersion}]`,
-      )
-    } ${msg}`;
-
-    return msg;
-  }
+type Arkive = {
+	name: string
+	majorVersion: number
+	minorVersion: number
+	id: number
 }
 
-export const logger = () => log.getLogger("arkiver");
+export class ArkiveConsoleLogHandler extends ConsoleHandler {
+	private arkive: Arkive
+
+	constructor(
+		levelName: log.LevelName,
+		options: log.HandlerOptions & {
+			arkive: Arkive
+		},
+	) {
+		super(levelName, options)
+		this.arkive = options.arkive
+	}
+
+	override format(logRecord: log.LogRecord): string {
+		let msg = super.format(logRecord)
+
+		msg = `${
+			colors.blue(
+				`[${this.arkive.id}:${this.arkive.name}@v${this.arkive.majorVersion}.${this.arkive.minorVersion}]`,
+			)
+		} ${msg}`
+
+		return msg
+	}
+}
+
+export const logger = () => log.getLogger('arkiver')

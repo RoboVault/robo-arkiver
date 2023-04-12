@@ -1,3 +1,9 @@
+# v0.4.2 (unreleased)
+
+- fix: fixed a bug with the indexing logic
+- chore: slight adustment to the console logger
+- feat: added a log to indicate when the arkiver starts indexing live
+
 # v0.4.1
 
 - feat: change `arkiver remove` command to use the arkive name specified in the
