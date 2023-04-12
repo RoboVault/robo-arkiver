@@ -1,27 +1,41 @@
 # v0.4.1
-- feat: change `arkiver remove` command to use the arkive name specified in the manifest instead of passing an the deployed arkive id.
+
+- feat: change `arkiver remove` command to use the arkive name specified in the
+  manifest instead of passing an the deployed arkive id.
 - feat: added `arkiver list` command to list all your arkives
+- fix: fixed a bug where block handlers won't run when you start indexing live
+  data
 
 # v0.4.0
-- feat: Pass in viem contract instance to event handlers. You no longer need to call `getContract` in your event handlers.
+
+- feat: Pass in viem contract instance to event handlers. You no longer need to
+  call `getContract` in your event handlers.
 - feat: Loggers are now passed to event handlers instead of being global.
-- feat: You can now configure custom loggers by calling `log.setup` before running the Arkiver instance.
-- feat: You can now configure the log level for the default console logger by passing in the `--log-level` flag to the `arkiver start` command.
-- feat: Enhanced the `arkiver init` command. You can now choose which template you want to initialize your arkive with. Templates are stored in the `examples` directory.
+- feat: You can now configure custom loggers by calling `log.setup` before
+  running the Arkiver instance.
+- feat: You can now configure the log level for the default console logger by
+  passing in the `--log-level` flag to the `arkiver start` command.
+- feat: Enhanced the `arkiver init` command. You can now choose which template
+  you want to initialize your arkive with. Templates are stored in the
+  `examples` directory.
 - feat: Enhanced logging
 - fix: several bugfixes related to wildcard event handlers
 
 # v0.3.7
+
 - fix: Fixed a bug where arkive would crash if you used event wildcards
-- fix: Fixed a bug where entities from other arkvies would show up in other arkives graphql schema
+- fix: Fixed a bug where entities from other arkvies would show up in other
+  arkives graphql schema
 - fix: Fixed a bug where reading source.options would return undefined
 - feat: Updated init template to show clearer example
 - feat: Added `--no-db` flag to `arkiver start` command to disable connecting to
-	MongoDB and serving data via GraphQL
+  MongoDB and serving data via GraphQL
 - feat: Check for new version of Arkiver CLI on every command
 
 # v0.3.6
-- Added more chains: Optimism, Polygon Mumbai, Polygon, Fantom, and Binance Smart Chain
+
+- Added more chains: Optimism, Polygon Mumbai, Polygon, Fantom, and Binance
+  Smart Chain
 
 # v0.3.5
 
