@@ -66,10 +66,6 @@ export class DataSource {
 		string,
 		string
 	> = new Map() // address to uuid
-	private readonly blockHandlers: Map<
-		string,
-		BlockHandler
-	> = new Map() // block handler  to block handler
 	private liveBlockHeight = 0n
 	private processedBlockHeight = 0n
 	private fetchedBlockHeight = 0n
@@ -91,15 +87,6 @@ export class DataSource {
 			nextFromBlock: bigint
 		}
 	> = new Map() // from block to blocks
-	private readonly queuePending: {
-		logs: Map<bigint, boolean>
-		blocks: Map<bigint, boolean>
-		agnosticLogs: Map<bigint, boolean>
-	} = {
-		logs: new Map(),
-		blocks: new Map(),
-		agnosticLogs: new Map(),
-	} // track if some logs or blocks are pending to be processed
 	private readonly retryBlocks: Map<bigint, bigint> = new Map() // blocks to retry
 	private eventLoops = {
 		fetcher: true,
@@ -168,9 +155,10 @@ export class DataSource {
 	private async runFetcherLoop() {
 		while (this.eventLoops.fetcher) {
 			for (const [retryFrom, retryTo] of this.retryBlocks) {
-				this.fetchLogs(retryFrom, retryTo)
-				this.fetchBlocks(retryFrom, retryTo)
-				this.fetchAgnosticLogs(retryFrom, retryTo)
+				const nextFromBlock = retryTo + 1n
+				this.fetchLogs(retryFrom, retryTo, nextFromBlock)
+				this.fetchBlocks(retryFrom, retryTo, nextFromBlock)
+				this.fetchAgnosticLogs(retryFrom, retryTo, nextFromBlock)
 			}
 
 			if (
@@ -202,9 +190,11 @@ export class DataSource {
 				continue
 			}
 
-			this.fetchLogs(fromBlock, toBlock)
-			this.fetchAgnosticLogs(fromBlock, toBlock)
-			this.fetchBlocks(fromBlock, toBlock)
+			const nextFromBlock = toBlock + 1n
+
+			this.fetchLogs(fromBlock, toBlock, nextFromBlock)
+			this.fetchAgnosticLogs(fromBlock, toBlock, nextFromBlock)
+			this.fetchBlocks(fromBlock, toBlock, nextFromBlock)
 
 			this.fetchedBlockHeight = toBlock + 1n
 
@@ -212,9 +202,12 @@ export class DataSource {
 		}
 	}
 
-	private fetchLogs(fromBlock: bigint, toBlock: bigint) {
+	private fetchLogs(fromBlock: bigint, toBlock: bigint, nextFromBlock: bigint) {
 		if (this.normalizedContracts.contracts.length === 0) {
-			this.queuePending.logs.set(fromBlock, false)
+			this.logsQueue.set(fromBlock, {
+				logs: [],
+				nextFromBlock,
+			})
 			return
 		}
 
@@ -225,11 +218,12 @@ export class DataSource {
 		).map((c) => c.address)
 
 		if (addresses.length === 0) {
-			this.queuePending.logs.set(fromBlock, false)
+			this.logsQueue.set(fromBlock, {
+				logs: [],
+				nextFromBlock,
+			})
 			return
 		}
-
-		const nextFromBlock = toBlock + 1n
 
 		this.client.request({
 			method: 'eth_getLogs',
@@ -271,13 +265,18 @@ export class DataSource {
 			)
 			this.retryBlocks.set(fromBlock, toBlock)
 		})
-
-		this.queuePending.logs.set(fromBlock, true)
 	}
 
-	private fetchAgnosticLogs(fromBlock: bigint, toBlock: bigint) {
+	private fetchAgnosticLogs(
+		fromBlock: bigint,
+		toBlock: bigint,
+		nextFromBlock: bigint,
+	) {
 		if (this.agnosticEvents.size === 0) {
-			this.queuePending.agnosticLogs.set(fromBlock, false)
+			this.agnosticLogsQueue.set(fromBlock, {
+				logs: [],
+				nextFromBlock,
+			})
 			return
 		}
 
@@ -290,11 +289,12 @@ export class DataSource {
 		).map(([topic]) => topic)
 
 		if (topics.length === 0) {
-			this.queuePending.agnosticLogs.set(fromBlock, false)
+			this.agnosticLogsQueue.set(fromBlock, {
+				logs: [],
+				nextFromBlock,
+			})
 			return
 		}
-
-		const nextFromBlock = toBlock + 1n
 
 		this.client.request({
 			method: 'eth_getLogs',
@@ -333,13 +333,21 @@ export class DataSource {
 			)
 			this.retryBlocks.set(fromBlock, toBlock)
 		})
-
-		this.queuePending.agnosticLogs.set(fromBlock, true)
 	}
 
-	private fetchBlocks(fromBlock: bigint, toBlock: bigint) {
+	private fetchBlocks(
+		fromBlock: bigint,
+		toBlock: bigint,
+		nextFromBlock: bigint,
+	) {
 		if (this.blockSources.length === 0) {
-			this.queuePending.blocks.set(fromBlock, false)
+			this.blocksQueue.set(
+				fromBlock,
+				{
+					blocks: [],
+					nextFromBlock,
+				},
+			)
 			return
 		}
 		logger().debug(`Fetching blocks from block ${fromBlock} to ${toBlock}...`)
@@ -354,7 +362,13 @@ export class DataSource {
 			logger().debug(
 				`No filtered block sources found for ${this.chain} at ${this.fetchedBlockHeight}`,
 			)
-			this.queuePending.blocks.set(fromBlock, false)
+			this.blocksQueue.set(
+				fromBlock,
+				{
+					blocks: [],
+					nextFromBlock,
+				},
+			)
 			return
 		}
 		for (const blockSource of blockSources) {
@@ -391,8 +405,6 @@ export class DataSource {
 				blockSource.blockInterval
 		}
 
-		const nextFromBlock = toBlock + 1n
-
 		const blocksPromises = Array.from(blockToHandlers.entries()).map(
 			async ([block, handlers]) => {
 				return {
@@ -428,54 +440,21 @@ export class DataSource {
 			)
 			this.retryBlocks.set(fromBlock, toBlock)
 		})
-
-		this.queuePending.blocks.set(fromBlock, true)
 	}
 
 	private async runProcessorLoop() {
 		while (this.eventLoops.processor) {
 			const logs = this.logsQueue.get(this.processedBlockHeight)
-			const logsPending = this.queuePending.logs.get(
-				this.processedBlockHeight,
-			)
 			const blocks = this.blocksQueue.get(this.processedBlockHeight)
-			const blocksPending = this.queuePending.blocks.get(
-				this.processedBlockHeight,
-			)
 			const agnosticLogs = this.agnosticLogsQueue.get(
 				this.processedBlockHeight,
 			)
-			const agnosticLogsPending = this.queuePending.agnosticLogs.get(
-				this.processedBlockHeight,
-			)
 
 			if (
-				logsPending === undefined && blocksPending === undefined &&
-				agnosticLogsPending === undefined
-			) {
-				await delay(this.queueDelay)
-				continue
-			}
-
-			if (
-				logsPending === false && blocksPending === false &&
-				agnosticLogsPending === false
+				logs === undefined || blocks === undefined || agnosticLogs === undefined
 			) {
 				logger().debug(
-					`No logs or blocks to process for block ${this.processedBlockHeight}, continuing...`,
-				)
-				this.processedBlockHeight = this.processedBlockHeight +
-					this.blockRange + 1n
-				await delay(this.queueDelay)
-				continue
-			}
-
-			if (
-				(!logs && logsPending) || (!blocks && blocksPending) ||
-				(!agnosticLogs && agnosticLogsPending)
-			) {
-				logger().debug(
-					`No logs or blocks fetched yet to process for block ${this.processedBlockHeight}, waiting...`,
+					`Waiting for fetcher loop to finish ${this.processedBlockHeight}...`,
 				)
 				await delay(this.queueDelay)
 				continue
@@ -486,22 +465,39 @@ export class DataSource {
 			)
 
 			const logsAndBlocks = [
-				...logs?.logs.map((log) => ({
+				...logs.logs.map((log) => ({
 					...log,
 					blockNumber: log.blockNumber,
 					type: 'log',
-				})) ?? [],
-				...blocks?.blocks.map((block) => ({
+				})),
+				...blocks.blocks.map((block) => ({
 					...block,
 					blockNumber: block.block.number,
 					type: 'block',
-				})) ?? [],
-				...agnosticLogs?.logs.map((log) => ({
+				})),
+				...agnosticLogs.logs.map((log) => ({
 					...log,
 					blockNumber: log.blockNumber,
 					type: 'agnosticLog',
-				})) ?? [],
+				})),
 			]
+
+			const nextFromBlock = logs.nextFromBlock ??
+				agnosticLogs.nextFromBlock ??
+				blocks.nextFromBlock
+
+			if (logsAndBlocks.length === 0) {
+				this.processedBlockHeight = nextFromBlock
+
+				this.logsQueue.delete(this.processedBlockHeight)
+				this.blocksQueue.delete(this.processedBlockHeight)
+				this.agnosticLogsQueue.delete(this.processedBlockHeight)
+
+				logger().debug(
+					`No logs or blocks found for block ${this.processedBlockHeight}, skipping...`,
+				)
+				continue
+			}
 
 			logsAndBlocks.sort((a, b) => {
 				a.blockNumber = !(typeof a.blockNumber === 'bigint')
@@ -516,10 +512,6 @@ export class DataSource {
 			let error: string | undefined
 
 			const startTime = performance.now()
-
-			const nextFromBlock = logs?.nextFromBlock ??
-				agnosticLogs?.nextFromBlock ??
-				blocks?.nextFromBlock
 
 			logger().info(
 				`Running handlers for blocks ${this.processedBlockHeight}-${
@@ -655,20 +647,13 @@ export class DataSource {
 
 			const endTime = performance.now()
 
-			if (nextFromBlock === undefined) {
-				logger().error(
-					`No nextFromBlock found for logs ${logs}, agnosticLogs ${agnosticLogs}, blocks ${blocks}`,
-				)
-				this.stop()
-				return
-			}
-
 			const { blocksPerSecond, itemsPerSecond } = getBlocksPerSecond({
 				startTime,
 				endTime,
 				blockRange: Number(this.blockRange),
 				items: logsAndBlocks.length,
 			})
+
 			logger().info(
 				`Processed blocks ${this.processedBlockHeight}-${nextFromBlock} in ${
 					(endTime - startTime).toFixed(3)
@@ -680,9 +665,6 @@ export class DataSource {
 			this.logsQueue.delete(this.processedBlockHeight)
 			this.blocksQueue.delete(this.processedBlockHeight)
 			this.agnosticLogsQueue.delete(this.processedBlockHeight)
-			this.queuePending.logs.delete(this.processedBlockHeight)
-			this.queuePending.blocks.delete(this.processedBlockHeight)
-			this.queuePending.agnosticLogs.delete(this.processedBlockHeight)
 			logger().debug(`Processed block ${this.processedBlockHeight}...`)
 
 			this.processedBlockHeight = nextFromBlock

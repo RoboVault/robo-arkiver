@@ -105,6 +105,16 @@
     "https://deno.land/std@0.180.0/async/retry.ts": "5efa3ba450ac0c07a40a82e2df296287b5013755d232049efd7ea2244f15b20f",
     "https://deno.land/std@0.180.0/async/tee.ts": "47e42d35f622650b02234d43803d0383a89eb4387e1b83b5a40106d18ae36757",
     "https://deno.land/std@0.180.0/http/server.ts": "cbb17b594651215ba95c01a395700684e569c165a567e4e04bba327f41197433",
+    "https://deno.land/std@0.181.0/_util/asserts.ts": "178dfc49a464aee693a7e285567b3d0b555dc805ff490505a8aae34f9cfb1462",
+    "https://deno.land/std@0.181.0/bytes/copy.ts": "939d89e302a9761dcf1d9c937c7711174ed74c59eef40a1e4569a05c9de88219",
+    "https://deno.land/std@0.181.0/fmt/colors.ts": "d67e3cd9f472535241a8e410d33423980bec45047e343577554d3356e1f0ef4e",
+    "https://deno.land/std@0.181.0/fs/exists.ts": "b8c8a457b71e9d7f29b9d2f87aad8dba2739cbe637e8926d6ba6e92567875f8e",
+    "https://deno.land/std@0.181.0/io/buf_writer.ts": "48c33c8f00b61dcbc7958706741cec8e59810bd307bc6a326cbd474fe8346dfd",
+    "https://deno.land/std@0.181.0/log/handlers.ts": "38871ecbfa67b0d39dc3384210439ac9a13cba6118b912236f9011b5989b9a4d",
+    "https://deno.land/std@0.181.0/log/levels.ts": "6309147664e9e008cd6671610f2505c4c95f181f6bae4816a84b33e0aec66859",
+    "https://deno.land/std@0.181.0/log/logger.ts": "257ceb47e3f5f872068073de9809b015a7400e8d86dd40563c1d80169e578f71",
+    "https://deno.land/std@0.181.0/log/mod.ts": "36d156ad18de3f1806c6ddafa4965129be99ccafc27f1813de528d65b6c528bf",
+    "https://deno.land/std@0.181.0/types.d.ts": "dbaeb2c4d7c526db9828fc8df89d8aecf53b9ced72e0c4568f97ddd8cda616a4",
     "https://deno.land/std@0.182.0/_util/asserts.ts": "178dfc49a464aee693a7e285567b3d0b555dc805ff490505a8aae34f9cfb1462",
     "https://deno.land/std@0.182.0/bytes/copy.ts": "939d89e302a9761dcf1d9c937c7711174ed74c59eef40a1e4569a05c9de88219",
     "https://deno.land/std@0.182.0/fmt/colors.ts": "d67e3cd9f472535241a8e410d33423980bec45047e343577554d3356e1f0ef4e",
@@ -228,6 +238,21 @@
     "https://deno.land/x/dax@0.28.0/src/shell.ts": "55e60cc0017a4a31833c390971381cce3875a17bc3b6430dfd976d035831871f",
     "https://deno.land/x/dir@1.5.1/data_local_dir/mod.ts": "91eb1c4bfadfbeda30171007bac6d85aadacd43224a5ed721bbe56bc64e9eb66",
     "https://deno.land/x/outdent@v0.8.0/src/index.ts": "6dc3df4108d5d6fedcdb974844d321037ca81eaaa16be6073235ff3268841a22",
+    "https://deno.land/x/robo_arkiver@v0.4.0/mod.ts": "e222cf63c0d6771bb5f99d6aa0d9162aec5b4b00c58b76fbea5da31c6ba56980",
+    "https://deno.land/x/robo_arkiver@v0.4.0/src/arkiver/arkive-metadata.ts": "72d26f38b3bb20951c4cb997fc0d706d60f06decece3e8fd7271fdd40f10cfcd",
+    "https://deno.land/x/robo_arkiver@v0.4.0/src/arkiver/arkiver.ts": "c90d026a2cb9043ce891e6c2fd7670c66dfd3317dfe591ddd6d3883a79d1abfd",
+    "https://deno.land/x/robo_arkiver@v0.4.0/src/arkiver/data-source.ts": "54d34aeb520cc0f41f406f00af8833eb926fb6f7f523d7bcbf41507fdb7db0b4",
+    "https://deno.land/x/robo_arkiver@v0.4.0/src/arkiver/manifest-builder.ts": "5eb6fd316baaa63f0fa445a1920afce602a6ffe5c4291700c4d808d89d0ba2b4",
+    "https://deno.land/x/robo_arkiver@v0.4.0/src/arkiver/providers/interfaces.ts": "c722d59a170c00056866279b04c67547a816bdaed5e40a3aebf5c7049397fc70",
+    "https://deno.land/x/robo_arkiver@v0.4.0/src/arkiver/providers/mongodb.ts": "5a0530ed95f74825dc1106dfe0ff683ad28b7755ec1e89b7135dca7777e775b0",
+    "https://deno.land/x/robo_arkiver@v0.4.0/src/arkiver/store.ts": "c7f89caab378a61e940565ff381fb45e7dea381055fa1427e27af09e3a8b543d",
+    "https://deno.land/x/robo_arkiver@v0.4.0/src/arkiver/types.ts": "0f581886b80530bfdf953710eedf3a2f74578217c46f495a90cb0ef4ad50f815",
+    "https://deno.land/x/robo_arkiver@v0.4.0/src/chains.ts": "e26f964fc2e858d01740382ba0b457a331530dee04cacf94bd134e0efafb12af",
+    "https://deno.land/x/robo_arkiver@v0.4.0/src/deps.ts": "45753fe41792f0c2bcad8a4799c23b1091079c36c5126138e1f085d3c986f05b",
+    "https://deno.land/x/robo_arkiver@v0.4.0/src/graphql/builder.ts": "16c60af2ecf8bb59928dfd3793aca3a30e1fc472d43a572fa5fd0d1e3860d2b0",
+    "https://deno.land/x/robo_arkiver@v0.4.0/src/graphql/entity.ts": "2ffe65f4f5c2e84ce12c65389f406f691ac197dc96fa72eda715238c8be58cc5",
+    "https://deno.land/x/robo_arkiver@v0.4.0/src/logger.ts": "fce8fa7b7df65fcdbd9bddb50c772148bb9b19b9c8f34132e7cf6cbf7f10052e",
+    "https://deno.land/x/robo_arkiver@v0.4.0/src/utils.ts": "6ff5f210abcef5d2adffffc4e671324914f514e9a5f639893c1a4c60852fb869",
     "https://deno.land/x/tty@0.1.4/ansi_regex.ts": "1d3b0c7289164f93c9ebafe3bbd05a723568a250cc5c29c0cc922ff55af9a238",
     "https://deno.land/x/tty@0.1.4/combining.ts": "a615e9479d8bc901e3a727e5cae83c0aa1d4ca1e75fa040861d9905d16b30ffc",
     "https://deno.land/x/tty@0.1.4/is_interactive.ts": "37080d92399827215e60a57d97013aefbdbc038e7a5d2346abd298a7010525e6",
@@ -314,9 +339,9 @@
       "graphql-compose": "graphql-compose@9.0.10",
       "graphql-compose-mongoose": "graphql-compose-mongoose@9.8.0_graphql-compose@9.0.10_mongoose@7.0.3",
       "graphql-yoga": "graphql-yoga@3.8.0_graphql@16.6.0_@envelop+core@3.0.6",
-      "lru-cache": "lru-cache@9.0.0",
+      "lru-cache": "lru-cache@9.0.1",
       "mongoose": "mongoose@7.0.3",
-      "viem": "viem@0.2.13_ws@8.12.0"
+      "viem": "viem@0.3.0_ws@8.12.0"
     },
     "packages": {
       "@adraffy/ens-normalize@1.9.0": {
@@ -687,6 +712,10 @@
         "integrity": "sha512-9AEKXzvOZc4BMacFnYiTOlDH/197LNnQIK9wZ6iMB5NXPzuv4bWR/Msv7iUMplkiMQ1qQL+KSv/JF1mZAB5Lrg==",
         "dependencies": {}
       },
+      "lru-cache@9.0.1": {
+        "integrity": "sha512-C8QsKIN1UIXeOs3iWmiZ1lQY+EnKDojWd37fXy1aSbJvH4iSma1uy2OWuoB3m4SYRli5+CUjDv3Dij5DVoetmg==",
+        "dependencies": {}
+      },
       "memory-pager@1.5.0": {
         "integrity": "sha512-ZS4Bp4r/Zoeq6+NLJpP+0Zzm0pR8whtGPf1XExKLJBAczGMnSi3It14OiNCStjQjM6NU1okjQGSxgEZN8eBYKg==",
         "dependencies": {}
@@ -836,6 +865,20 @@
       },
       "viem@0.2.13_ws@8.12.0": {
         "integrity": "sha512-/V8q/fYj/NImiYZ3kKdG6Oq0Txk0/axGfjXfJd1X8CCO91LxmmGkkcgrCmWSyx9jfueZFOWOB6lPvz1URs4Xow==",
+        "dependencies": {
+          "@adraffy/ens-normalize": "@adraffy/ens-normalize@1.9.0",
+          "@noble/curves": "@noble/curves@0.9.0",
+          "@noble/hashes": "@noble/hashes@1.3.0",
+          "@scure/bip32": "@scure/bip32@1.2.0",
+          "@scure/bip39": "@scure/bip39@1.2.0",
+          "@wagmi/chains": "@wagmi/chains@0.2.16",
+          "abitype": "abitype@0.7.1_typescript@5.0.3",
+          "isomorphic-ws": "isomorphic-ws@5.0.0_ws@8.12.0",
+          "ws": "ws@8.12.0"
+        }
+      },
+      "viem@0.3.0_ws@8.12.0": {
+        "integrity": "sha512-BDNVZ4pIBD/RUT4ztgz/L76Rzof3yhhG24FDplASLGUiOEHaLQIEGQ3ebV8OMdssQLtHhaYVTIUINMd0yEiaQg==",
         "dependencies": {
           "@adraffy/ens-normalize": "@adraffy/ens-normalize@1.9.0",
           "@noble/curves": "@noble/curves@0.9.0",
