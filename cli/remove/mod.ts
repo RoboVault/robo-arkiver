@@ -7,6 +7,10 @@ export const action = async (
 	options: { manifest: string },
 	directory: string,
 ) => {
+	const dev = Deno.env.get('DEV') !== undefined
+
+	if (dev) return deleteDev(options, directory)
+
 	const spinner = wait('Deleting...').start()
 
 	try {
@@ -70,6 +74,48 @@ export const action = async (
 	} catch (error) {
 		spinner.fail('Deletion failed: ' + error.message)
 		console.error(error)
+	}
+
+	Deno.exit()
+}
+
+const deleteDev = async (
+	options: { manifest: string },
+	directory: string,
+) => {
+	const manifestPath = join(
+		Deno.cwd(),
+		directory,
+		options.manifest ?? 'manifest.ts',
+	)
+	let manifestImport
+	try {
+		manifestImport = await import(`file://${manifestPath}`)
+	} catch (error) {
+		throw new Error(`Error importing manifest.ts: ${error.message}`)
+	}
+	const manifest = manifestImport.default ?? manifestImport.manifest
+	if (!manifest) {
+		throw new Error(
+			`Manifest file must export a default or manifest object.`,
+		)
+	}
+	const { name: arkiveName } = manifest
+	if (!arkiveName) {
+		throw new Error(`Manifest must have a name property.`)
+	}
+
+	const url = 'http://localhost:42069'
+
+	const response = await fetch(url, {
+		method: 'DELETE',
+		body: JSON.stringify({
+			name: arkiveName,
+		}),
+	})
+
+	if (response.status !== 200) {
+		console.log('error: ', await response.text())
 	}
 
 	Deno.exit()

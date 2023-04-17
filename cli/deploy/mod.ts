@@ -9,7 +9,7 @@ export const action = async (
 ) => {
 	const dev = Deno.env.get('DEV') !== undefined
 
-	if (dev) return deployDev(directory)
+	if (dev) return deployDev(options, directory)
 
 	const spinner = wait('Packaging...').start()
 
@@ -53,6 +53,7 @@ export const action = async (
 }
 
 const deployDev = async (
+	options: { public?: true; major?: true },
 	directory: string,
 ) => {
 	const manifestPath = join(Deno.cwd(), directory, 'manifest.ts')
@@ -80,6 +81,7 @@ const deployDev = async (
 		body: JSON.stringify({
 			name: arkiveName,
 			absolutePath: join(Deno.cwd(), directory),
+			majorUpdate: options.major ?? false,
 		}),
 	})
 
