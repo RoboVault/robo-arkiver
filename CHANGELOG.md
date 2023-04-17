@@ -1,3 +1,9 @@
+# v0.4.4 (unreleased)
+
+# v0.4.3
+
+- feat: added sepolia testnet
+
 # v0.4.2
 
 - fix: fixed a bug with the indexing logic
