@@ -1,5 +1,8 @@
 # v0.4.4 (unreleased)
 
+- feat: enhanced `arkiver list` command
+- feat: add dev mode
+
 # v0.4.3
 
 - feat: added sepolia testnet
