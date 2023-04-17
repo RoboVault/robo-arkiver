@@ -2,8 +2,13 @@ import { wait } from '../deps.ts'
 import { getSupabaseClient } from '../utils.ts'
 import { login } from '../login/mod.ts'
 import { SUPABASE_FUNCTIONS_URL } from '../constants.ts'
+import { Arkive, Deployment } from '../../src/arkiver/types.ts'
 
 export const action = async () => {
+	const dev = Deno.env.get('DEV') !== undefined
+
+	if (dev) return listDev()
+
 	const spinner = wait('Fetching your arkives...').start()
 
 	try {
@@ -44,13 +49,55 @@ export const action = async () => {
 
 		spinner.stop()
 
-		console.table(await listRes.json())
+		const arkives = (await listRes.json() as (Omit<Arkive, 'deployment'> & {
+			deployments: Deployment[]
+		})[]).flatMap((arkive) =>
+			arkive.deployments.map((deployment) => ({
+				name: arkive.name,
+				created_at: deployment.created_at,
+				id: arkive.id,
+				version: `${deployment.major_version}.${deployment.minor_version}`,
+				status: deployment.status,
+				is_public: arkive.public,
+			}))
+		)
+
+		console.table(arkives)
 
 		Deno.exit()
 	} catch (error) {
 		spinner.fail('Deletion failed: ' + error.message)
 		console.error(error)
 	}
+
+	Deno.exit()
+}
+
+const listDev = async () => {
+	const url = 'http://localhost:42069'
+
+	const response = await fetch(url, {
+		method: 'GET',
+	})
+
+	if (response.status !== 200) {
+		console.log('error: ', await response.text())
+	}
+
+	const arkives = (await response.json() as (Omit<Arkive, 'deployment'> & {
+		deployments: Deployment[]
+	})[]).flatMap((arkive) =>
+		arkive.deployments.map((deployment) => ({
+			name: arkive.name,
+			created_at: deployment.created_at,
+			id: arkive.id,
+			version: `${deployment.major_version}.${deployment.minor_version}`,
+			status: deployment.status,
+			is_public: arkive.public,
+		}))
+	)
+
+	console.table(arkives)
 
 	Deno.exit()
 }
