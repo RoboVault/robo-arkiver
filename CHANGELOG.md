@@ -1,4 +1,9 @@
-# v0.4.4 (unreleased)
+# v0.4.5 (unreleased)
+
+- feat: add localhost to supported chains
+- fix: fix bug regarding retry fetch behavior
+
+# v0.4.4
 
 - feat: enhanced `arkiver list` command
 - feat: add dev mode

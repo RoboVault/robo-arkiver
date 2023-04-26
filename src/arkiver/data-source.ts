@@ -87,7 +87,9 @@ export class DataSource {
 			nextFromBlock: bigint
 		}
 	> = new Map() // from block to blocks
-	private readonly retryBlocks: Map<bigint, bigint> = new Map() // blocks to retry
+	private readonly retryFetchBlocks: Map<bigint, bigint> = new Map() // blocks to retry
+	private readonly retryFetchLogs: Map<bigint, bigint> = new Map() // blocks to retry
+	private readonly retryFetchAgnosticLogs: Map<bigint, bigint> = new Map() // blocks to retry
 	private eventLoops = {
 		fetcher: true,
 		processor: true,
@@ -154,11 +156,25 @@ export class DataSource {
 
 	private async runFetcherLoop() {
 		while (this.eventLoops.fetcher) {
-			for (const [retryFrom, retryTo] of this.retryBlocks) {
+			for (const [retryFrom, retryTo] of this.retryFetchBlocks) {
+				const nextFromBlock = retryTo + 1n
+				this.fetchBlocks(retryFrom, retryTo, nextFromBlock)
+
+				this.retryFetchBlocks.delete(retryFrom)
+			}
+
+			for (const [retryFrom, retryTo] of this.retryFetchLogs) {
 				const nextFromBlock = retryTo + 1n
 				this.fetchLogs(retryFrom, retryTo, nextFromBlock)
-				this.fetchBlocks(retryFrom, retryTo, nextFromBlock)
+
+				this.retryFetchLogs.delete(retryFrom)
+			}
+
+			for (const [retryFrom, retryTo] of this.retryFetchAgnosticLogs) {
+				const nextFromBlock = retryTo + 1n
 				this.fetchAgnosticLogs(retryFrom, retryTo, nextFromBlock)
+
+				this.retryFetchAgnosticLogs.delete(retryFrom)
 			}
 
 			if (
@@ -253,7 +269,7 @@ export class DataSource {
 				})
 			) {
 				logger().debug(`Some logs still pending, retrying...`)
-				this.retryBlocks.set(fromBlock, toBlock)
+				this.retryFetchLogs.set(fromBlock, toBlock)
 				return
 			}
 			logger().debug(
@@ -263,12 +279,12 @@ export class DataSource {
 				logs: logs as SafeRpcLog[],
 				nextFromBlock,
 			})
-			this.retryBlocks.delete(fromBlock)
+			this.retryFetchLogs.delete(fromBlock)
 		}).catch((e) => {
 			logger().error(
 				`Error fetching logs from block ${fromBlock} to ${toBlock} for ${this.chain}: ${e}, retrying...`,
 			)
-			this.retryBlocks.set(fromBlock, toBlock)
+			this.retryFetchLogs.set(fromBlock, toBlock)
 		})
 	}
 
@@ -321,7 +337,7 @@ export class DataSource {
 				})
 			) {
 				logger().debug(`Some logs still pending, retrying...`)
-				this.retryBlocks.set(fromBlock, toBlock)
+				this.retryFetchAgnosticLogs.set(fromBlock, toBlock)
 				return
 			}
 			logger().debug(
@@ -331,12 +347,12 @@ export class DataSource {
 				logs: logs as SafeRpcLog[],
 				nextFromBlock,
 			})
-			this.retryBlocks.delete(fromBlock)
+			this.retryFetchAgnosticLogs.delete(fromBlock)
 		}).catch((e) => {
 			logger().error(
 				`Error fetching agnostic logs from block ${fromBlock} to ${toBlock} for ${this.chain}: ${e}, retrying...`,
 			)
-			this.retryBlocks.set(fromBlock, toBlock)
+			this.retryFetchAgnosticLogs.set(fromBlock, toBlock)
 		})
 	}
 
@@ -422,7 +438,7 @@ export class DataSource {
 		Promise.all(blocksPromises).then((blocks) => {
 			if (blocks.some((b) => b.block === null)) {
 				logger().debug(`Some blocks still pending, retrying...`)
-				this.retryBlocks.set(fromBlock, toBlock)
+				this.retryFetchBlocks.set(fromBlock, toBlock)
 				return
 			}
 			logger().debug(
@@ -435,12 +451,12 @@ export class DataSource {
 					nextFromBlock,
 				},
 			)
-			this.retryBlocks.delete(fromBlock)
+			this.retryFetchBlocks.delete(fromBlock)
 		}).catch((e) => {
 			logger().error(
 				`Error fetching blocks from block ${fromBlock} to ${toBlock} for ${this.chain}: ${e}, retrying...`,
 			)
-			this.retryBlocks.set(fromBlock, toBlock)
+			this.retryFetchBlocks.set(fromBlock, toBlock)
 		})
 	}
 

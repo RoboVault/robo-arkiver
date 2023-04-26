@@ -2,6 +2,7 @@ import {
 	arbitrum,
 	avalanche,
 	fantom,
+	localhost,
 	mainnet,
 	optimism,
 	polygon,
@@ -18,4 +19,5 @@ export const supportedChains = {
 	optimism,
 	mumbai: polygonMumbai,
 	sepolia,
+	localhost,
 } as const
