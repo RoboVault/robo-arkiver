@@ -1,3 +1,4 @@
 .env
 src/packages
 scratchpad.ts
+.hypothesis/
