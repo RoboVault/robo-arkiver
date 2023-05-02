@@ -2,6 +2,7 @@
 
 - feat: add localhost to supported chains
 - fix: fix bug regarding retry fetch behavior
+- chore: update `arkiver list` command
 
 # v0.4.4
 

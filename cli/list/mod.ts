@@ -29,6 +29,8 @@ export const action = async () => {
 			throw new Error('Not logged in')
 		}
 
+		const username = await getUsername(userRes.data.user.id);
+
 		const headers = new Headers()
 		headers.append(
 			'Authorization',
@@ -36,7 +38,7 @@ export const action = async () => {
 		)
 
 		const listRes = await fetch(
-			new URL(`/arkives`, SUPABASE_FUNCTIONS_URL),
+			new URL(`/arkives/${username}`, SUPABASE_FUNCTIONS_URL),
 			{
 				method: 'GET',
 				headers,
@@ -101,3 +103,18 @@ const listDev = async () => {
 
 	Deno.exit()
 }
+
+export const getUsername = async (userId: string) => {
+	const supabase = getSupabaseClient();
+	const profileRes = await supabase
+		.from("user_profile")
+		.select<"username", { username: string }>("username")
+		.eq("id", userId)
+		.single();
+
+	if (profileRes.error) {
+		throw profileRes.error;
+	}
+
+	return profileRes.data.username;
+};
