@@ -33,6 +33,10 @@ export class MongoStatusProvider implements StatusProvider {
 						chain: params.chain,
 						blockHandlerCalls: 0,
 						eventHandlerCalls: 0,
+						errors: [],
+						arkiveId: params.arkiveId,
+						arkiveMajorVersion: params.arkiveMajorVersion,
+						arkiveMinorVersion: params.arkiveMinorVersion,
 					}),
 		)
 		arkiverMetadata.processedBlockHeight = Number(

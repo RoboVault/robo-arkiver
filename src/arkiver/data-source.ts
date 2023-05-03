@@ -47,6 +47,7 @@ export class DataSource {
 	private readonly blockRange: bigint
 	private readonly arkiveId: number
 	private readonly arkiveVersion: number
+	private readonly arkiveMinorVersion: number
 	private readonly statusProvider: StatusProvider
 	private readonly contracts: Contract[]
 	private readonly blockSources: IBlockHandler[]
@@ -113,6 +114,7 @@ export class DataSource {
 			blockRange: bigint
 			arkiveId: number
 			arkiveVersion: number
+			arkiveMinorVersion: number
 			blockSources: IBlockHandler[]
 			noDb: boolean
 		},
@@ -128,6 +130,7 @@ export class DataSource {
 		})
 		this.arkiveId = params.arkiveId
 		this.arkiveVersion = params.arkiveVersion
+		this.arkiveMinorVersion = params.arkiveMinorVersion
 		this.statusProvider = new MongoStatusProvider()
 		this.noDb = params.noDb
 	}
@@ -659,6 +662,9 @@ export class DataSource {
 						error,
 						store: this.store,
 						type: logOrBlock.type,
+						arkiveId: this.arkiveId,
+						arkiveMajorVersion: this.arkiveVersion,
+						arkiveMinorVersion: this.arkiveMinorVersion,
 					})
 				}
 			}

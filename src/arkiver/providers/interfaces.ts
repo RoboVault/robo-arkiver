@@ -21,4 +21,7 @@ export interface SaveArkiveMetadataParams {
 	type: string
 	error: string | undefined
 	store: Store
+	arkiveId: number
+	arkiveMajorVersion: number
+	arkiveMinorVersion: number
 }
