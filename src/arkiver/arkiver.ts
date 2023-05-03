@@ -69,6 +69,7 @@ export class Arkiver extends EventTarget {
 				rpcUrl: rpcUrl,
 				blockSources: source.blockHandlers ?? [],
 				noDb: this.mongoConnection === undefined,
+				arkiveMinorVersion: this.arkiveData.deployment.minor_version,
 			})
 			await dataSource.run()
 			this.sources.push(dataSource)

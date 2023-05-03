@@ -1,3 +1,5 @@
+# v0.4.6
+- fix: add minor version to data source
 # v0.4.5
 
 - feat: add localhost to supported chains
