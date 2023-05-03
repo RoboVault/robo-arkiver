@@ -3,7 +3,7 @@ import erc20 from './erc20.ts'
 import { Transfer, Approval } from './entities.ts'
 import { onTransfer, onApproval } from './handlers.ts'
 
-const manifest = new Manifest('simple')
+const manifest = new Manifest('weth-events')
 
 manifest
 	.addEntities([Transfer, Approval])

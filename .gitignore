@@ -2,3 +2,5 @@
 src/packages
 scratchpad.ts
 .hypothesis/
+
+.DS_Store

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 layout: example
-title: ERC20 Events
+title: Index ERC20 Events
 short_title: Indexing Events
 date: 2023-04-02 00:00:00
 lang: en
@@ -174,3 +174,6 @@ arkiver deploy .
 This will package an deploy the arkive job. The name of the arkive job is specified in the manifiest file, in this example it's "weth-events". 
 
 Navigate to `https://data.arkiver.net/$USERNAME/weth-events/graphql`, where $USERNAME is your username, to see your custom, production-ready graphql endpoint. 
+
+Here is a deployment we prepared perviously:
+> https://data.arkiver.net/robolabs/weth-events/graphql
