@@ -215,7 +215,7 @@ The index job is running, you can now navigate to http://0.0.0.0:4000/graphql to
 
 Note: Make sure you click the explorer icon on the left menu to see what queery options are available.
 
-<!-- ![GraphQL Explorer](./img/erc20-balance-history-explorer.png) -->
+![GraphQL Explorer](./img/erc20-balance-history-explorer.png)
 
 ## Explore the data
 
