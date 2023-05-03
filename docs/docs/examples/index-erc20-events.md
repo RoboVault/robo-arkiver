@@ -48,7 +48,8 @@ $ arkiver init
 
 This arkive exmaple is prepared with everything we need. Let's take a look inside
 
-## Example: erc20-events
+:::tip Let's take a look inside
+Infomation overload? Skip to [Running the arkive](#run-indexing-locally)
 ### Entities
 
 Entities specify how the indexed data is stored in the db and how it is accessed via the graphql interface. 
@@ -134,7 +135,7 @@ export const onTransfer: EventHandlerFor<typeof erc20, 'Transfer'> = async ({ ev
 	record.save()
 }
 ```
-
+:::
 ## Run Indexing Locally
 
 Run the index job locally:
