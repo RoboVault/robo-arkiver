@@ -38,7 +38,7 @@ export const action = async (
 		Deno.addSignalListener('SIGABRT', cleanup)
 
 		const containerId =
-			await $`docker run --name arkiver_mongodb -d -p 27017:27017 --rm mongodb/mongodb-community-server:6.0-ubi8`
+			await $`docker run --name arkiver_mongodb -d -p 27017:27017 --env MONGO_INITDB_ROOT_USERNAME=admin --env MONGO_INITDB_ROOT_PASSWORD=password --rm mongo`
 				.stdout('piped')
 		await delay(3000) // wait for db to start
 	}
@@ -85,12 +85,11 @@ export const action = async (
 			},
 		},
 	})
-
 	const arkiver = new Arkiver({
 		manifest,
 		mongoConnection: options.db
 			? options.mongoConnection ??
-				'mongodb://localhost:27017'
+				'mongodb://admin:password@localhost:27017'
 			: undefined,
 		rpcUrls,
 		arkiveData: {

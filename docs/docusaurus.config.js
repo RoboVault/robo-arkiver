@@ -102,7 +102,7 @@ const config = {
 							},
 							{
 								label: "Twitter",
-								href: "https://twitter.com/robo_vault",
+								href: "https://twitter.com/robolabs_biz",
 							},
 						],
 					},
@@ -112,6 +112,10 @@ const config = {
 							{
 								label: "GitHub",
 								href: "https://github.com/facebook/RoboVault",
+							},
+							{
+								label: "Robo Labs",
+								href: "https://robolabs.biz",
 							},
 						],
 					},
