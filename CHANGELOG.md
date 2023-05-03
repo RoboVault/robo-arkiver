@@ -1,6 +1,7 @@
-# v0.4.5 (unreleased)
+# v0.4.5
 
 - feat: add localhost to supported chains
+- feat: add arkive id and arkive version to arkive metadata
 - fix: fix bug regarding retry fetch behavior
 - chore: update `arkiver list` command
 
