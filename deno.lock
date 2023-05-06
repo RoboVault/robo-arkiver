@@ -253,6 +253,21 @@
     "https://deno.land/x/robo_arkiver@v0.4.0/src/graphql/entity.ts": "2ffe65f4f5c2e84ce12c65389f406f691ac197dc96fa72eda715238c8be58cc5",
     "https://deno.land/x/robo_arkiver@v0.4.0/src/logger.ts": "fce8fa7b7df65fcdbd9bddb50c772148bb9b19b9c8f34132e7cf6cbf7f10052e",
     "https://deno.land/x/robo_arkiver@v0.4.0/src/utils.ts": "6ff5f210abcef5d2adffffc4e671324914f514e9a5f639893c1a4c60852fb869",
+    "https://deno.land/x/robo_arkiver@v0.4.6/mod.ts": "e222cf63c0d6771bb5f99d6aa0d9162aec5b4b00c58b76fbea5da31c6ba56980",
+    "https://deno.land/x/robo_arkiver@v0.4.6/src/arkiver/arkive-metadata.ts": "cb215c002fc91acd12ce94a9a65a5c560555c91533d3660c3f1228b39f6b02b7",
+    "https://deno.land/x/robo_arkiver@v0.4.6/src/arkiver/arkiver.ts": "0a5b132796a71bdc1d726e733241a9a38872ba2a517fd048634336a236e5547c",
+    "https://deno.land/x/robo_arkiver@v0.4.6/src/arkiver/data-source.ts": "21633e23679d4eaa66798a28425003b7c892648e0844bdffcf9e9b7eb6d337da",
+    "https://deno.land/x/robo_arkiver@v0.4.6/src/arkiver/manifest-builder.ts": "5eb6fd316baaa63f0fa445a1920afce602a6ffe5c4291700c4d808d89d0ba2b4",
+    "https://deno.land/x/robo_arkiver@v0.4.6/src/arkiver/providers/interfaces.ts": "0f048fc8d8f6296220f32b378f1b86426f1f2b144aa96fa474c3871604f723de",
+    "https://deno.land/x/robo_arkiver@v0.4.6/src/arkiver/providers/mongodb.ts": "bb4634f3d83ee3fef93c297cf1005b3d75788dea756df3faa4939342a7357f8b",
+    "https://deno.land/x/robo_arkiver@v0.4.6/src/arkiver/store.ts": "c7f89caab378a61e940565ff381fb45e7dea381055fa1427e27af09e3a8b543d",
+    "https://deno.land/x/robo_arkiver@v0.4.6/src/arkiver/types.ts": "0f581886b80530bfdf953710eedf3a2f74578217c46f495a90cb0ef4ad50f815",
+    "https://deno.land/x/robo_arkiver@v0.4.6/src/chains.ts": "f1b022804d9382a23f3ccfb5dfc3bf8df2d64787bc1049431446000e73581c73",
+    "https://deno.land/x/robo_arkiver@v0.4.6/src/deps.ts": "45753fe41792f0c2bcad8a4799c23b1091079c36c5126138e1f085d3c986f05b",
+    "https://deno.land/x/robo_arkiver@v0.4.6/src/graphql/builder.ts": "16c60af2ecf8bb59928dfd3793aca3a30e1fc472d43a572fa5fd0d1e3860d2b0",
+    "https://deno.land/x/robo_arkiver@v0.4.6/src/graphql/entity.ts": "2ffe65f4f5c2e84ce12c65389f406f691ac197dc96fa72eda715238c8be58cc5",
+    "https://deno.land/x/robo_arkiver@v0.4.6/src/logger.ts": "7a1ea86ab4f4b8ab71e5fc16d24b04b770f8c1609c6aaec4c155e3daaa7c3c7b",
+    "https://deno.land/x/robo_arkiver@v0.4.6/src/utils.ts": "6ff5f210abcef5d2adffffc4e671324914f514e9a5f639893c1a4c60852fb869",
     "https://deno.land/x/tty@0.1.4/ansi_regex.ts": "1d3b0c7289164f93c9ebafe3bbd05a723568a250cc5c29c0cc922ff55af9a238",
     "https://deno.land/x/tty@0.1.4/combining.ts": "a615e9479d8bc901e3a727e5cae83c0aa1d4ca1e75fa040861d9905d16b30ffc",
     "https://deno.land/x/tty@0.1.4/is_interactive.ts": "37080d92399827215e60a57d97013aefbdbc038e7a5d2346abd298a7010525e6",
@@ -335,13 +350,13 @@
   },
   "npm": {
     "specifiers": {
-      "abitype": "abitype@0.7.1_typescript@5.0.3",
+      "abitype": "abitype@0.8.2_typescript@5.0.4",
       "graphql-compose": "graphql-compose@9.0.10",
       "graphql-compose-mongoose": "graphql-compose-mongoose@9.8.0_graphql-compose@9.0.10_mongoose@7.0.3",
       "graphql-yoga": "graphql-yoga@3.8.0_graphql@16.6.0_@envelop+core@3.0.6",
-      "lru-cache": "lru-cache@9.0.1",
-      "mongoose": "mongoose@7.0.3",
-      "viem": "viem@0.3.0_ws@8.12.0"
+      "lru-cache": "lru-cache@9.1.1",
+      "mongoose": "mongoose@7.1.0",
+      "viem": "viem@0.3.17_ws@8.12.0"
     },
     "packages": {
       "@adraffy/ens-normalize@1.9.0": {
@@ -556,6 +571,18 @@
           "typescript": "typescript@5.0.3"
         }
       },
+      "abitype@0.7.1_typescript@5.0.4": {
+        "integrity": "sha512-VBkRHTDZf9Myaek/dO3yMmOzB/y2s3Zo6nVU7yaw1G+TvCHAjwaJzNGN9yo4K5D8bU/VZXKP1EJpRhFr862PlQ==",
+        "dependencies": {
+          "typescript": "typescript@5.0.4"
+        }
+      },
+      "abitype@0.8.2_typescript@5.0.4": {
+        "integrity": "sha512-B1ViNMGpfx/qjVQi0RTc2HEFHuR9uoCoTEkwELT5Y7pBPtBbctYijz9BK6+Kd0hQ3S70FhYTO2dWWk0QNUEXMA==",
+        "dependencies": {
+          "typescript": "typescript@5.0.4"
+        }
+      },
       "asn1js@3.0.5": {
         "integrity": "sha512-FVnvrKJwpt9LP2lAMl8qZswRNm3T4q9CON+bxldk2iwk3FFpuwhx2FfinyitizWHsVYyaY+y5JzDR0rCMV5yTQ==",
         "dependencies": {
@@ -716,6 +743,10 @@
         "integrity": "sha512-C8QsKIN1UIXeOs3iWmiZ1lQY+EnKDojWd37fXy1aSbJvH4iSma1uy2OWuoB3m4SYRli5+CUjDv3Dij5DVoetmg==",
         "dependencies": {}
       },
+      "lru-cache@9.1.1": {
+        "integrity": "sha512-65/Jky17UwSb0BuB9V+MyDpsOtXKmYwzhyl+cOa9XUiI4uV2Ouy/2voFP3+al0BjZbJgMBD8FojMpAf+Z+qn4A==",
+        "dependencies": {}
+      },
       "memory-pager@1.5.0": {
         "integrity": "sha512-ZS4Bp4r/Zoeq6+NLJpP+0Zzm0pR8whtGPf1XExKLJBAczGMnSi3It14OiNCStjQjM6NU1okjQGSxgEZN8eBYKg==",
         "dependencies": {}
@@ -736,12 +767,33 @@
           "socks": "socks@2.7.1"
         }
       },
+      "mongodb@5.3.0": {
+        "integrity": "sha512-Wy/sbahguL8c3TXQWXmuBabiLD+iVmz+tOgQf+FwkCjhUIorqbAxRbbz00g4ZoN4sXIPwpAlTANMaGRjGGTikQ==",
+        "dependencies": {
+          "bson": "bson@5.2.0",
+          "mongodb-connection-string-url": "mongodb-connection-string-url@2.6.0",
+          "saslprep": "saslprep@1.0.3",
+          "socks": "socks@2.7.1"
+        }
+      },
       "mongoose@7.0.3": {
         "integrity": "sha512-3n8vc1/mssuxKa6vfghSocp3MeiCFYzhX36Ok+PsDNNYzHC9tw3rNkAMLemIwZ2jgXqkZ7CfKOxkzjp/d/SWfg==",
         "dependencies": {
           "bson": "bson@5.2.0",
           "kareem": "kareem@2.5.1",
           "mongodb": "mongodb@5.1.0",
+          "mpath": "mpath@0.9.0",
+          "mquery": "mquery@5.0.0",
+          "ms": "ms@2.1.3",
+          "sift": "sift@16.0.1"
+        }
+      },
+      "mongoose@7.1.0": {
+        "integrity": "sha512-shoo9z/7o96Ojx69wpJn65+EC+Mt3q1SWTducW+F2Y4ieCXo0lZwpCZedgC841MIvJ7V8o6gmzoN1NfcnOTOuw==",
+        "dependencies": {
+          "bson": "bson@5.2.0",
+          "kareem": "kareem@2.5.1",
+          "mongodb": "mongodb@5.3.0",
           "mpath": "mpath@0.9.0",
           "mquery": "mquery@5.0.0",
           "ms": "ms@2.1.3",
@@ -839,6 +891,10 @@
         "integrity": "sha512-xv8mOEDnigb/tN9PSMTwSEqAnUvkoXMQlicOb0IUVDBSQCgBSaAAROUZYy2IcUy5qU6XajK5jjjO7TMWqBTKZA==",
         "dependencies": {}
       },
+      "typescript@5.0.4": {
+        "integrity": "sha512-cW9T5W9xY37cc+jfEnaUvX91foxtHkza3Nw3wkoF4sSlKn0MONdkdEndig/qPBWXNkmplh3NzayQzCiHM4/hqw==",
+        "dependencies": {}
+      },
       "urlpattern-polyfill@6.0.2": {
         "integrity": "sha512-5vZjFlH9ofROmuWmXM9yj2wljYKgWstGwe8YTyiqM7hVum/g9LyCizPZtb3UqsuppVwety9QJmfc42VggLpTgg==",
         "dependencies": {
@@ -887,6 +943,20 @@
           "@scure/bip39": "@scure/bip39@1.2.0",
           "@wagmi/chains": "@wagmi/chains@0.2.16",
           "abitype": "abitype@0.7.1_typescript@5.0.3",
+          "isomorphic-ws": "isomorphic-ws@5.0.0_ws@8.12.0",
+          "ws": "ws@8.12.0"
+        }
+      },
+      "viem@0.3.17_ws@8.12.0": {
+        "integrity": "sha512-WGJQ3rV2gMiHgwxLqeAZQ3HetSfsrkF//WezdJPnwUNXuic/c2jjB3MBk4XfYvuRUMccPfc37ORi03AmQxjscg==",
+        "dependencies": {
+          "@adraffy/ens-normalize": "@adraffy/ens-normalize@1.9.0",
+          "@noble/curves": "@noble/curves@0.9.0",
+          "@noble/hashes": "@noble/hashes@1.3.0",
+          "@scure/bip32": "@scure/bip32@1.2.0",
+          "@scure/bip39": "@scure/bip39@1.2.0",
+          "@wagmi/chains": "@wagmi/chains@0.2.16",
+          "abitype": "abitype@0.7.1_typescript@5.0.4",
           "isomorphic-ws": "isomorphic-ws@5.0.0_ws@8.12.0",
           "ws": "ws@8.12.0"
         }

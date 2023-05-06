@@ -76,3 +76,14 @@ export const getBlocksPerSecond = (params: {
 	const itemsPerSecond = items / (timeElapsed / 1000)
 	return { blocksPerSecond, itemsPerSecond }
 }
+
+export const JSONBigIntReplacer = (_key: string, value: unknown) => {
+	return typeof value === 'bigint' ? { _bigint: value.toString() } : value
+}
+
+export const JSONBigIntReviver = (_key: string, value: unknown) => {
+	if (value && typeof value === 'object' && '_bigint' in value) {
+		return BigInt((value as { _bigint: string })._bigint)
+	}
+	return value
+}

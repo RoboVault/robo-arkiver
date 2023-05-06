@@ -1,11 +1,12 @@
 import { getSupabaseClient } from '../utils.ts'
 import { login } from '../login/mod.ts'
 import { SUPABASE_FUNCTIONS_URL } from '../constants.ts'
+import { ArkiveManifest, JSONBigIntReplacer } from '../../mod.ts'
 
 export const upload = async (
 	pkgName: string,
 	tempPath: string,
-	arkiveName: string,
+	manifest: ArkiveManifest,
 	options: { public?: true; major?: true },
 ) => {
 	const supabase = getSupabaseClient()
@@ -20,7 +21,11 @@ export const upload = async (
 	}
 
 	const formData = new FormData()
-	formData.append('name', arkiveName)
+	formData.append('name', manifest.name)
+	formData.append(
+		'manifest',
+		JSON.stringify(manifest, JSONBigIntReplacer),
+	)
 	const filePath = new URL(`file://${tempPath}/${pkgName}`)
 	formData.append(
 		'pkg',

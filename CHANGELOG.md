@@ -1,3 +1,7 @@
+# v0.4.7 (unreleased)
+- chore: update `arkiver deploy` command to include serialized manifest
+- chore: add entity name field to manifest
+
 # v0.4.6
 - fix: add minor version to data source
 # v0.4.5

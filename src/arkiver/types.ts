@@ -50,7 +50,7 @@ export interface ArkiveManifest {
 		Record<keyof typeof supportedChains, DataSource>
 	>
 	// deno-lint-ignore no-explicit-any
-	entities: { model: mongoose.Model<any>; list: boolean }[]
+	entities: { model: mongoose.Model<any>; list: boolean; name: string }[]
 	name: string
 }
 

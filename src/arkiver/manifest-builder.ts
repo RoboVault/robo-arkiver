@@ -56,7 +56,11 @@ export class Manifest<TName extends string = ''> {
 	}
 
 	public addEntity(entity: mongoose.Model<any>) {
-		this.manifest.entities.push({ model: entity, list: true })
+		this.manifest.entities.push({
+			model: entity,
+			list: true,
+			name: entity.modelName,
+		})
 		return this
 	}
 
@@ -64,6 +68,7 @@ export class Manifest<TName extends string = ''> {
 		this.manifest.entities.push(...entities.map((entity) => ({
 			model: entity,
 			list: true,
+			name: entity.modelName,
 		})))
 		return this
 	}

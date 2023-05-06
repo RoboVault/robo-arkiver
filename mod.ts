@@ -11,4 +11,8 @@ export { createEntity } from './src/graphql/entity.ts'
 export { Types } from './src/deps.ts'
 export { buildSchemaFromEntities } from './src/graphql/builder.ts'
 export { supportedChains } from './src/chains.ts'
-export { defaultArkiveData } from './src/utils.ts'
+export {
+	defaultArkiveData,
+	JSONBigIntReplacer,
+	JSONBigIntReviver,
+} from './src/utils.ts'
