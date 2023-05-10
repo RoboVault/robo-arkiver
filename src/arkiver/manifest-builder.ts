@@ -13,6 +13,7 @@ import {
 } from './types.ts'
 import {
 	Abi,
+	crypto,
 	ExtractAbiEvent,
 	ExtractAbiEventNames,
 	mongoose,
@@ -110,11 +111,27 @@ export class DataSourceBuilder<TName extends string> {
 
 	public contract<const TAbi extends Abi>(
 		abi: TAbi,
+	): ContractBuilder<TAbi, TName>
+
+	public contract<const TAbi extends Abi>(
+		nameOrAbi: string | TAbi,
+		abi: TAbi,
+	): ContractBuilder<TAbi, TName>
+
+	public contract<const TAbi extends Abi>(
+		nameOrAbi: string | TAbi,
+		abi?: TAbi,
 	) {
 		if (this.dataSource.contracts == undefined) {
 			this.dataSource.contracts = []
 		}
-		return new ContractBuilder<TAbi, TName>(this, abi)
+		if (typeof nameOrAbi === 'string') {
+			if (abi === undefined) {
+				throw new Error('ABI is required when passing a name.')
+			}
+			return new ContractBuilder<TAbi, TName>(this, abi, nameOrAbi)
+		}
+		return new ContractBuilder<TAbi, TName>(this, nameOrAbi)
 	}
 
 	public addBlockHandler(
@@ -134,6 +151,7 @@ export class DataSourceBuilder<TName extends string> {
 			handler,
 			startBlockHeight,
 			blockInterval: BigInt(blockInterval),
+			name: handler.name,
 		})
 		return this
 	}
@@ -148,6 +166,7 @@ export class ContractBuilder<
 	constructor(
 		private builder: DataSourceBuilder<TName>,
 		abi: TAbi,
+		name?: string,
 	) {
 		const existing = this.builder.dataSource.contracts?.find(
 			(contract) => contract.abi === abi,
@@ -159,7 +178,7 @@ export class ContractBuilder<
 				abi,
 				sources: [],
 				events: [],
-				id: crypto.randomUUID(),
+				id: name ?? hashAbi(abi),
 			}
 			this.builder.dataSource.contracts!.push(this.contract)
 		}
@@ -249,4 +268,16 @@ export class ContractBuilder<
 		}
 		return this
 	}
+}
+
+const hashAbi = (abi: Abi) => {
+	const textEncoder = new TextEncoder()
+	const str = JSON.stringify(abi)
+	const hash = crypto.subtle.digestSync('SHA-256', textEncoder.encode(str))
+	const uint8Array = new Uint8Array(hash)
+	const hexString = Array.from(
+		uint8Array,
+		(byte) => byte.toString(16).padStart(2, '0'),
+	).join('')
+	return hexString
 }

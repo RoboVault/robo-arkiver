@@ -38,6 +38,7 @@ export interface IBlockHandler {
 	handler: BlockHandler
 	startBlockHeight: bigint | 'live'
 	blockInterval: bigint
+	name: string
 }
 
 export interface ChainOptions {

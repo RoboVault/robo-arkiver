@@ -1,6 +1,9 @@
 # v0.4.7 (unreleased)
+- feat: add overload to .contract() method of the manifest builder to allow for passing in a name to identify the contract instead of the digest of the contract ABI
 - chore: update `arkiver deploy` command to include serialized manifest
 - chore: add entity name field to manifest
+- chore: add block handler name field to manifest
+- chore: use digest instead of uuid for contract id
 
 # v0.4.6
 - fix: add minor version to data source
