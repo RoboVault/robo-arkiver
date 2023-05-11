@@ -57,7 +57,12 @@ export class DataSource {
 	}
 	private readonly agnosticEvents: Map<
 		`0x${string}`,
-		{ handler: EventHandler<any, any, Abi>; abi: Abi; startBlockHeight: bigint }
+		{
+			handler: EventHandler<any, any, Abi>
+			abi: Abi
+			startBlockHeight: bigint
+			contractId: string
+		}
 	> = new Map() // topic to handler and interface
 	private readonly eventHandlers: Map<
 		string,
@@ -136,14 +141,13 @@ export class DataSource {
 	}
 
 	public async run() {
-		logger().debug(`Running data source for ${this.chain}...`)
 		await this.init()
 		this.runFetcherLoop()
 		this.runProcessorLoop()
 	}
 
 	private async init() {
-		logger().debug(`Initializing data source for ${this.chain}...`)
+		logger(this.chain).debug(`Initializing data source`)
 		await this.getLiveBlockHeight()
 		this.loadContracts()
 		this.loadBlockHandlers()
@@ -185,7 +189,7 @@ export class DataSource {
 				this.blocksQueue.size > this.maxQueueSize ||
 				this.agnosticLogsQueue.size > this.maxQueueSize
 			) {
-				logger().debug(
+				logger(this.chain).debug(
 					`Queue size is logs - ${
 						this.logsQueue.size + this.agnosticLogsQueue.size
 					}, blocks - ${this.blocksQueue.size}, waiting...`,
@@ -204,7 +208,7 @@ export class DataSource {
 
 			if (toBlock === this.liveBlockHeight && !this.isLive) {
 				this.isLive = true
-				logger().info(
+				logger(this.chain).info(
 					`Start live arkiving for ${this.chain} at ${this.liveBlockHeight}`,
 				)
 			}
@@ -235,7 +239,9 @@ export class DataSource {
 			return
 		}
 
-		logger().debug(`Fetching logs from block ${fromBlock} to ${toBlock}...`)
+		logger(this.chain).debug(
+			`Fetching logs from block ${fromBlock} to ${toBlock}...`,
+		)
 
 		const addresses = this.normalizedContracts.contracts.filter((c) =>
 			c.startBlockHeight <= toBlock
@@ -271,11 +277,11 @@ export class DataSource {
 						l.logIndex === null
 				})
 			) {
-				logger().debug(`Some logs still pending, retrying...`)
+				logger(this.chain).debug(`Some logs still pending, retrying...`)
 				this.retryFetchLogs.set(fromBlock, toBlock)
 				return
 			}
-			logger().debug(
+			logger(this.chain).debug(
 				`Fetched ${logs.length} logs from block ${fromBlock} to ${toBlock}...`,
 			)
 			this.logsQueue.set(fromBlock, {
@@ -284,7 +290,7 @@ export class DataSource {
 			})
 			this.retryFetchLogs.delete(fromBlock)
 		}).catch((e) => {
-			logger().error(
+			logger(this.chain).error(
 				`Error fetching logs from block ${fromBlock} to ${toBlock} for ${this.chain}: ${e}, retrying...`,
 			)
 			this.retryFetchLogs.set(fromBlock, toBlock)
@@ -304,7 +310,7 @@ export class DataSource {
 			return
 		}
 
-		logger().debug(
+		logger(this.chain).debug(
 			`Fetching agnostic logs from block ${fromBlock} to ${toBlock}...`,
 		)
 
@@ -339,11 +345,11 @@ export class DataSource {
 						l.logIndex === null
 				})
 			) {
-				logger().debug(`Some logs still pending, retrying...`)
+				logger(this.chain).debug(`Some logs still pending, retrying...`)
 				this.retryFetchAgnosticLogs.set(fromBlock, toBlock)
 				return
 			}
-			logger().debug(
+			logger(this.chain).debug(
 				`Fetched ${logs.length} agnostic logs from block ${fromBlock} to ${toBlock}...`,
 			)
 			this.agnosticLogsQueue.set(fromBlock, {
@@ -352,7 +358,7 @@ export class DataSource {
 			})
 			this.retryFetchAgnosticLogs.delete(fromBlock)
 		}).catch((e) => {
-			logger().error(
+			logger(this.chain).error(
 				`Error fetching agnostic logs from block ${fromBlock} to ${toBlock} for ${this.chain}: ${e}, retrying...`,
 			)
 			this.retryFetchAgnosticLogs.set(fromBlock, toBlock)
@@ -374,7 +380,9 @@ export class DataSource {
 			)
 			return
 		}
-		logger().debug(`Fetching blocks from block ${fromBlock} to ${toBlock}...`)
+		logger(this.chain).debug(
+			`Fetching blocks from block ${fromBlock} to ${toBlock}...`,
+		)
 		const blockToHandlers = new Map<bigint, BlockHandler[]>()
 		const blockSources = this.blockSources.filter((source) =>
 			source.startBlockHeight !== 'live' &&
@@ -440,11 +448,11 @@ export class DataSource {
 
 		Promise.all(blocksPromises).then((blocks) => {
 			if (blocks.some((b) => b.block === null)) {
-				logger().debug(`Some blocks still pending, retrying...`)
+				logger(this.chain).debug(`Some blocks still pending, retrying...`)
 				this.retryFetchBlocks.set(fromBlock, toBlock)
 				return
 			}
-			logger().debug(
+			logger(this.chain).debug(
 				`Fetched ${blocks.length} blocks from block ${fromBlock} to ${toBlock}...`,
 			)
 			this.blocksQueue.set(
@@ -456,7 +464,7 @@ export class DataSource {
 			)
 			this.retryFetchBlocks.delete(fromBlock)
 		}).catch((e) => {
-			logger().error(
+			logger(this.chain).error(
 				`Error fetching blocks from block ${fromBlock} to ${toBlock} for ${this.chain}: ${e}, retrying...`,
 			)
 			this.retryFetchBlocks.set(fromBlock, toBlock)
@@ -474,14 +482,14 @@ export class DataSource {
 			if (
 				logs === undefined || blocks === undefined || agnosticLogs === undefined
 			) {
-				logger().debug(
+				logger(this.chain).debug(
 					`Waiting for fetcher loop to finish ${this.processedBlockHeight}...`,
 				)
 				await delay(this.queueDelay)
 				continue
 			}
 
-			logger().debug(
+			logger(this.chain).debug(
 				`Processing logs and blocks from block ${this.processedBlockHeight}...`,
 			)
 
@@ -514,7 +522,7 @@ export class DataSource {
 
 				this.processedBlockHeight = nextFromBlock
 
-				logger().debug(
+				logger(this.chain).debug(
 					`No logs or blocks found for block ${this.processedBlockHeight}, skipping...`,
 				)
 				continue
@@ -534,7 +542,7 @@ export class DataSource {
 
 			const startTime = performance.now()
 
-			logger().info(
+			logger(this.chain).info(
 				`Running handlers for blocks ${this.processedBlockHeight}-${
 					nextFromBlock ?? 'unknown'
 				} (${this.blockRange} blocks - ${logsAndBlocks.length} items)`,
@@ -548,7 +556,7 @@ export class DataSource {
 
 					const contractId = this.addressToId.get(log.address.toLowerCase())
 					if (!contractId) {
-						logger().error(`No contract ID found for log ${log}`)
+						logger(this.chain).error(`No contract ID found for log ${log}`)
 						continue
 					}
 					const handler = this.eventHandlers.get(
@@ -567,6 +575,7 @@ export class DataSource {
 						topics: [log.topics[0]!, ...log.topics.slice(1)],
 					})
 
+					const loggerKey = `${this.chain}-${contractId}-${event.eventName}`
 					try {
 						await handler.handler({
 							eventName: event.eventName,
@@ -578,7 +587,7 @@ export class DataSource {
 								address: log.address,
 								publicClient: this.client,
 							}),
-							logger: logger(),
+							logger: logger(loggerKey),
 						})
 					} catch (e) {
 						error =
@@ -587,7 +596,7 @@ export class DataSource {
 									`\n    ${idx} ${name}: ${arg}`
 								)
 							}\n\n${e.stack}`
-						logger().error(error)
+						logger(loggerKey).error(error)
 					}
 				} else if (logOrBlock.type === 'block') {
 					const block = logOrBlock as {
@@ -596,17 +605,18 @@ export class DataSource {
 					}
 
 					for (const handler of block.handlers) {
+						const loggerKey = `${this.chain}-${handler.name}`
 						try {
 							await handler({
 								block: block.block,
 								client: this.client,
 								store: this.store,
-								logger: logger(),
+								logger: logger(loggerKey),
 							})
 						} catch (e) {
 							error =
 								`Block handler ${handler.name} at block ${block.block.number}\n\n${e.stack}`
-							logger().error(error)
+							logger(loggerKey).error(error)
 						}
 					}
 				} else if (logOrBlock.type === 'agnosticLog') {
@@ -615,13 +625,13 @@ export class DataSource {
 					const topic = log.topics[0]
 
 					if (!topic) {
-						logger().error(`No topic found for log ${log}`)
+						logger(this.chain).error(`No topic found for log ${log}`)
 						continue
 					}
 
 					const eventHandler = this.agnosticEvents.get(topic)
 					if (!eventHandler) {
-						logger().error(`No event found for log ${log}`)
+						logger(this.chain).error(`No event found for log ${log}`)
 						continue
 					}
 
@@ -631,6 +641,8 @@ export class DataSource {
 						topics: [log.topics[0]!, ...log.topics.slice(1)],
 					})
 
+					const loggerKey =
+						`${this.chain}-${eventHandler.contractId}-${event.eventName}`
 					try {
 						await eventHandler.handler({
 							eventName: event.eventName,
@@ -642,7 +654,7 @@ export class DataSource {
 								address: log.address,
 								publicClient: this.client,
 							}),
-							logger: logger(),
+							logger: logger(loggerKey),
 						})
 					} catch (e) {
 						error =
@@ -651,7 +663,7 @@ export class DataSource {
 									`\n    ${idx} ${name}: ${arg}`
 								)
 							}\n\n${e.stack}`
-						logger().error(error)
+						logger(loggerKey).error(error)
 					}
 				}
 
@@ -678,7 +690,7 @@ export class DataSource {
 				items: logsAndBlocks.length,
 			})
 
-			logger().info(
+			logger(this.chain).info(
 				`Processed blocks ${this.processedBlockHeight}-${nextFromBlock} in ${
 					(endTime - startTime).toFixed(3)
 				}ms (${blocksPerSecond.toFixed(3)} blocks/s - ${
@@ -689,7 +701,9 @@ export class DataSource {
 			this.logsQueue.delete(this.processedBlockHeight)
 			this.blocksQueue.delete(this.processedBlockHeight)
 			this.agnosticLogsQueue.delete(this.processedBlockHeight)
-			logger().debug(`Processed block ${this.processedBlockHeight}...`)
+			logger(this.chain).debug(
+				`Processed block ${this.processedBlockHeight}...`,
+			)
 
 			this.processedBlockHeight = nextFromBlock
 		}
@@ -704,14 +718,14 @@ export class DataSource {
 				arkiveVersion: this.arkiveVersion.toString(),
 			})
 
-		logger().debug(
+		logger(this.chain).debug(
 			`Indexed block height for ${this.chain}: ${indexedBlockHeight}...`,
 		)
 
 		if (
 			indexedBlockHeight && (indexedBlockHeight + 1) > this.processedBlockHeight
 		) {
-			logger().debug(
+			logger(this.chain).debug(
 				`Setting processed block height to ${indexedBlockHeight + 1}...`,
 			)
 			this.processedBlockHeight = BigInt(indexedBlockHeight) + 1n
@@ -743,15 +757,15 @@ export class DataSource {
 		if (this.fetchedBlockHeight + this.blockRange < this.liveBlockHeight) {
 			return
 		}
-		logger().debug(`Fetching live block height...`)
+		logger(this.chain).debug(`Fetching live block height...`)
 		const block = await this.client.getBlockNumber()
-		logger().debug(`Live block height for ${this.chain}: ${block}...`)
+		logger(this.chain).debug(`Live block height for ${this.chain}: ${block}...`)
 		this.liveBlockHeight = block
 	}
 
 	private loadBlockHandlers() {
 		if (this.blockSources.length === 0) return
-		logger().debug(`Loading block handlers for ${this.chain}...`)
+		logger(this.chain).debug(`Loading block handlers for ${this.chain}...`)
 		for (const blockSource of this.blockSources) {
 			if (blockSource.startBlockHeight === 'live') {
 				if (this.processedBlockHeight === 0n) {
@@ -770,7 +784,7 @@ export class DataSource {
 	}
 
 	private loadContracts() {
-		logger().debug(
+		logger(this.chain).debug(
 			`Processing raw contracts for ${this.chain}...`,
 		)
 
@@ -803,6 +817,7 @@ export class DataSource {
 							abi,
 							handler: event.handler,
 							startBlockHeight: source.startBlockHeight,
+							contractId: id,
 						},
 					)
 				}

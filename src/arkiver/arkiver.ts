@@ -26,38 +26,40 @@ export class Arkiver extends EventTarget {
 	}
 
 	public async run() {
-		logger().info(
+		logger('arkiver').info(
 			`Running Arkive - ${this.arkiveData.name}`,
 		)
 		try {
 			if (this.mongoConnection !== undefined) {
-				logger().debug(`Connecting to database...`)
+				logger('arkiver').debug(`Connecting to database...`)
 				await mongoose.connect(this.mongoConnection, {
 					dbName:
 						`${this.arkiveData.id}-${this.arkiveData.deployment.major_version}`,
 					// deno-lint-ignore no-explicit-any
 				} as any)
-				logger().debug(`Connected to database`)
+				logger('arkiver').debug(`Connected to database`)
 			}
 			await this.initSources()
 		} catch (e) {
-			logger().error(`Error running arkiver: ${e}`)
+			logger('arkiver').error(`Error running arkiver: ${e}`)
 		}
 	}
 
 	private async initSources() {
-		logger().debug(`Initializing data sources...`)
+		logger('arkiver').debug(`Initializing data sources...`)
 		const { dataSources } = this.manifest
 		for (const [chain, source] of Object.entries(dataSources)) {
 			try {
 				assertChain(chain)
 			} catch (_e) {
-				logger().error(`Invalid chain ${chain} in manifest, ignoring...`)
+				logger('arkiver').error(
+					`Invalid chain ${chain} in manifest, ignoring...`,
+				)
 				continue
 			}
 			const rpcUrl = this.rpcUrls[chain] ?? source.options.rpcUrl
 			if (rpcUrl === undefined) {
-				logger().error(`No RPC URL found for chain ${chain}`)
+				logger('arkiver').error(`No RPC URL found for chain ${chain}`)
 				continue
 			}
 			const dataSource = new DataSource({

@@ -33,4 +33,4 @@ export class ArkiveConsoleLogHandler extends ConsoleHandler {
 	}
 }
 
-export const logger = () => log.getLogger('arkiver')
+export const logger = (loggerName: string) => log.getLogger(loggerName)

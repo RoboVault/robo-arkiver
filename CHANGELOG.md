@@ -1,5 +1,7 @@
-# v0.4.7 (unreleased)
+# v0.4.7
 - feat: add overload to .contract() method of the manifest builder to allow for passing in a name to identify the contract instead of the digest of the contract ABI
+- feat: enhanced logging features
+- feat: removed logger export
 - chore: update `arkiver deploy` command to include serialized manifest
 - chore: add entity name field to manifest
 - chore: add block handler name field to manifest
