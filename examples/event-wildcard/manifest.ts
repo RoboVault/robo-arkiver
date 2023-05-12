@@ -6,7 +6,7 @@ const manifest = new Manifest('agnostic-events')
 
 manifest
 	.chain('avalanche', { blockRange: 100n })
-	.contract(erc20)
+	.contract('ERC20', erc20)
 	.addSources({ '*': 27347402n })
 	.addEventHandlers({ 'Transfer': transferHandler })
 

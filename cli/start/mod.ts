@@ -4,8 +4,10 @@ import {
 	buildSchemaFromEntities,
 	defaultArkiveData,
 } from '../../mod.ts'
-import { $, createYoga, delay, join, log, serve } from '../deps.ts'
+import { $, createYoga, delay, join, log, logLevel, serve } from '../deps.ts'
 import { ArkiverMetadata } from '../../src/arkiver/arkive-metadata.ts'
+import { createManifestHandlers } from './logger.ts'
+import { colors } from '../../src/deps.ts'
 
 export const action = async (
 	options: {
@@ -19,6 +21,13 @@ export const action = async (
 	directory: string,
 ) => {
 	Deno.env.set('DENO_ENV', 'PROD')
+
+	try {
+		logLevel.getLevelByName(options.logLevel.toUpperCase() as log.LevelName)
+	} catch (e) {
+		console.error(e)
+		Deno.exit(1)
+	}
 
 	if (!options.mongoConnection && options.db) {
 		const cleanup = async () => {
@@ -58,15 +67,14 @@ export const action = async (
 		)
 	}
 
-	const rpcUrls = options.rpcUrl?.reduce((acc, rpc) => {
-		const [name, url] = rpc.split('=')
-		acc[name] = url
-		return acc
-	}, {} as Record<string, string>) ?? {}
+	const { handlers, loggers } = createManifestHandlers(
+		manifest,
+		options.logLevel.toUpperCase() as log.LevelName,
+	)
 
 	log.setup({
 		handlers: {
-			console: new ArkiveConsoleLogHandler(
+			arkiver: new ArkiveConsoleLogHandler(
 				options.logLevel.toUpperCase() as log.LevelName,
 				{
 					arkive: {
@@ -77,14 +85,23 @@ export const action = async (
 					},
 				},
 			),
+			...handlers,
 		},
 		loggers: {
 			arkiver: {
 				level: options.logLevel as log.LevelName,
-				handlers: ['console'],
+				handlers: ['arkiver'],
 			},
+			...loggers,
 		},
 	})
+
+	const rpcUrls = options.rpcUrl?.reduce((acc, rpc) => {
+		const [name, url] = rpc.split('=')
+		acc[name] = url
+		return acc
+	}, {} as Record<string, string>) ?? {}
+
 	const arkiver = new Arkiver({
 		manifest,
 		mongoConnection: options.db
@@ -122,7 +139,13 @@ export const action = async (
 		port: 4000,
 		onListen: ({ hostname, port }) => {
 			console.log(
-				`🚀 Arkiver playground ready at http://${hostname}:${port}/graphql`,
+				colors.magenta(
+					colors.bold(
+						`🚀 Arkiver playground ready at ${
+							colors.underline(`http://${hostname}:${port}/graphql`)
+						}`,
+					),
+				),
 			)
 		},
 	})
