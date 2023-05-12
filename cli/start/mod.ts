@@ -89,7 +89,7 @@ export const action = async (
 		},
 		loggers: {
 			arkiver: {
-				level: options.logLevel as log.LevelName,
+				level: options.logLevel.toUpperCase() as log.LevelName,
 				handlers: ['arkiver'],
 			},
 			...loggers,
