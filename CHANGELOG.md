@@ -1,3 +1,6 @@
+# v0.4.8
+- fix: small bug in `arkiver deploy` where it was incorrectly uploading the name string as the arkiver
+
 # v0.4.7
 - feat: add overload to .contract() method of the manifest builder to allow for passing in a name to identify the contract instead of the digest of the contract ABI
 - feat: enhanced logging features
