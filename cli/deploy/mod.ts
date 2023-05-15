@@ -37,7 +37,7 @@ export const action = async (
 
 		spinner.text = 'Uploading package...'
 		// upload package
-		await upload(fileName, tempPath, arkiveName, options)
+		await upload(fileName, tempPath, manifest, options)
 
 		spinner.text = 'Cleaning up...'
 		// cleanup
