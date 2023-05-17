@@ -11,6 +11,7 @@ export {
 	type Log,
 	type PublicClient,
 	type RpcLog,
+	type DecodeEventLogReturnType
 } from 'npm:viem'
 export {
 	type Abi,

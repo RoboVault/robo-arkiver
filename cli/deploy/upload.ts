@@ -7,7 +7,7 @@ export const upload = async (
 	pkgName: string,
 	tempPath: string,
 	manifest: ArkiveManifest,
-	options: { public?: true; major?: true },
+	options: { public?: true; major?: true, env?: string },
 ) => {
 	const supabase = getSupabaseClient()
 	const sessionRes = await supabase.auth.getSession()
@@ -38,6 +38,9 @@ export const upload = async (
 		formData.append('update', 'major')
 	} else {
 		formData.append('update', 'minor')
+	}
+	if (options.env) {
+		formData.append('env', options.env)
 	}
 
 	const headers = new Headers()

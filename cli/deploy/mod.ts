@@ -4,10 +4,10 @@ import { pkg } from './pkg.ts'
 import { upload } from './upload.ts'
 
 export const action = async (
-	options: { public?: true; major?: true },
+	options: { public?: true; major?: true, env?: string },
 	directory: string,
 ) => {
-	const dev = Deno.env.get('DEV') !== undefined
+	const dev = options.env?.toLowerCase() === 'dev'
 
 	if (dev) return deployDev(options, directory)
 

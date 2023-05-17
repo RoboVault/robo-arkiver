@@ -14,7 +14,7 @@ import {
 } from './cli/mod.ts'
 import 'https://deno.land/std@0.179.0/dotenv/load.ts'
 
-export const version = 'v0.4.8'
+export const version = 'v0.4.9'
 
 const command = new Command()
 	.name('arkiver')
@@ -50,6 +50,7 @@ command
 	.command('deploy', 'Deploy arkive')
 	.option('--public', 'Make arkive public')
 	.option('--major', 'Deploy as major version')
+	.option('--env <env:string>', 'Environment to deploy to')
 	.arguments('<dir:string>')
 	.action(async (opts, ...args) => {
 		await checkVersion(version)

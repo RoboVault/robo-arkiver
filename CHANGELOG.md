@@ -1,3 +1,6 @@
+# v0.4.9
+- chore: add environment flag to deploy command
+
 # v0.4.8
 - fix: small bug in `arkiver deploy` where it was incorrectly uploading the name string as the arkiver
 
