@@ -1,22 +1,47 @@
-# RoboArkiver
+# [Arkiver](https://docs.arkiver.net)
 
-RoboArkiver is a highly configurable and extensible tool for indexing evm data.
+Fast and Fully Type-Safe Blockchain Indexer
 
-## Run locally
+# Features
 
-### Prerequisites
+- **Fast** - Maximize indexing speed by minimizing I/O and caching data in
+  memory
+- **Type-Safe** - End-to-end type-safety with TypeScript
+- **Flexible** - Write custom handlers to process data however you want
+- **Ergonomic** - Minimal configuration and easy to test locally
+- **Multi-Chain** - Index multiple chains in a single Arkive
+- **GraphQL** - Serve your data via a GraphQL API
+- **Open-Source** - Arkiver is open-source and free to use
+- **Self-Hosted** - Run Arkiver on your own infrastructure
+- **Cloud-Hosted** - Deploy your Arkive to the Arkiver cloud
 
-- [deno](https://deno.land/)
+... and a lot more!
 
-### Run the arkiver locally
+# Overview
 
-1. clone the repo
-2. setup a supabase project
-3. copy .env.sample to .env and fill the supabase variables. you can omit the
-   influxdb variables if you're not persisting the data
-4. run `deno task dev`
+```typescript title="manifest.ts"
+import { createEntity, Manifest } from 'https://deno.land/x/robo_arkiver/mod.ts'
+import { ERC20 } from './ERC20.ts'
 
-### Deploy an arkive
+const manifest = new Manifest('my-arkive')
 
-1. Follow
-   [these steps.](https://github.com/RoboVault/telegraf-indexer/tree/arkive)
+manifest
+	.chain('mainnet')
+	.contract(ERC20)
+	.addSources({ '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2': 16987011n })
+	.addEventHandlers({
+		'Transfer': ({ logger, event }) => {
+			logger.info(`Transfer: ${event.from} -> ${event.to}: ${event.value}`)
+		},
+	})
+
+export default manifest.build()
+```
+
+# Documentation
+
+[(WIP)](https://docs.arkiver.net)
+
+# License
+
+[MIT](LICENSE) License
