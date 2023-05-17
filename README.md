@@ -20,7 +20,7 @@ Fast and Fully Type-Safe Blockchain Indexer
 # Overview
 
 ```typescript title="manifest.ts"
-import { createEntity, Manifest } from 'https://deno.land/x/robo_arkiver/mod.ts'
+import { Manifest } from 'https://deno.land/x/robo_arkiver/mod.ts'
 import { ERC20 } from './ERC20.ts'
 
 const manifest = new Manifest('my-arkive')
