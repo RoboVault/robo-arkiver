@@ -114,7 +114,7 @@ export class DataSourceBuilder<TName extends string> {
 	): ContractBuilder<TAbi, TName>
 
 	public contract<const TAbi extends Abi>(
-		nameOrAbi: string | TAbi,
+		name: string,
 		abi: TAbi,
 	): ContractBuilder<TAbi, TName>
 
