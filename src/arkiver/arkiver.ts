@@ -8,6 +8,7 @@ export class Arkiver extends EventTarget {
 	private readonly manifest: ArkiveManifest
 	private arkiveData: Arkive
 	private sources: DataSource[] = []
+	private syncedCount = 0
 	private mongoConnection?: string
 	private rpcUrls: Record<string, string>
 
@@ -73,6 +74,17 @@ export class Arkiver extends EventTarget {
 				noDb: this.mongoConnection === undefined,
 				arkiveMinorVersion: this.arkiveData.deployment.minor_version,
 			})
+
+			dataSource.addEventListener('synced', () => {
+				this.syncedCount++
+				if (this.syncedCount === Object.entries(dataSources).length) {
+					logger('arkiver').info(
+						`Arkiver synced - ${this.arkiveData.name}`,
+					)
+					this.dispatchEvent(new Event('synced'))
+				}
+			})
+
 			await dataSource.run()
 			this.sources.push(dataSource)
 		}

@@ -40,7 +40,7 @@ interface NormalizedContracts {
 	signatureTopics: string[]
 }
 
-export class DataSource {
+export class DataSource extends EventTarget {
 	private readonly chain: keyof typeof supportedChains
 	private readonly rpcUrl: string
 	private readonly client: PublicClient<HttpTransport>
@@ -100,7 +100,7 @@ export class DataSource {
 		fetcher: true,
 		processor: true,
 	}
-	private maxQueueSize = 10
+	private maxQueueSize = 3
 	private liveDelay = 2000
 	private queueDelay = 500
 	private fetchInterval = 500
@@ -124,6 +124,7 @@ export class DataSource {
 			noDb: boolean
 		},
 	) {
+		super()
 		this.chain = params.chain
 		this.rpcUrl = params.rpcUrl
 		this.blockRange = params.blockRange
@@ -208,6 +209,7 @@ export class DataSource {
 
 			if (toBlock === this.liveBlockHeight && !this.isLive) {
 				this.isLive = true
+				this.dispatchEvent(new Event('synced'))
 				logger(this.chain).info(
 					`Start live arkiving for ${this.chain} at ${this.liveBlockHeight}`,
 				)

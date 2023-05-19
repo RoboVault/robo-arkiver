@@ -1,3 +1,7 @@
+# v0.4.10
+- fix: emit event when arkiver is synced
+- - fix: set maxQueueSize to 3
+
 # v0.4.9
 - chore: add environment flag to deploy command
 
