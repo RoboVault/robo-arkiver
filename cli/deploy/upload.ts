@@ -7,7 +7,7 @@ export const upload = async (
 	pkgName: string,
 	tempPath: string,
 	manifest: ArkiveManifest,
-	options: { public?: true; major?: true, env?: string },
+	options: { public?: true; major?: true; env?: string },
 ) => {
 	const supabase = getSupabaseClient()
 	const sessionRes = await supabase.auth.getSession()
@@ -56,5 +56,8 @@ export const upload = async (
 			headers,
 		},
 	)
+	if (!res.ok) {
+		throw new Error(await res.text())
+	}
 	console.log('Deployed successfully: ', await res.json())
 }

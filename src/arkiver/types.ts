@@ -82,9 +82,10 @@ export type EventHandlerFor<
 	TEventName extends ExtractAbiEventNames<TAbi>,
 > = EventHandler<ExtractAbiEvent<TAbi, TEventName>, TEventName, TAbi>
 
-type RecursiveNonNullable<T> = T extends {} ? {
-	[K in keyof T]-?: RecursiveNonNullable<T[K]>
-} : NonNullable<T>
+type RecursiveNonNullable<T> = T extends Record<string, unknown> ? {
+		[K in keyof T]-?: RecursiveNonNullable<T[K]>
+	}
+	: NonNullable<T>
 
 export type SafeLog<TAbiEvent extends AbiEvent> = RecursiveNonNullable<
 	Log<bigint, bigint, TAbiEvent, [TAbiEvent], string>
@@ -164,19 +165,19 @@ type ValidNameChars =
 
 export type CheckManifestName<Name extends string, FullName extends string> =
 	Name extends `${infer First}${infer Rest}`
-	? First extends ValidNameChars | Capitalize<ValidNameChars>
-	? CheckManifestName<Rest, FullName>
-	: `Invalid character in manifest name: ${First}`
-	: FullName
+		? First extends ValidNameChars | Capitalize<ValidNameChars>
+			? CheckManifestName<Rest, FullName>
+		: `Invalid character in manifest name: ${First}`
+		: FullName
 
 export type HexString<Str extends string, Length extends number> = Str extends
 	`0x${infer Rest}`
 	? InnerHexStr<Rest, Length> extends number
-	? InnerHexStr<Rest, Length> extends Length ? Str
-	: `Invalid hex string length. Expected ${Length}, got ${InnerHexStr<
-		Rest,
-		Length
-	>}`
+		? InnerHexStr<Rest, Length> extends Length ? Str
+		: `Invalid hex string length. Expected ${Length}, got ${InnerHexStr<
+			Rest,
+			Length
+		>}`
 	: `Invalid hex character in string: ${InnerHexStr<Rest, Length>}`
 	: 'Missing 0x prefix'
 
@@ -186,7 +187,7 @@ type InnerHexStr<
 	LengthStore extends never[] = [],
 > = Str extends `${infer First}${infer Rest}`
 	? First extends HexChars | Capitalize<HexChars>
-	? InnerHexStr<Rest, Length, [...LengthStore, never]>
+		? InnerHexStr<Rest, Length, [...LengthStore, never]>
 	: First
 	: LengthStore['length'] extends Length ? Length
 	: LengthStore['length']
@@ -211,9 +212,9 @@ type HexChars =
 
 export type ValidateSourcesObject<Sources extends Record<string, bigint>> =
 	keyof Sources extends string
-	? keyof Sources extends HexString<keyof Sources, 40> | '*'
-	? keyof Sources extends '*' ? Sources
-	: keyof Sources extends HexString<keyof Sources, 40> ? Sources
-	: 'Can\'t mix wildcard and specific addresses'
-	: HexString<keyof Sources, 40>
-	: `Source addresses must be strings`
+		? keyof Sources extends HexString<keyof Sources, 40> | '*'
+			? keyof Sources extends '*' ? Sources
+			: keyof Sources extends HexString<keyof Sources, 40> ? Sources
+			: 'Can\'t mix wildcard and specific addresses'
+		: HexString<keyof Sources, 40>
+		: `Source addresses must be strings`
