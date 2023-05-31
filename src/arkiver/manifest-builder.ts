@@ -20,6 +20,8 @@ import {
 } from '../deps.ts'
 import { getChainObjFromChainName } from '../utils.ts'
 
+export const manifestVersion = 'v1'
+
 export class Manifest<TName extends string = ''> {
 	public manifest: ArkiveManifest
 
@@ -36,6 +38,7 @@ export class Manifest<TName extends string = ''> {
 			dataSources: {},
 			entities: [],
 			name: formattedName,
+			version: manifestVersion,
 		}
 	}
 

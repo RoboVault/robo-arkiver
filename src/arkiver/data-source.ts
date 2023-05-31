@@ -110,6 +110,7 @@ export class DataSource extends EventTarget {
 	})
 	private isLive = false
 	private noDb: boolean
+	private maxHandlerRetries = 5
 
 	constructor(
 		params: {
@@ -578,27 +579,41 @@ export class DataSource extends EventTarget {
 					})
 
 					const loggerKey = `${this.chain}-${contractId}-${event.eventName}`
-					try {
-						await handler.handler({
-							eventName: event.eventName,
-							client: this.client,
-							store: this.store,
-							event: formatLog(log, event),
-							contract: getContract({
-								abi: handler.abi,
-								address: log.address,
-								publicClient: this.client,
-							}),
-							logger: logger(loggerKey),
-						})
-					} catch (e) {
-						error =
-							`Event handler ${handler.handler.name} at block ${log.blockNumber} with arguments:${
-								Object.entries(event.args ?? {}).map(([name, arg], idx) =>
-									`\n    ${idx} ${name}: ${arg}`
+
+					let retries = 0
+					while (true) {
+						try {
+							await handler.handler({
+								eventName: event.eventName,
+								client: this.client,
+								store: this.store,
+								event: formatLog(log, event),
+								contract: getContract({
+									abi: handler.abi,
+									address: log.address,
+									publicClient: this.client,
+								}),
+								logger: logger(loggerKey),
+							})
+							break
+						} catch (e) {
+							error =
+								`Event handler ${handler.handler.name} at block ${log.blockNumber} with arguments:${
+									Object.entries(event.args ?? {}).map(([name, arg], idx) =>
+										`\n    ${idx} ${name}: ${arg}`
+									)
+								}\n${e.stack}`
+							logger(loggerKey).error(error)
+							retries++
+							if (retries > this.maxHandlerRetries) {
+								this.dispatchEvent(new Event('error'))
+								logger(loggerKey).debug(
+									`Max retries reached for handler ${handler.handler.name} at block ${log.blockNumber}, stopping ...`,
 								)
-							}\n\n${e.stack}`
-						logger(loggerKey).error(error)
+								this.stop()
+								return
+							}
+						}
 					}
 				} else if (logOrBlock.type === 'block') {
 					const block = logOrBlock as {
@@ -608,17 +623,31 @@ export class DataSource extends EventTarget {
 
 					for (const handler of block.handlers) {
 						const loggerKey = `${this.chain}-${handler.name}`
-						try {
-							await handler({
-								block: block.block,
-								client: this.client,
-								store: this.store,
-								logger: logger(loggerKey),
-							})
-						} catch (e) {
-							error =
-								`Block handler ${handler.name} at block ${block.block.number}\n\n${e.stack}`
-							logger(loggerKey).error(error)
+
+						let retries = 0
+						while (true) {
+							try {
+								await handler({
+									block: block.block,
+									client: this.client,
+									store: this.store,
+									logger: logger(loggerKey),
+								})
+								break
+							} catch (e) {
+								error =
+									`Block handler ${handler.name} at block ${block.block.number}\n${e.stack}`
+								logger(loggerKey).error(error)
+								retries++
+								if (retries > this.maxHandlerRetries) {
+									this.dispatchEvent(new Event('error'))
+									logger(loggerKey).debug(
+										`Max retries reached for handler ${handler.name} at block ${block.block.number}, stopping ...`,
+									)
+									this.stop()
+									return
+								}
+							}
 						}
 					}
 				} else if (logOrBlock.type === 'agnosticLog') {
@@ -645,27 +674,41 @@ export class DataSource extends EventTarget {
 
 					const loggerKey =
 						`${this.chain}-${eventHandler.contractId}-${event.eventName}`
-					try {
-						await eventHandler.handler({
-							eventName: event.eventName,
-							client: this.client,
-							store: this.store,
-							event: formatLog(log, event),
-							contract: getContract({
-								abi: eventHandler.abi,
-								address: log.address,
-								publicClient: this.client,
-							}),
-							logger: logger(loggerKey),
-						})
-					} catch (e) {
-						error =
-							`Agnostic event handler ${eventHandler.handler.name} at block ${log.blockNumber} with arguments:${
-								Object.entries(event.args ?? {}).map(([name, arg], idx) =>
-									`\n    ${idx} ${name}: ${arg}`
+
+					let retries = 0
+					while (true) {
+						try {
+							await eventHandler.handler({
+								eventName: event.eventName,
+								client: this.client,
+								store: this.store,
+								event: formatLog(log, event),
+								contract: getContract({
+									abi: eventHandler.abi,
+									address: log.address,
+									publicClient: this.client,
+								}),
+								logger: logger(loggerKey),
+							})
+							break
+						} catch (e) {
+							error =
+								`Agnostic event handler ${eventHandler.handler.name} at block ${log.blockNumber} with arguments:${
+									Object.entries(event.args ?? {}).map(([name, arg], idx) =>
+										`\n    ${idx} ${name}: ${arg}`
+									)
+								}\n${e.stack}`
+							logger(loggerKey).error(error)
+							retries++
+							if (retries > this.maxHandlerRetries) {
+								this.dispatchEvent(new Event('error'))
+								logger(loggerKey).debug(
+									`Max retries reached for handler ${eventHandler.handler.name} at block ${log.blockNumber}, stopping ...`,
 								)
-							}\n\n${e.stack}`
-						logger(loggerKey).error(error)
+								this.stop()
+								return
+							}
+						}
 					}
 				}
 

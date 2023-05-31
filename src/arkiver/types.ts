@@ -60,6 +60,7 @@ export interface ArkiveManifest {
 	// deno-lint-ignore no-explicit-any
 	entities: { model: mongoose.Model<any>; list: boolean; name: string }[]
 	name: string
+	version: string
 }
 
 export type DataSource = {

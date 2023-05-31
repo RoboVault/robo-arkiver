@@ -79,10 +79,18 @@ export class Arkiver extends EventTarget {
 				this.syncedCount++
 				if (this.syncedCount === Object.entries(dataSources).length) {
 					logger('arkiver').info(
-						`Arkiver synced - ${this.arkiveData.name}`,
+						`All chains fully synced!`,
 					)
 					this.dispatchEvent(new Event('synced'))
 				}
+			})
+
+			dataSource.addEventListener('error', () => {
+				logger('arkiver').error(
+					`Error running ${chain}`,
+				)
+
+				this.dispatchEvent(new Event('error'))
 			})
 
 			await dataSource.run()
