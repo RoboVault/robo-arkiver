@@ -29,7 +29,14 @@ export interface Deployment {
 	major_version: number
 	minor_version: number
 	created_at: string
-	status: 'pending' | 'synced' | 'error' | 'syncing' | 'retired'
+	status:
+		| 'pending'
+		| 'synced'
+		| 'error'
+		| 'syncing'
+		| 'retired'
+		| 'paused'
+		| 'restarting'
 	file_path: string
 	arkive: Omit<Arkive, 'deployment'>
 }
