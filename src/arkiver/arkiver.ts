@@ -87,10 +87,10 @@ export class Arkiver extends EventTarget {
 
 			dataSource.addEventListener('error', () => {
 				logger('arkiver').error(
-					`Error running ${chain}`,
+					`Error running handlers in ${chain}`,
 				)
 
-				this.dispatchEvent(new Event('error'))
+				this.dispatchEvent(new Event('handlerError'))
 			})
 
 			await dataSource.run()

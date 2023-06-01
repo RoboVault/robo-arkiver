@@ -606,7 +606,7 @@ export class DataSource extends EventTarget {
 							logger(loggerKey).error(error)
 							retries++
 							if (retries > this.maxHandlerRetries) {
-								this.dispatchEvent(new Event('error'))
+								this.dispatchEvent(new Event('handlerError'))
 								logger(loggerKey).debug(
 									`Max retries reached for handler ${handler.handler.name} at block ${log.blockNumber}, stopping ...`,
 								)
@@ -640,7 +640,7 @@ export class DataSource extends EventTarget {
 								logger(loggerKey).error(error)
 								retries++
 								if (retries > this.maxHandlerRetries) {
-									this.dispatchEvent(new Event('error'))
+									this.dispatchEvent(new Event('handlerError'))
 									logger(loggerKey).debug(
 										`Max retries reached for handler ${handler.name} at block ${block.block.number}, stopping ...`,
 									)
@@ -701,7 +701,7 @@ export class DataSource extends EventTarget {
 							logger(loggerKey).error(error)
 							retries++
 							if (retries > this.maxHandlerRetries) {
-								this.dispatchEvent(new Event('error'))
+								this.dispatchEvent(new Event('handlerError'))
 								logger(loggerKey).debug(
 									`Max retries reached for handler ${eventHandler.handler.name} at block ${log.blockNumber}, stopping ...`,
 								)
