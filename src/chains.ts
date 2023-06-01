@@ -1,6 +1,7 @@
 import {
 	arbitrum,
 	avalanche,
+	avalancheFuji,
 	fantom,
 	localhost,
 	mainnet,
@@ -11,9 +12,11 @@ import {
 } from 'npm:viem/chains'
 
 export const supportedChains = {
-	avalanche,
 	arbitrum,
+	avalanche,
+	avalancheFuji,
 	mainnet,
+	ethereum: mainnet,
 	fantom,
 	polygon,
 	optimism,

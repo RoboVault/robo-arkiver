@@ -1,6 +1,7 @@
-# v0.4.11 (Unreleased)
+# v0.4.11
 - fix: show error message when `arkive deploy` fails
 - feat: add maximum retry attempts to handler function. default of 5 retries
+- feat: add fuji to chains
 
 # v0.4.10
 - fix: emit event when arkiver is synced
