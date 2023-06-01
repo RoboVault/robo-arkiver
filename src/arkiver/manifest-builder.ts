@@ -19,6 +19,7 @@ import {
 	mongoose,
 } from '../deps.ts'
 import { getChainObjFromChainName } from '../utils.ts'
+import { parseArkiveManifest } from './manifest-validator.ts'
 
 export const manifestVersion = 'v1'
 
@@ -78,6 +79,11 @@ export class Manifest<TName extends string = ''> {
 	}
 
 	public build() {
+		const { problems } = parseArkiveManifest.manifest(this.manifest)
+		if (problems) {
+			throw new Error(`Invalid manifest: ${problems}`)
+		}
+		console.log(this.manifest)
 		return this.manifest
 	}
 }

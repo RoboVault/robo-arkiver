@@ -1,5 +1,6 @@
 # v0.4.12 (unreleased)
 - fix: version number
+- feat: validate manifest when building and deploying
 
 # v0.4.11
 - fix: show error message when `arkive deploy` fails

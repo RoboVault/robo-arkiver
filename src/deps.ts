@@ -3,6 +3,7 @@ export {
 	type Block,
 	createPublicClient,
 	decodeEventLog,
+	type DecodeEventLogReturnType,
 	encodeEventTopics,
 	getContract,
 	type GetContractReturnType,
@@ -11,7 +12,6 @@ export {
 	type Log,
 	type PublicClient,
 	type RpcLog,
-	type DecodeEventLogReturnType
 } from 'npm:viem'
 export {
 	type Abi,
@@ -33,3 +33,4 @@ export {
 	ConsoleHandler,
 } from 'https://deno.land/std@0.181.0/log/handlers.ts'
 export { crypto } from 'https://deno.land/std@0.186.0/crypto/mod.ts'
+export { scope } from 'npm:arktype'

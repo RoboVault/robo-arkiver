@@ -16,3 +16,4 @@ export {
 	JSONBigIntReplacer,
 	JSONBigIntReviver,
 } from './src/utils.ts'
+export { parseArkiveManifest } from './src/arkiver/manifest-validator.ts'
