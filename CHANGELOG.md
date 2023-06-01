@@ -1,3 +1,6 @@
+# v0.4.12 (unreleased)
+- fix: version number
+
 # v0.4.11
 - fix: show error message when `arkive deploy` fails
 - feat: add maximum retry attempts to handler function. default of 5 retries
