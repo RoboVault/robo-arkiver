@@ -1,4 +1,7 @@
-# v0.4.12 (unreleased)
+# v0.4.13
+- fix: import chains from esm.sh instead of using npm: directive
+
+# v0.4.12
 - fix: version number
 - feat: validate manifest when building and deploying
 
