@@ -1,3 +1,6 @@
+# v0.4.14
+- fix: reimport from npm: directive
+
 # v0.4.13
 - fix: import chains from esm.sh instead of using npm: directive
 

@@ -9,7 +9,7 @@ import {
 	polygon,
 	polygonMumbai,
 	sepolia,
-} from 'https://esm.sh/viem@0.3.44/chains'
+} from 'npm:viem/chains'
 
 export const supportedChains = {
 	arbitrum,
