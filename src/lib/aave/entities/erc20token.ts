@@ -1,7 +1,7 @@
 import { createEntity } from "../../../graphql/entity.ts";
 import { Network } from "../types.ts";
 
-export interface IToken {
+export interface IERC20Token {
 	id: string
 	address: string
 	network: string
@@ -9,7 +9,7 @@ export interface IToken {
 	symbol: string
 }
 
-export const Token = createEntity<IToken>("Token", {
+export const ERC20Token = createEntity<IERC20Token>("ERC20Token", {
 	id: String,
 	address: String,
 	network: String,

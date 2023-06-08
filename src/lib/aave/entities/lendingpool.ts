@@ -12,5 +12,5 @@ export const LendingPool = createEntity<ILendingPool>("LendingPool", {
 	protocol: String,
 	network: String,
 	underlyingSymbol: String,
-	underlying: { type: Types.ObjectId, ref: 'Token'},
+	underlying: { type: Types.ObjectId, ref: 'ERC20Token'},
 });
