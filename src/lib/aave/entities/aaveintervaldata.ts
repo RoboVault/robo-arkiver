@@ -1,4 +1,4 @@
-import { createEntity } from "../deps.ts";
+import { createEntity } from "../../../graphql/entity.ts";
 import { Types } from 'npm:mongoose'
 
 interface IAAVEIntervalData {
@@ -10,7 +10,7 @@ interface IAAVEIntervalData {
 	totalDebt: number,
 }
 
-export const AAVEIntervalData = createEntity<IAAVEIntervalData>("IntervalData", {
+export const AAVEIntervalData = createEntity<IAAVEIntervalData>("AaveIntervalData", {
 	pool: { type: Types.ObjectId, ref: 'Pool'},
 	timestamp: { type: Number, index: true },
 	liquidityRate: Number,

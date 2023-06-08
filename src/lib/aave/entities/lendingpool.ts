@@ -1,14 +1,14 @@
-import { createEntity } from "../deps.ts";
+import { createEntity } from "../../../graphql/entity.ts";
 import { Types } from 'npm:mongoose'
 
-export interface IPool {
+export interface ILendingPool {
 	protocol: string
 	network: string
 	underlyingSymbol: string
 	underlying: any 
 }
 
-export const Pool = createEntity<IPool>("Pool", {
+export const LendingPool = createEntity<ILendingPool>("LendingPool", {
 	protocol: String,
 	network: String,
 	underlyingSymbol: String,

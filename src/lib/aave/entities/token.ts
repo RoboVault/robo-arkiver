@@ -1,4 +1,4 @@
-import { createEntity } from "../deps.ts";
+import { createEntity } from "../../../graphql/entity.ts";
 import { Network } from "../types.ts";
 
 export interface IToken {

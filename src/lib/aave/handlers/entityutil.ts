@@ -2,7 +2,7 @@ import { type PublicClient, type Address } from "npm:viem";
 import erc20 from "../abis/erc20.ts";
 import { Store } from "../../../../mod.ts";
 import { IToken, Token } from "../entities/token.ts";
-import { Pool } from "../entities/pool.ts";
+import { LendingPool } from "../entities/lendingpool.ts";
 import { AAVEPoolAbi } from "../abis/AAVEPoolAbi.ts";
 
 export const getPairId = (client: PublicClient, pair: Address | string) => {
@@ -45,7 +45,7 @@ export const getPools = async (client: PublicClient, store: Store, block: bigint
 	const {pool, network} = getPoolAddress(client)
 
 	return await store.retrieve(`${network}:AAVE Pools`, async () => {
-		const records = await Pool.find({ network }).populate('underlying')
+		const records = await LendingPool.find({ network }).populate('underlying')
 		if (records.length > 0)
 			return records
 
@@ -59,7 +59,7 @@ export const getPools = async (client: PublicClient, store: Store, block: bigint
 
 		const pools = await Promise.all(poolAddresses.map(async (address: Address) => { 
 			const token = await getToken(client, address)
-			return new Pool({
+			return new LendingPool({
 				protocol: 'AAVE',
 				address,
 				network,
@@ -67,7 +67,7 @@ export const getPools = async (client: PublicClient, store: Store, block: bigint
 				underlying: token
 			})
 		}))
-		Pool.bulkSave(pools)
+		LendingPool.bulkSave(pools)
 		return pools
 	})
 }
