@@ -17,3 +17,7 @@ export {
 	JSONBigIntReviver,
 } from './src/utils.ts'
 export { parseArkiveManifest } from './src/arkiver/manifest-validator.ts'
+export { IArkiveLib } from './src/lib/IArkiveLib.ts'
+export { NftLib } from './src/lib/nft/NftLib.ts'
+export { AaveLib } from './src/lib/aave/AaveLib.ts'
+export type { AaveOpts } from './src/lib/aave/AaveLib.ts'

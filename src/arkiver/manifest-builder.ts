@@ -20,6 +20,7 @@ import {
 } from '../deps.ts'
 import { getChainObjFromChainName } from '../utils.ts'
 import { parseArkiveManifest } from './manifest-validator.ts'
+import { IArkiveLib } from '../lib/IArkiveLib.ts'
 
 export const manifestVersion = 'v1'
 
@@ -83,7 +84,7 @@ export class Manifest<TName extends string = ''> {
 		if (problems) {
 			throw new Error(`Invalid manifest: ${problems}`)
 		}
-		console.log(this.manifest)
+		//console.log(this.manifest)
 		return this.manifest
 	}
 }
@@ -92,14 +93,12 @@ export class DataSourceBuilder<TName extends string> {
 	public dataSource: DataSource
 
 	constructor(
-		private builder: Manifest<TName>,
-		chain: keyof typeof supportedChains,
-		options: Partial<ChainOptions> = {},
+		//private builder: Manifest<TName>,
+		public builder: Manifest<TName>,
+		public chain: keyof typeof supportedChains,
+		public options: Partial<ChainOptions> = {},
 	) {
-		if (this.builder.manifest.dataSources[chain] != undefined) {
-			throw new Error(`Cannot add data source for ${chain} more than once.`)
-		}
-		const dataSource: DataSource = {
+		const dataSource: DataSource = this.builder.manifest.dataSources[chain] ?? {
 			options: {
 				blockRange: 3000n,
 				rpcUrl: getChainObjFromChainName(chain).rpcUrls.public.http[0],
@@ -164,6 +163,25 @@ export class DataSourceBuilder<TName extends string> {
 		})
 		return this
 	}
+	public use(libs: IArkiveLib[]){
+		libs.forEach(lib => {
+			let chain = this.builder.addEntities(lib.getEntities())
+			.chain(this.chain, { blockRange: this.options.blockRange ? this.options.blockRange : 3000n})
+			if(Object.keys(lib.getBlockHandler()).length > 0){
+				chain.addBlockHandler(lib.getBlockHandler())
+			}
+			if(lib.abi){
+				let contract = chain.contract(lib.abi)
+				if(Object.keys(lib.getDataSources()).length > 0){
+					contract.addSources(lib.getDataSources() as any)
+				}
+				if(Object.keys(lib.getEventHandlers()).length > 0){
+					contract.addEventHandlers(lib.getEventHandlers())
+				}
+			}
+		})
+		return this
+	}
 }
 
 export class ContractBuilder<
@@ -173,7 +191,7 @@ export class ContractBuilder<
 	public contract: Contract
 
 	constructor(
-		private builder: DataSourceBuilder<TName>,
+		public builder: DataSourceBuilder<TName>,
 		abi: TAbi,
 		name?: string,
 	) {
