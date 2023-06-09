@@ -20,6 +20,7 @@ import {
 } from '../deps.ts'
 import { getChainObjFromChainName } from '../utils.ts'
 import { parseArkiveManifest } from './manifest-validator.ts'
+import { ArkiveLib } from '../lib/ArkiveLib.ts'
 
 export const manifestVersion = 'v1'
 
@@ -93,13 +94,10 @@ export class DataSourceBuilder<TName extends string> {
 
 	constructor(
 		private builder: Manifest<TName>,
-		chain: keyof typeof supportedChains,
-		options: Partial<ChainOptions> = {},
+		public chain: keyof typeof supportedChains,
+		public options: Partial<ChainOptions> = {},
 	) {
-		if (this.builder.manifest.dataSources[chain] != undefined) {
-			throw new Error(`Cannot add data source for ${chain} more than once.`)
-		}
-		const dataSource: DataSource = {
+		const dataSource: DataSource = this.builder.manifest.dataSources[chain] ?? {
 			options: {
 				blockRange: 3000n,
 				rpcUrl: getChainObjFromChainName(chain).rpcUrls.public.http[0],
@@ -161,6 +159,24 @@ export class DataSourceBuilder<TName extends string> {
 			startBlockHeight,
 			blockInterval: BigInt(blockInterval),
 			name: handler.name,
+		})
+		return this
+	}
+
+	public use(libs: ArkiveLib[]){
+		libs.forEach(lib => {
+			const chain = this.builder.addEntities(lib.getEntities())
+				.chain(this.chain, { blockRange: this.options.blockRange ? this.options.blockRange : 3000n})
+			if(Object.keys(lib.getBlockHandler()).length > 0) {
+				chain.addBlockHandler(lib.getBlockHandler())
+			}
+			let sources = lib.getDataSources()
+			for (const info of sources) {
+				const { contract, handlers, abi } = info
+				chain.contract(abi)
+					.addSources(contract)
+					.addEventHandlers(handlers)
+			}
 		})
 		return this
 	}
