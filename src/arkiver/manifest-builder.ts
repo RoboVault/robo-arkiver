@@ -93,7 +93,7 @@ export class DataSourceBuilder<TName extends string> {
 	public dataSource: DataSource
 
 	constructor(
-		public builder: Manifest<TName>,
+		private builder: Manifest<TName>,
 		public chain: keyof typeof supportedChains,
 		public options: Partial<ChainOptions> = {},
 	) {
@@ -167,7 +167,7 @@ export class DataSourceBuilder<TName extends string> {
 		libs.forEach(lib => {
 			const chain = this.builder.addEntities(lib.getEntities())
 				.chain(this.chain, { blockRange: this.options.blockRange ? this.options.blockRange : 3000n})
-			if(Object.keys(lib.getBlockHandler()).length > 0){
+			if(Object.keys(lib.getBlockHandler()).length > 0) {
 				chain.addBlockHandler(lib.getBlockHandler())
 			}
 			let sources = lib.getDataSources()

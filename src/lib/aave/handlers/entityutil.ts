@@ -11,15 +11,27 @@ export const getPairId = (client: PublicClient, pair: Address | string) => {
 
 export const AavePool: {[key: string]: Address } = {
 	'optimism': '0x794a61358D6845594F94dc1DB02A252b5b4814aD',
-	'ethereum': '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2'
+	'ethereum': '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2',
+	'arbitrum': '0x794a61358D6845594F94dc1DB02A252b5b4814aD',
+	'harmony': '0x794a61358D6845594F94dc1DB02A252b5b4814aD',
+	'polygon': '0x794a61358D6845594F94dc1DB02A252b5b4814aD',
+	'fantom': '0x794a61358D6845594F94dc1DB02A252b5b4814aD',
+	'avalanche': '0x794a61358D6845594F94dc1DB02A252b5b4814aD',
+	'metis': '0x90df02551bB792286e8D4f13E0e357b4Bf1D6a57'
 }
 
 export const AavePoolData: {[key: string]: Address } = {
 	'optimism': '0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654',
-	'ethereum': '0x7B4EB56E7CD4b454BA8ff71E4518426369a138a3'
+	'ethereum': '0x7B4EB56E7CD4b454BA8ff71E4518426369a138a3',
+	'arbitrum': '0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654',
+	'harmony': '0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654',
+	'polygon': '0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654',
+	'fantom': '0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654',
+	'avalanche': '0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654',
+	'metis': '0x99411FC17Ad1B56f49719E3850B2CDcc0f9bBFd8'
 }
 
-export const getTokenId = (client: PublicClient, token: Address | string) => {
+export async function getTokenId(client: PublicClient, token: Address | string) {
 	return `${client.chain?.name}:${token}`
 }
 export const getPoolAddress = (client: PublicClient) => {
@@ -41,7 +53,7 @@ export const getPoolDataAddress = (client: PublicClient) => {
 	return {poolData, network}
 }
 
-export const getPools = async (client: PublicClient, store: Store, block: bigint) => {
+export async function getPools(client: PublicClient, store: Store, block: bigint){
 	const {pool, network} = getPoolAddress(client)
 
 	return await store.retrieve(`${network}:AAVE Pools`, async () => {
@@ -72,7 +84,7 @@ export const getPools = async (client: PublicClient, store: Store, block: bigint
 	})
 }
 
-export const getToken = async (client: PublicClient, address: Address) => {
+export async function getToken(client: PublicClient, address: Address) {
 	// check if it's already in the db
 	const id = getTokenId(client, address)
 	const record = await Erc20Token.findOne({ id })

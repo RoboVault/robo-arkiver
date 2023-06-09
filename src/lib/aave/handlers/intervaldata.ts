@@ -23,8 +23,6 @@ export const blockHandlerFactory = (secondsInterval: number) => {
 		const last = await AaveIntervalData.findOne({}).sort({ timestamp: -1 })
 		const lastInterval = last?.timestamp ?? (nearestInterval(now, secondsInterval) - secondsInterval)
 
-
-
 		if (lastInterval < nowInterval) {
 			const pools = await getPools(client, store, block.number!)
 			const { poolData } = getPoolDataAddress(client)
