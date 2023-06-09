@@ -15,7 +15,7 @@ export class Erc721Lib extends ArkiveLib {
 
   public static create(opts: ERC721Opts): ArkiveLib{
     let lib: Erc721Lib = new Erc721Lib()
-    lib.sources = [{abi: Erc721, contract: opts.contract, handlers: { 'Transfer': onTransferFactory(opts.async) }}]
+    lib.sources = [{ abi: Erc721, contract: opts.contract, handlers: { 'Transfer': onTransferFactory(opts.async) }}]
     lib.entities = [Erc721Transfer, Erc721Set, Erc721Balance, Erc721Token]
     lib.blockHandler = {}
     return lib
