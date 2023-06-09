@@ -1,4 +1,4 @@
-export const ERC721 = [
+export const Erc721 = [
   {
     "inputs":[
       {

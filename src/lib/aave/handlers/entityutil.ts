@@ -1,9 +1,9 @@
 import { type PublicClient, type Address } from "npm:viem";
-import { ERC20 } from "../abis/ERC20.ts";
+import { Erc20 } from "../abis/Erc20.ts";
 import { Store } from "../../../../mod.ts";
-import { IERC20Token, ERC20Token } from "../entities/erc20token.ts";
+import { Erc20TokenType, Erc20Token } from "../entities/erc20token.ts";
 import { LendingPool } from "../entities/lendingpool.ts";
-import { AAVEPoolAbi } from "../abis/AAVEPoolAbi.ts";
+import { AavePoolAbi } from "../abis/AavePoolAbi.ts";
 
 export const getPairId = (client: PublicClient, pair: Address | string) => {
 	return `${client.chain?.name}:${pair}`
@@ -52,7 +52,7 @@ export const getPools = async (client: PublicClient, store: Store, block: bigint
 		// Otherwise populate the array offchain
 		const poolAddresses = await client.readContract({
 			address: pool,
-			abi: AAVEPoolAbi,
+			abi: AavePoolAbi,
 			functionName: 'getReservesList',
 			blockNumber: block,
 		})
@@ -75,7 +75,7 @@ export const getPools = async (client: PublicClient, store: Store, block: bigint
 export const getToken = async (client: PublicClient, address: Address) => {
 	// check if it's already in the db
 	const id = getTokenId(client, address)
-	const record = await ERC20Token.findOne({ id })
+	const record = await Erc20Token.findOne({ id })
 	if (record)
 		return record
 
@@ -87,25 +87,25 @@ export const getToken = async (client: PublicClient, address: Address) => {
 		[ decimals, symbol ] = await Promise.all([
 			client.readContract({ 
 				address: address as Address, 
-				abi: ERC20, 
+				abi: Erc20, 
 				functionName: 'decimals',
 			}),
 			client.readContract({ 
 				address: address as Address, 
-				abi: ERC20, 
+				abi: Erc20, 
 				functionName: 'symbol',
 			})
 		])
 	}
 
-	const token: IERC20Token = {
+	const token: Erc20TokenType = {
 		id,
 		address: address,
 		network: client.chain?.name as string,
 		decimals: Number(decimals),
 		symbol,
 	}
-	const doc = new ERC20Token(token)
+	const doc = new Erc20Token(token)
 	await doc.save()
 	return doc
 }

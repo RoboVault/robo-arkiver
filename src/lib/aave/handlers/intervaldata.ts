@@ -1,7 +1,7 @@
 import { BlockHandler, Store } from "../../../../mod.ts";
 import { type PublicClient, type Block } from "npm:viem";
-import { AAVEPoolDataAbi } from "../abis/AAVEPoolDataAbi.ts";
-import { AAVEIntervalData } from "../entities/aaveintervaldata.ts";
+import { AavePoolDataAbi } from "../abis/AavePoolDataAbi.ts";
+import { AaveIntervalData } from "../entities/aaveintervaldata.ts";
 import { getPoolDataAddress, getPools } from "./entityutil.ts";
 
 const nearestInterval = (now: number, interval: number) => {
@@ -20,7 +20,7 @@ export const blockHandlerFactory = (secondsInterval: number) => {
 	}): Promise<void> => {
 		const now = Number(block.timestamp)
 		const nowInterval = nearestInterval(Number(now), secondsInterval)
-		const last = await AAVEIntervalData.findOne({}).sort({ timestamp: -1 })
+		const last = await AaveIntervalData.findOne({}).sort({ timestamp: -1 })
 		const lastInterval = last?.timestamp ?? (nearestInterval(now, secondsInterval) - secondsInterval)
 
 
@@ -45,13 +45,13 @@ export const blockHandlerFactory = (secondsInterval: number) => {
 					, // lastUpdateTimestamp,
 				] = await client.readContract({
 					address: poolData,
-					abi: AAVEPoolDataAbi,
+					abi: AavePoolDataAbi,
 					functionName: 'getReserveData',
 					args: [pool.underlying.address],
 					blockNumber: block.number!,
 				})
 
-				return new AAVEIntervalData({
+				return new AaveIntervalData({
 					timestamp: nowInterval,
 					pool: pool,
 					underlying: pool.underlying,
@@ -63,7 +63,7 @@ export const blockHandlerFactory = (secondsInterval: number) => {
 				})
 			}))
 
-			await AAVEIntervalData.bulkSave(records)
+			await AaveIntervalData.bulkSave(records)
 		}
 	}
 }

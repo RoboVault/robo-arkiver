@@ -17,7 +17,6 @@ export {
 	JSONBigIntReviver,
 } from './src/utils.ts'
 export { parseArkiveManifest } from './src/arkiver/manifest-validator.ts'
-export { ArkiveLib } from './src/lib/ArkiveLib.ts'
-export { ERC721Lib, type ERC721Opts } from './src/lib/nft/ERC721Lib.ts'
-export { AaveLib } from './src/lib/aave/AaveLib.ts'
-export type { AaveOpts } from './src/lib/aave/AaveLib.ts'
+export { ArkiveLib, type SourceInfo } from './src/lib/ArkiveLib.ts'
+export { Erc721Lib, type Erc721Opts } from './src/lib/nft/Erc721Lib.ts'
+export { AaveLib, type AaveOpts } from './src/lib/aave/AaveLib.ts'

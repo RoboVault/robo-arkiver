@@ -1,4 +1,4 @@
-export const ERC20 = [{
+export const Erc20 = [{
 	"inputs": [],
 	"stateMutability": "nonpayable",
 	"type": "constructor",
