@@ -3,13 +3,10 @@ import {
   Abi
 } from '../deps.ts'
 
-export abstract class IArkiveLib {
-  //public variable for datasource entities
-  public sources: Record<string, bigint>
+export abstract class ArkiveLib {
+  public sources: [] //{source: {abi: Abi, contract: Record<string, bigint>, handler: any}
   public entities: mongoose.Model<any>[]
-  public eventHandlers: any
   public blockHandler: any
-  public abi: Abi
 
   public getDataSources() {
     return this.sources
@@ -17,10 +14,6 @@ export abstract class IArkiveLib {
 
   public getEntities(): mongoose.Model<any>[]{
     return this.entities
-  }
-
-  public getEventHandlers(){
-    return this.eventHandlers
   }
 
   public getBlockHandler(){

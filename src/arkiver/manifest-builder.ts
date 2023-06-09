@@ -20,7 +20,7 @@ import {
 } from '../deps.ts'
 import { getChainObjFromChainName } from '../utils.ts'
 import { parseArkiveManifest } from './manifest-validator.ts'
-import { IArkiveLib } from '../lib/IArkiveLib.ts'
+import { ArkiveLib } from '../lib/ArkiveLib.ts'
 
 export const manifestVersion = 'v1'
 
@@ -84,7 +84,7 @@ export class Manifest<TName extends string = ''> {
 		if (problems) {
 			throw new Error(`Invalid manifest: ${problems}`)
 		}
-		//console.log(this.manifest)
+		console.log(this.manifest)
 		return this.manifest
 	}
 }
@@ -93,7 +93,6 @@ export class DataSourceBuilder<TName extends string> {
 	public dataSource: DataSource
 
 	constructor(
-		//private builder: Manifest<TName>,
 		public builder: Manifest<TName>,
 		public chain: keyof typeof supportedChains,
 		public options: Partial<ChainOptions> = {},
@@ -163,21 +162,20 @@ export class DataSourceBuilder<TName extends string> {
 		})
 		return this
 	}
-	public use(libs: IArkiveLib[]){
+
+	public use(libs: ArkiveLib[]){
 		libs.forEach(lib => {
-			let chain = this.builder.addEntities(lib.getEntities())
-			.chain(this.chain, { blockRange: this.options.blockRange ? this.options.blockRange : 3000n})
+			const chain = this.builder.addEntities(lib.getEntities())
+				.chain(this.chain, { blockRange: this.options.blockRange ? this.options.blockRange : 3000n})
 			if(Object.keys(lib.getBlockHandler()).length > 0){
 				chain.addBlockHandler(lib.getBlockHandler())
 			}
-			if(lib.abi){
-				let contract = chain.contract(lib.abi)
-				if(Object.keys(lib.getDataSources()).length > 0){
-					contract.addSources(lib.getDataSources() as any)
-				}
-				if(Object.keys(lib.getEventHandlers()).length > 0){
-					contract.addEventHandlers(lib.getEventHandlers())
-				}
+			let sources = lib.getDataSources()
+			for (const info of sources) {
+				const { contract, handlers, abi } = info
+				chain.contract(abi)
+					.addSources(contract)
+					.addEventHandlers(handlers)
 			}
 		})
 		return this
@@ -191,7 +189,7 @@ export class ContractBuilder<
 	public contract: Contract
 
 	constructor(
-		public builder: DataSourceBuilder<TName>,
+		private builder: DataSourceBuilder<TName>,
 		abi: TAbi,
 		name?: string,
 	) {

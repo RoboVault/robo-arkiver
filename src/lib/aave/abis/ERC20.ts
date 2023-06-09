@@ -1,4 +1,4 @@
-export default [{
+export const ERC20 = [{
 	"inputs": [],
 	"stateMutability": "nonpayable",
 	"type": "constructor",

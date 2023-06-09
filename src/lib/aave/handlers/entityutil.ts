@@ -1,5 +1,5 @@
 import { type PublicClient, type Address } from "npm:viem";
-import erc20 from "../abis/erc20.ts";
+import { ERC20 } from "../abis/ERC20.ts";
 import { Store } from "../../../../mod.ts";
 import { IERC20Token, ERC20Token } from "../entities/erc20token.ts";
 import { LendingPool } from "../entities/lendingpool.ts";
@@ -72,7 +72,6 @@ export const getPools = async (client: PublicClient, store: Store, block: bigint
 	})
 }
 
-
 export const getToken = async (client: PublicClient, address: Address) => {
 	// check if it's already in the db
 	const id = getTokenId(client, address)
@@ -88,17 +87,16 @@ export const getToken = async (client: PublicClient, address: Address) => {
 		[ decimals, symbol ] = await Promise.all([
 			client.readContract({ 
 				address: address as Address, 
-				abi: erc20, 
+				abi: ERC20, 
 				functionName: 'decimals',
 			}),
 			client.readContract({ 
 				address: address as Address, 
-				abi: erc20, 
+				abi: ERC20, 
 				functionName: 'symbol',
 			})
 		])
 	}
-
 
 	const token: IERC20Token = {
 		id,

@@ -1,6 +1,6 @@
 import {
-	IArkiveLib
-} from '../IArkiveLib.ts'
+	ArkiveLib
+} from '../ArkiveLib.ts'
 import { AAVEIntervalData  } from './entities/aaveintervaldata.ts'
 import { LendingPool } from './entities/lendingpool.ts'
 import { ERC20Token } from './entities/erc20token.ts'
@@ -13,13 +13,12 @@ export type AaveOpts = {
   blockInterval: bigint
 }
 
-export class AaveLib extends IArkiveLib {
+export class AaveLib extends ArkiveLib {
 
-  public static create(opts: AaveOpts): IArkiveLib{
+  public static create(opts: AaveOpts): ArkiveLib{
     let lib: AaveLib = new AaveLib()
-    lib.sources = {}
+    lib.sources = []
     lib.entities = [AAVEIntervalData, LendingPool, ERC20Token]
-    lib.eventHandlers = {}
     lib.blockHandler = { blockInterval: opts.blockInterval, startBlockHeight: opts.startBlockHeight, handler: blockHandlerFactory(opts.secondsInterval) }
     return lib
   }
