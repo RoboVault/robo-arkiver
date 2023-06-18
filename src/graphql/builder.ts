@@ -16,15 +16,19 @@ export const buildSchemaFromEntities = (
 		}
 
 		const ModelTC = getTC(schemaComposer, model)
-		const addRelation = (path: string, ref: string) => {
+		const addRelation = (path: string, ref: string, isArray: boolean) => {
 			const refModel = entities.find(e => e.model.modelName === ref)
 			if (refModel) {
 				const RefTC = getTC(schemaComposer, refModel.model)
+				const query = isArray ? 'dataLoaderMany' : 'dataLoader'
+				const _id = isArray ? '_ids' : '_id'
+
 				ModelTC.addRelation(path, {
-					resolver: () => RefTC.mongooseResolvers.findMany({ lean: true }),
+					resolver: () => RefTC.mongooseResolvers[query]({ lean: true }),
 					prepareArgs: {
-						_ids: (source: any) => source[path],
+						[_id]: (source: any) => source[path]
 					},
+					projection: { [path]: 1 }
 				})
 			}
 		}
@@ -34,11 +38,11 @@ export const buildSchemaFromEntities = (
 				return
 
 			if (type.instance === 'Array' && type.caster.instance === 'ObjectId') {
-				addRelation(path, type.caster.options.ref)
+				addRelation(path, type.caster.options.ref, true)
 			}
 
 			if (type.instance === 'ObjectId') {
-				addRelation(path, type.options.ref)
+				addRelation(path, type.options.ref, false)
 			}
 		})
 
@@ -50,6 +54,7 @@ export const buildSchemaFromEntities = (
 				[`${model.modelName}s`]: ModelTC.mongooseResolvers.findMany({
 					lean: true,
 				}),
+				[`${model.modelName}sCount`]: ModelTC.mongooseResolvers.count(),
 			})
 		}
 	}
