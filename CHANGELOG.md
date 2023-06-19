@@ -1,3 +1,6 @@
+# v0.4.15 - unreleased
+- feat: populate relational entities on graphql endpoint
+
 # v0.4.14
 - fix: reimport from npm: directive
 
