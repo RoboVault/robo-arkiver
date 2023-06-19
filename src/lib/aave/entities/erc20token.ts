@@ -1,5 +1,5 @@
-import { createEntity } from "../../../graphql/entity.ts";
-import { Network } from "../types.ts";
+import { createEntity } from '../../../graphql/entity.ts'
+import { Network } from '../types.ts'
 
 export type Erc20TokenType = {
 	id: string
@@ -9,10 +9,10 @@ export type Erc20TokenType = {
 	symbol: string
 }
 
-export const Erc20Token = createEntity<Erc20TokenType>("Erc20Token", {
+export const Erc20Token = createEntity<Erc20TokenType>('Erc20Token', {
 	id: String,
 	address: String,
 	network: String,
 	decimals: Number,
 	symbol: String,
-});
+})

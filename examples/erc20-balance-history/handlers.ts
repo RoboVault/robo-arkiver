@@ -12,7 +12,9 @@ const getBalance = async (user: string, token: string) => {
 	return new Balance({ user, token, balance: 0 })
 }
 
-export const onTransfer: EventHandlerFor<typeof erc20, 'Transfer'> = async ({ event, store, client }) => {
+export const onTransfer: EventHandlerFor<typeof erc20, 'Transfer'> = async (
+	{ event, store, client },
+) => {
 	// Store the transfer event
 	const { from, to, value } = event.args
 	const address = event.address
@@ -20,7 +22,11 @@ export const onTransfer: EventHandlerFor<typeof erc20, 'Transfer'> = async ({ ev
 	// Grab the decimals with viem
 	// Use store to cache the value so it is only called once
 	const decimals = await store.retrieve(`${address}:decimals`, async () => {
-		return await client.readContract({ abi: erc20, address, functionName: "decimals" })
+		return await client.readContract({
+			abi: erc20,
+			address,
+			functionName: 'decimals',
+		})
 	})
 
 	const block = Number(event.blockNumber)
@@ -28,16 +34,17 @@ export const onTransfer: EventHandlerFor<typeof erc20, 'Transfer'> = async ({ ev
 		token: address,
 		hash: event.transactionHash,
 		block,
-		from, 
-		to, 
+		from,
+		to,
 		value: formatUnits(value, Number(decimals)),
 	})
 	record.save()
 
 	const updateBalance = async (user: string, value: number) => {
 		// ignore zero address
-		if (user === ZERO_ADDRESS)
+		if (user === ZERO_ADDRESS) {
 			return
+		}
 
 		// grab the balance entry for the user
 		const bal = await getBalance(user, address)
@@ -50,19 +57,19 @@ export const onTransfer: EventHandlerFor<typeof erc20, 'Transfer'> = async ({ ev
 		const entry = new BalanceHistory({
 			token: address,
 			block,
-			user, 
+			user,
 			balance: bal.balance,
 		})
 
 		// Save both the balance and the history entry
 		return Promise.all([
 			bal.save(),
-			entry.save()
+			entry.save(),
 		])
 	}
 
 	// Update the balances for both the sender and the receiver
-	// note: user await here to ensure the handler is synchonous 
+	// note: user await here to ensure the handler is synchonous
 	// 		 so te balances are updated
 	const amount = Number(formatUnits(value, Number(decimals)))
 	await Promise.all([
@@ -70,4 +77,3 @@ export const onTransfer: EventHandlerFor<typeof erc20, 'Transfer'> = async ({ ev
 		updateBalance(to, amount),
 	])
 }
-

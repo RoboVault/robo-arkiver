@@ -1,14 +1,13 @@
 {
-	"tasks": {
-		"dev": "DENO_ENV=DEV deno run -A --unstable main.ts",
-		"start": "DENO_ENV=PROD deno run -A --unstable main.ts",
-		"cli": "deno run -A --unstable cli.ts"
-	},
-	"fmt": {
-		"options": {
-			"useTabs": true,
-			"semiColons": false,
-			"singleQuote": true
-		}
-	}
+  "tasks": {
+    "dev": "DENO_ENV=DEV deno run -A --unstable main.ts",
+    "start": "DENO_ENV=PROD deno run -A --unstable main.ts",
+    "cli": "deno run -A --unstable cli.ts"
+  },
+  "fmt": {
+    "useTabs": true,
+    "semiColons": false,
+    "singleQuote": true,
+    "include": ["src/", "cli/", "lib/", "examples/", "cli.ts"]
+  }
 }

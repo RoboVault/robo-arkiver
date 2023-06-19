@@ -1,4 +1,4 @@
-import { createEntity } from "../deps.ts";
+import { createEntity } from '../deps.ts'
 
 export interface IVaultSnapshot {
 	vault: string
@@ -9,11 +9,11 @@ export interface IVaultSnapshot {
 	sharePrice: number
 }
 
-export const VaultSnapshot = createEntity<IVaultSnapshot>("VaultSnapshot", {
+export const VaultSnapshot = createEntity<IVaultSnapshot>('VaultSnapshot', {
 	vault: String,
 	name: String,
 	symbol: String,
 	block: { type: Number, index: true },
 	timestamp: { type: Number, index: true },
 	sharePrice: { type: Number, index: true },
-});
+})

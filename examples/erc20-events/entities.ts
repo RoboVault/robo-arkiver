@@ -1,8 +1,8 @@
 import { createEntity } from 'https://deno.land/x/robo_arkiver/mod.ts'
 
-// @note: "Index: true" enhances graphql queries 
+// @note: "Index: true" enhances graphql queries
 export const Transfer = createEntity('Transfer', {
-	block: { type: Number, index: true }, 
+	block: { type: Number, index: true },
 	hash: String,
 	from: String,
 	to: String,
