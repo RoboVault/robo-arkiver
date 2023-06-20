@@ -1,4 +1,4 @@
-import { supportedChains } from "../../chains.ts"
+import { supportedChains } from '../../chains.ts'
 
-export type Network = typeof supportedChains[keyof typeof supportedChains]['name']
-	
+export type Network =
+  typeof supportedChains[keyof typeof supportedChains]['name']
