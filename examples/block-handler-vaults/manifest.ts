@@ -5,13 +5,13 @@ import { snapshotVault } from './handlers/vault.ts'
 const manifest = new Manifest('yearn-vaults')
 
 manifest
-	.addEntity(VaultSnapshot)
-	.chain('mainnet')
-	.addBlockHandler({
-		blockInterval: 1000,
-		startBlockHeight: 12790000n,
-		handler: snapshotVault,
-	})
+  .addEntity(VaultSnapshot)
+  .chain('mainnet')
+  .addBlockHandler({
+    blockInterval: 1000,
+    startBlockHeight: 12790000n,
+    handler: snapshotVault,
+  })
 
 export default manifest
-	.build()
+  .build()

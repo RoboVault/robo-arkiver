@@ -5,9 +5,10 @@
     "cli": "deno run -A --unstable cli.ts"
   },
   "fmt": {
-    "useTabs": true,
+    "useTabs": false,
     "semiColons": false,
     "singleQuote": true,
+    "indentWidth": 2,
     "include": ["src/", "cli/", "lib/", "examples/", "cli.ts"]
   }
 }
