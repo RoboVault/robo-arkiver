@@ -7,8 +7,6 @@ export const transferHandler: EventHandlerFor<typeof erc20, 'Transfer'> =
     { event, client, store, contract },
   ) => {
     const { from, to, value } = event.args
-    event.transactionHash
-    event.blockHash
 
     const address = event.address
 
