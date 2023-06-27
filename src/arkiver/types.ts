@@ -96,7 +96,7 @@ type RecursiveNonNullable<T> = T extends Record<string, unknown> ? {
   : NonNullable<T>
 
 export type SafeLog<TAbiEvent extends AbiEvent> = RecursiveNonNullable<
-  Log<bigint, bigint, TAbiEvent, [TAbiEvent], string>
+  Log<bigint, number, TAbiEvent, true, [TAbiEvent]>
 >
 
 export type SafeRpcLog = RecursiveNonNullable<RpcLog>

@@ -172,11 +172,11 @@ export class DataSourceBuilder<TName extends string> {
       if (Object.keys(lib.getBlockHandler()).length > 0) {
         chain.addBlockHandler(lib.getBlockHandler())
       }
-      let sources = lib.getDataSources()
+      const sources = lib.getDataSources()
       for (const info of sources) {
         const { contract, handlers, abi } = info
         chain.contract(abi)
-          .addSources(contract)
+          .addSources(contract as any)
           .addEventHandlers(handlers)
       }
     })

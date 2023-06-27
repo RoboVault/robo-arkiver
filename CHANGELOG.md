@@ -1,5 +1,6 @@
-# v0.4.15 - unreleased
+# v0.4.15
 - feat: populate relational entities on graphql endpoint
+- fix: missing event handler types due to updates to `viem` package
 
 # v0.4.14
 - fix: reimport from npm: directive
