@@ -1,4 +1,4 @@
-import { Manifest } from 'https://deno.land/x/robo_arkiver/mod.ts'
+import { Manifest } from 'https://deno.land/x/robo_arkiver@v0.4.15/mod.ts'
 import erc20 from './erc20.ts'
 import { Entities } from './entities.ts'
 import { onTransfer } from './handlers.ts'
