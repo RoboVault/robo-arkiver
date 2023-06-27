@@ -50,10 +50,7 @@ export class Manifest<TName extends string = ''> {
     return new DataSourceBuilder<TName>(this, chain, options)
   }
 
-  /**
-   * @deprecated Use `addChain` instead.
-   */
-  public chain(
+  private chain(
     chain: keyof typeof supportedChains,
     options?: Partial<ChainOptions>,
   ) {
@@ -121,25 +118,17 @@ export class DataSourceBuilder<TName extends string> {
     }
     return new ContractBuilder<TAbi, TName>(this, nameOrAbi)
   }
-  /**
-   * @deprecated Use `addContract` instead.
-   */
-  public contract<const TAbi extends Abi>(
+
+  private contract<const TAbi extends Abi>(
     abi: TAbi,
   ): ContractBuilder<TAbi, TName>
 
-  /**
-   * @deprecated Use `addContract` instead.
-   */
-  public contract<const TAbi extends Abi>(
+  private contract<const TAbi extends Abi>(
     name: string,
     abi: TAbi,
   ): ContractBuilder<TAbi, TName>
 
-  /**
-   * @deprecated Use `addContract` instead.
-   */
-  public contract<const TAbi extends Abi>(
+  private contract<const TAbi extends Abi>(
     nameOrAbi: string | TAbi,
     abi?: TAbi,
   ) {
@@ -187,7 +176,7 @@ export class DataSourceBuilder<TName extends string> {
   public use(libs: ArkiveLib[]) {
     libs.forEach((lib) => {
       const chain = this.builder.addEntities(lib.getEntities())
-        .chain(this.chain, {
+        .addChain(this.chain, {
           blockRange: this.options.blockRange ? this.options.blockRange : 3000n,
         })
       if (Object.keys(lib.getBlockHandler()).length > 0) {
@@ -232,10 +221,7 @@ export class ContractBuilder<
     }
   }
 
-  /**
-   * @deprecated Use `addSources` instead.
-   */
-  public addSource<TAddress extends string>(
+  private addSource<TAddress extends string>(
     address: HexString<TAddress, 40> | '*',
     startBlockHeight: bigint,
   ) {
@@ -268,10 +254,7 @@ export class ContractBuilder<
     return this
   }
 
-  /**
-   * @deprecated Use `addEventHandlers` instead.
-   */
-  public addEventHandler<
+  private addEventHandler<
     TEventName extends ExtractAbiEventNames<TAbi>,
     TEventHandler extends EventHandler<
       ExtractAbiEvent<TAbi, TEventName>,
