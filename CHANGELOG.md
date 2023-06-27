@@ -1,5 +1,7 @@
 # v0.4.15
 - feat: populate relational entities on graphql endpoint
+- change: deprecate `manifest.chain` for `manifest.addChain`
+- change: deprecate `manifest.contract` for `manifest.addContract`
 - fix: missing event handler types due to updates to `viem` package
 
 # v0.4.14

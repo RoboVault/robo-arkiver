@@ -43,10 +43,6 @@ export class Manifest<TName extends string = ''> {
       version: manifestVersion,
     }
   }
-
-  /**
-   * @deprecated Use `chain` instead.
-   */
   public addChain(
     chain: keyof typeof supportedChains,
     options?: Partial<ChainOptions>,
@@ -54,6 +50,9 @@ export class Manifest<TName extends string = ''> {
     return new DataSourceBuilder<TName>(this, chain, options)
   }
 
+  /**
+   * @deprecated Use `addChain` instead.
+   */
   public chain(
     chain: keyof typeof supportedChains,
     options?: Partial<ChainOptions>,
@@ -107,25 +106,7 @@ export class DataSourceBuilder<TName extends string> {
     this.builder.manifest.dataSources[chain] = this.dataSource = dataSource
   }
 
-  /**
-   * @deprecated Use `contract` instead.
-   */
-  public addContract<TAbi extends Abi>(
-    abi: TAbi,
-  ) {
-    return this.contract(abi)
-  }
-
-  public contract<const TAbi extends Abi>(
-    abi: TAbi,
-  ): ContractBuilder<TAbi, TName>
-
-  public contract<const TAbi extends Abi>(
-    name: string,
-    abi: TAbi,
-  ): ContractBuilder<TAbi, TName>
-
-  public contract<const TAbi extends Abi>(
+  #addContract<const TAbi extends Abi>(
     nameOrAbi: string | TAbi,
     abi?: TAbi,
   ) {
@@ -139,6 +120,46 @@ export class DataSourceBuilder<TName extends string> {
       return new ContractBuilder<TAbi, TName>(this, abi, nameOrAbi)
     }
     return new ContractBuilder<TAbi, TName>(this, nameOrAbi)
+  }
+  /**
+   * @deprecated Use `addContract` instead.
+   */
+  public contract<const TAbi extends Abi>(
+    abi: TAbi,
+  ): ContractBuilder<TAbi, TName>
+
+  /**
+   * @deprecated Use `addContract` instead.
+   */
+  public contract<const TAbi extends Abi>(
+    name: string,
+    abi: TAbi,
+  ): ContractBuilder<TAbi, TName>
+
+  /**
+   * @deprecated Use `addContract` instead.
+   */
+  public contract<const TAbi extends Abi>(
+    nameOrAbi: string | TAbi,
+    abi?: TAbi,
+  ) {
+    return this.#addContract(nameOrAbi, abi)
+  }
+
+  public addContract<const TAbi extends Abi>(
+    abi: TAbi,
+  ): ContractBuilder<TAbi, TName>
+
+  public addContract<const TAbi extends Abi>(
+    name: string,
+    abi: TAbi,
+  ): ContractBuilder<TAbi, TName>
+
+  public addContract<const TAbi extends Abi>(
+    nameOrAbi: string | TAbi,
+    abi?: TAbi,
+  ) {
+    return this.#addContract(nameOrAbi, abi)
   }
 
   public addBlockHandler(
