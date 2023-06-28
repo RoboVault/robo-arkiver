@@ -162,22 +162,51 @@ export class DataSourceBuilder<TName extends string> {
     abi: TAbi,
   ): ContractBuilder<TAbi, TName>
 
+  public addContract<
+    const TAbi extends Abi,
+    TSources extends Record<string, bigint>,
+  >(
+    params: AddContractParams<TAbi, TSources>,
+  ): DataSourceBuilder<TName>
+
   public addContract<const TAbi extends Abi>(
     name: string,
     abi: TAbi,
     contractBuilderFn: (builder: ContractBuilder<TAbi, TName>) => void,
   ): DataSourceBuilder<TName>
 
-  public addContract<const TAbi extends Abi>(
-    nameOrAbi: string | TAbi,
+  public addContract<
+    const TAbi extends Abi,
+    TSources extends Record<string, bigint> = Record<
+      string | number | symbol,
+      never
+    >,
+  >(
+    nameOrAbiOrParams: string | TAbi | AddContractParams<TAbi, TSources>,
     abi?: TAbi,
     contractBuilderFn?: (builder: ContractBuilder<TAbi, TName>) => void,
   ): ContractBuilder<TAbi, TName> | DataSourceBuilder<TName> {
-    if (contractBuilderFn) {
-      contractBuilderFn(this.#addContract(nameOrAbi, abi))
+    if (contractBuilderFn && typeof nameOrAbiOrParams === 'string') {
+      contractBuilderFn(this.#addContract(nameOrAbiOrParams, abi))
       return this
     }
-    return this.#addContract(nameOrAbi, abi)
+    if (typeof nameOrAbiOrParams === 'object' && 'abi' in nameOrAbiOrParams) {
+      const { abi, name, sources, eventHandlers } = nameOrAbiOrParams
+      let contractBuilder
+      if (name) {
+        contractBuilder = this.#addContract(name, abi)
+      } else {
+        contractBuilder = this.#addContract(abi)
+      }
+      if (sources) {
+        contractBuilder.addSources(sources)
+      }
+      if (eventHandlers) {
+        contractBuilder.addEventHandlers(eventHandlers)
+      }
+      return this
+    }
+    return this.#addContract(nameOrAbiOrParams, abi)
   }
 
   public addBlockHandler(
@@ -340,4 +369,22 @@ const hashAbi = (abi: Abi) => {
     (byte) => byte.toString(16).padStart(2, '0'),
   ).join('')
   return hexString
+}
+
+type AddContractParams<
+  TAbi extends Abi,
+  TSources extends Record<string, bigint>,
+> = {
+  abi: TAbi
+  name?: string
+  sources?: ValidateSourcesObject<TSources>
+  eventHandlers?: Partial<
+    {
+      [eventName in ExtractAbiEventNames<TAbi>]: EventHandler<
+        ExtractAbiEvent<TAbi, eventName>,
+        eventName,
+        TAbi
+      >
+    }
+  >
 }
