@@ -43,11 +43,29 @@ export class Manifest<TName extends string = ''> {
       version: manifestVersion,
     }
   }
+
+  public addChain(
+    chain: keyof typeof supportedChains,
+    builderFn: (builder: DataSourceBuilder<TName>) => void,
+  ): Manifest<TName>
+
   public addChain(
     chain: keyof typeof supportedChains,
     options?: Partial<ChainOptions>,
-  ) {
-    return new DataSourceBuilder<TName>(this, chain, options)
+  ): DataSourceBuilder<TName>
+
+  public addChain(
+    chain: keyof typeof supportedChains,
+    optionsOrBuilderFn?:
+      | ((builder: DataSourceBuilder<TName>) => void)
+      | Partial<ChainOptions>,
+  ): Manifest<TName> | DataSourceBuilder<TName> {
+    if (optionsOrBuilderFn && typeof optionsOrBuilderFn === 'function') {
+      optionsOrBuilderFn(new DataSourceBuilder<TName>(this, chain))
+      return this
+    }
+
+    return new DataSourceBuilder<TName>(this, chain, optionsOrBuilderFn)
   }
 
   private chain(
@@ -145,9 +163,20 @@ export class DataSourceBuilder<TName extends string> {
   ): ContractBuilder<TAbi, TName>
 
   public addContract<const TAbi extends Abi>(
+    name: string,
+    abi: TAbi,
+    contractBuilderFn: (builder: ContractBuilder<TAbi, TName>) => void,
+  ): DataSourceBuilder<TName>
+
+  public addContract<const TAbi extends Abi>(
     nameOrAbi: string | TAbi,
     abi?: TAbi,
-  ) {
+    contractBuilderFn?: (builder: ContractBuilder<TAbi, TName>) => void,
+  ): ContractBuilder<TAbi, TName> | DataSourceBuilder<TName> {
+    if (contractBuilderFn) {
+      contractBuilderFn(this.#addContract(nameOrAbi, abi))
+      return this
+    }
     return this.#addContract(nameOrAbi, abi)
   }
 
@@ -185,7 +214,7 @@ export class DataSourceBuilder<TName extends string> {
       const sources = lib.getDataSources()
       for (const info of sources) {
         const { contract, handlers, abi } = info
-        chain.contract(abi)
+        chain.addContract(abi)
           .addSources(contract as any)
           .addEventHandlers(handlers)
       }

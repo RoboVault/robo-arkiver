@@ -1,7 +1,9 @@
-# v0.4.15
+# v0.5.0
 - feat: populate relational entities on graphql endpoint
+- feat: add overload to `manifest.addChain` and `chain.addContract` functions to pass in a callback function that takes in a DataSourceBuilder and ContractBuilder instance respectively
 - change: deprecate `manifest.chain` for `manifest.addChain`
 - change: deprecate `manifest.contract` for `manifest.addContract`
+- change: `transactionIndex` and `logIndex` field in event is now number type to align with viem's return types
 - fix: missing event handler types due to updates to `viem` package
 
 # v0.4.14
