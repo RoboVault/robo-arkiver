@@ -97,11 +97,10 @@ command
 // init
 command
   .command('init', 'Initialize a new arkive project')
-  .option('--overwrite', 'Overwrite existing files')
-  .action(async (opts, ...args) => {
+  .action(async () => {
     util.logHeader(version)
     await checkVersion(version)
-    await init.action(opts, ...args)
+    await init.action()
   })
 
 // upgrade
