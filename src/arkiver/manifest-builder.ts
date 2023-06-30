@@ -44,17 +44,31 @@ export class Manifest<TName extends string = ''> {
     }
   }
 
-  /**
-   * @deprecated Use `chain` instead.
-   */
+  public addChain(
+    chain: keyof typeof supportedChains,
+    builderFn: (builder: DataSourceBuilder<TName>) => void,
+  ): Manifest<TName>
+
   public addChain(
     chain: keyof typeof supportedChains,
     options?: Partial<ChainOptions>,
-  ) {
-    return new DataSourceBuilder<TName>(this, chain, options)
+  ): DataSourceBuilder<TName>
+
+  public addChain(
+    chain: keyof typeof supportedChains,
+    optionsOrBuilderFn?:
+      | ((builder: DataSourceBuilder<TName>) => void)
+      | Partial<ChainOptions>,
+  ): Manifest<TName> | DataSourceBuilder<TName> {
+    if (optionsOrBuilderFn && typeof optionsOrBuilderFn === 'function') {
+      optionsOrBuilderFn(new DataSourceBuilder<TName>(this, chain))
+      return this
+    }
+
+    return new DataSourceBuilder<TName>(this, chain, optionsOrBuilderFn)
   }
 
-  public chain(
+  private chain(
     chain: keyof typeof supportedChains,
     options?: Partial<ChainOptions>,
   ) {
@@ -107,25 +121,7 @@ export class DataSourceBuilder<TName extends string> {
     this.builder.manifest.dataSources[chain] = this.dataSource = dataSource
   }
 
-  /**
-   * @deprecated Use `contract` instead.
-   */
-  public addContract<TAbi extends Abi>(
-    abi: TAbi,
-  ) {
-    return this.contract(abi)
-  }
-
-  public contract<const TAbi extends Abi>(
-    abi: TAbi,
-  ): ContractBuilder<TAbi, TName>
-
-  public contract<const TAbi extends Abi>(
-    name: string,
-    abi: TAbi,
-  ): ContractBuilder<TAbi, TName>
-
-  public contract<const TAbi extends Abi>(
+  #addContract<const TAbi extends Abi>(
     nameOrAbi: string | TAbi,
     abi?: TAbi,
   ) {
@@ -139,6 +135,78 @@ export class DataSourceBuilder<TName extends string> {
       return new ContractBuilder<TAbi, TName>(this, abi, nameOrAbi)
     }
     return new ContractBuilder<TAbi, TName>(this, nameOrAbi)
+  }
+
+  private contract<const TAbi extends Abi>(
+    abi: TAbi,
+  ): ContractBuilder<TAbi, TName>
+
+  private contract<const TAbi extends Abi>(
+    name: string,
+    abi: TAbi,
+  ): ContractBuilder<TAbi, TName>
+
+  private contract<const TAbi extends Abi>(
+    nameOrAbi: string | TAbi,
+    abi?: TAbi,
+  ) {
+    return this.#addContract(nameOrAbi, abi)
+  }
+
+  public addContract<const TAbi extends Abi>(
+    abi: TAbi,
+  ): ContractBuilder<TAbi, TName>
+
+  public addContract<const TAbi extends Abi>(
+    name: string,
+    abi: TAbi,
+  ): ContractBuilder<TAbi, TName>
+
+  public addContract<
+    const TAbi extends Abi,
+    TSources extends Record<string, bigint>,
+  >(
+    params: AddContractParams<TAbi, TSources>,
+  ): DataSourceBuilder<TName>
+
+  public addContract<const TAbi extends Abi>(
+    name: string,
+    abi: TAbi,
+    contractBuilderFn: (builder: ContractBuilder<TAbi, TName>) => void,
+  ): DataSourceBuilder<TName>
+
+  public addContract<
+    const TAbi extends Abi,
+    TSources extends Record<string, bigint> = Record<
+      string | number | symbol,
+      never
+    >,
+  >(
+    nameOrAbiOrParams: string | TAbi | AddContractParams<TAbi, TSources>,
+    abi?: TAbi,
+    contractBuilderFn?: (builder: ContractBuilder<TAbi, TName>) => void,
+  ): ContractBuilder<TAbi, TName> | DataSourceBuilder<TName> {
+    if (contractBuilderFn && typeof nameOrAbiOrParams === 'string') {
+      contractBuilderFn(this.#addContract(nameOrAbiOrParams, abi))
+      return this
+    }
+    if (typeof nameOrAbiOrParams === 'object' && 'abi' in nameOrAbiOrParams) {
+      const { abi, name, sources, eventHandlers } = nameOrAbiOrParams
+      let contractBuilder
+      if (name) {
+        contractBuilder = this.#addContract(name, abi)
+      } else {
+        contractBuilder = this.#addContract(abi)
+      }
+      if (sources) {
+        contractBuilder.addSources(sources)
+      }
+      if (eventHandlers) {
+        contractBuilder.addEventHandlers(eventHandlers)
+      }
+      return this
+    }
+    return this.#addContract(nameOrAbiOrParams, abi)
   }
 
   public addBlockHandler(
@@ -166,7 +234,7 @@ export class DataSourceBuilder<TName extends string> {
   public use(libs: ArkiveLib[]) {
     libs.forEach((lib) => {
       const chain = this.builder.addEntities(lib.getEntities())
-        .chain(this.chain, {
+        .addChain(this.chain, {
           blockRange: this.options.blockRange ? this.options.blockRange : 3000n,
         })
       if (Object.keys(lib.getBlockHandler()).length > 0) {
@@ -175,7 +243,7 @@ export class DataSourceBuilder<TName extends string> {
       const sources = lib.getDataSources()
       for (const info of sources) {
         const { contract, handlers, abi } = info
-        chain.contract(abi)
+        chain.addContract(abi)
           .addSources(contract as any)
           .addEventHandlers(handlers)
       }
@@ -211,10 +279,7 @@ export class ContractBuilder<
     }
   }
 
-  /**
-   * @deprecated Use `addSources` instead.
-   */
-  public addSource<TAddress extends string>(
+  private addSource<TAddress extends string>(
     address: HexString<TAddress, 40> | '*',
     startBlockHeight: bigint,
   ) {
@@ -247,10 +312,7 @@ export class ContractBuilder<
     return this
   }
 
-  /**
-   * @deprecated Use `addEventHandlers` instead.
-   */
-  public addEventHandler<
+  private addEventHandler<
     TEventName extends ExtractAbiEventNames<TAbi>,
     TEventHandler extends EventHandler<
       ExtractAbiEvent<TAbi, TEventName>,
@@ -307,4 +369,22 @@ const hashAbi = (abi: Abi) => {
     (byte) => byte.toString(16).padStart(2, '0'),
   ).join('')
   return hexString
+}
+
+type AddContractParams<
+  TAbi extends Abi,
+  TSources extends Record<string, bigint>,
+> = {
+  abi: TAbi
+  name?: string
+  sources?: ValidateSourcesObject<TSources>
+  eventHandlers?: Partial<
+    {
+      [eventName in ExtractAbiEventNames<TAbi>]: EventHandler<
+        ExtractAbiEvent<TAbi, eventName>,
+        eventName,
+        TAbi
+      >
+    }
+  >
 }

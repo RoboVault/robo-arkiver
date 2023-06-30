@@ -132,7 +132,7 @@ export class DataSource extends EventTarget {
     this.contracts = params.contracts
     this.blockSources = params.blockSources
     this.client = createPublicClient({
-      chain: getChainObjFromChainName(this.chain),
+      chain: getChainObjFromChainName(this.chain) as any,
       transport: http(this.rpcUrl),
     })
     this.arkiveId = params.arkiveId
@@ -587,7 +587,7 @@ export class DataSource extends EventTarget {
                 eventName: event.eventName,
                 client: this.client,
                 store: this.store,
-                event: formatLog(log, event),
+                event: formatLog(log, event as any),
                 contract: getContract({
                   abi: handler.abi,
                   address: log.address,
@@ -682,7 +682,7 @@ export class DataSource extends EventTarget {
                 eventName: event.eventName,
                 client: this.client,
                 store: this.store,
-                event: formatLog(log, event),
+                event: formatLog(log, event as any),
                 contract: getContract({
                   abi: eventHandler.abi,
                   address: log.address,

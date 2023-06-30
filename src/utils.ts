@@ -33,18 +33,18 @@ export const bigIntMin = (...args: bigint[]) =>
 
 export function formatLog(
   log: SafeRpcLog,
-  { args, eventName }: { args?: unknown; eventName?: string } = {},
+  { args, eventName }: { args: unknown[]; eventName: string },
 ) {
   return {
     ...log,
     blockHash: log.blockHash,
     blockNumber: BigInt(log.blockNumber),
-    logIndex: BigInt(log.logIndex),
+    logIndex: parseInt(log.logIndex, 16),
     transactionHash: log.transactionHash,
-    transactionIndex: BigInt(log.transactionIndex),
-    ...(eventName ? { args, eventName } : {}),
+    transactionIndex: parseInt(log.transactionIndex, 16),
+    ...({ args, eventName }),
     // deno-lint-ignore no-explicit-any
-  } as SafeLog<any>
+  } satisfies SafeLog<any>
 }
 
 export const defaultArkiveData: Arkive = {
