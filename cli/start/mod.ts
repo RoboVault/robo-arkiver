@@ -9,6 +9,7 @@ import { ArkiverMetadata } from '../../src/arkiver/arkive-metadata.ts'
 import { createManifestHandlers } from './logger.ts'
 import { colors } from '../../src/deps.ts'
 
+
 export const action = async (
   options: {
     manifest?: string
@@ -39,12 +40,19 @@ export const action = async (
       Deno.exit(stopRes.code)
     }
 
-    Deno.addSignalListener('SIGINT', cleanup)
-    Deno.addSignalListener('SIGHUP', cleanup)
-    Deno.addSignalListener('SIGTERM', cleanup)
-    Deno.addSignalListener('SIGQUIT', cleanup)
-    Deno.addSignalListener('SIGTSTP', cleanup)
-    Deno.addSignalListener('SIGABRT', cleanup)
+    const addSignalToCleanup = (signal: string) => {
+      try {
+        Deno.addSignalListener('SIGINT', cleanup)
+      // deno-lint-ignore no-unused-vars no-empty
+      } catch (e) {}
+    }
+
+    addSignalToCleanup('SIGINT')
+    addSignalToCleanup('SIGHUP')
+    addSignalToCleanup('SIGTERM')
+    addSignalToCleanup('SIGQUIT')
+    addSignalToCleanup('SIGTSTP')
+    addSignalToCleanup('SIGABRT')
 
     const containerId =
       await $`docker run --name arkiver_mongodb -d -p 27017:27017 --env MONGO_INITDB_ROOT_USERNAME=admin --env MONGO_INITDB_ROOT_PASSWORD=password --rm mongo`
