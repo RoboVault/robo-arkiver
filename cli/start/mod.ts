@@ -9,7 +9,6 @@ import { ArkiverMetadata } from '../../src/arkiver/arkive-metadata.ts'
 import { createManifestHandlers } from './logger.ts'
 import { colors } from '../../src/deps.ts'
 
-
 export const action = async (
   options: {
     manifest?: string
@@ -43,7 +42,7 @@ export const action = async (
     const addSignalToCleanup = (signal: string) => {
       try {
         Deno.addSignalListener('SIGINT', cleanup)
-      // deno-lint-ignore no-unused-vars no-empty
+        // deno-lint-ignore no-unused-vars no-empty
       } catch (e) {}
     }
 
