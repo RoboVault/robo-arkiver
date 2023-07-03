@@ -123,15 +123,15 @@ export const action = async (
     return
   }
 
-  let schemaComposer = new SchemaComposer()
+  const schemaComposer = new SchemaComposer()
 
-  schemaComposer = buildSchemaFromEntities(
+  buildSchemaFromEntities(
     schemaComposer,
     [...manifest.entities, { model: ArkiverMetadata, list: true }],
   )
 
   if (manifest.schemaComposerCustomizer) {
-    schemaComposer = manifest.schemaComposerCustomizer(schemaComposer)
+    manifest.schemaComposerCustomizer(schemaComposer)
   }
 
   const schema = schemaComposer.buildSchema()
