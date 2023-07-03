@@ -11,6 +11,7 @@ import {
   mongoose,
   PublicClient,
   RpcLog,
+  SchemaComposer,
 } from '../deps.ts'
 import { Store } from './store.ts'
 
@@ -61,6 +62,7 @@ export interface ArkiveManifest {
   entities: { model: mongoose.Model<any>; list: boolean; name: string }[]
   name: string
   version: string
+  schemaComposerCustomizer?: (sc: SchemaComposer) => SchemaComposer
 }
 
 export type DataSource = {

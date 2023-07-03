@@ -3,7 +3,7 @@ export type {
 	BlockHandler,
 	EventHandlerFor,
 } from './src/arkiver/types.ts'
-export { Manifest } from './src/arkiver/manifest-builder.ts'
+export { Manifest } from './src/arkiver/manifest-builder/mod.ts'
 export { ArkiveConsoleLogHandler } from './src/logger.ts'
 export { Store } from './src/arkiver/store.ts'
 export { Arkiver } from './src/arkiver/arkiver.ts'

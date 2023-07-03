@@ -1,5 +1,6 @@
 import {
   ArkiveConsoleLogHandler,
+  ArkiveManifest,
   Arkiver,
   buildSchemaFromEntities,
   defaultArkiveData,
@@ -7,7 +8,7 @@ import {
 import { $, createYoga, delay, join, log, logLevel, serve } from '../deps.ts'
 import { ArkiverMetadata } from '../../src/arkiver/arkive-metadata.ts'
 import { createManifestHandlers } from './logger.ts'
-import { colors } from '../../src/deps.ts'
+import { colors, SchemaComposer } from '../../src/deps.ts'
 
 export const action = async (
   options: {
@@ -59,7 +60,8 @@ export const action = async (
 
   const manifestImport = await import(dir)
 
-  const manifest = manifestImport.default ?? manifestImport.manifest
+  const manifest: ArkiveManifest | undefined = manifestImport.default ??
+    manifestImport.manifest
 
   if (!manifest) {
     throw new Error(
@@ -121,9 +123,18 @@ export const action = async (
     return
   }
 
-  const schema = buildSchemaFromEntities(
+  let schemaComposer = new SchemaComposer()
+
+  schemaComposer = buildSchemaFromEntities(
+    schemaComposer,
     [...manifest.entities, { model: ArkiverMetadata, list: true }],
   )
+
+  if (manifest.schemaComposerCustomizer) {
+    schemaComposer = manifest.schemaComposerCustomizer(schemaComposer)
+  }
+
+  const schema = schemaComposer.buildSchema()
 
   const yoga = createYoga({
     schema,

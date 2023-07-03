@@ -1,15 +1,15 @@
-import { composeMongoose, mongoose, schemaComposer } from '../deps.ts'
+// deno-lint-ignore-file no-explicit-any
+import { composeMongoose, mongoose, SchemaComposer } from '../deps.ts'
 
 export const buildSchemaFromEntities = (
-  // deno-lint-ignore no-explicit-any
+  schemaComposer: SchemaComposer,
   entities: { model: mongoose.Model<any>; list: boolean }[],
 ) => {
-  schemaComposer.clear()
   for (const { model, list } of entities) {
     const getTC = (schemaComposer: any, model: any) => {
       try {
         return schemaComposer.getAnyTC(model.modelName)
-      } catch (e) {
+      } catch (_e) {
         return composeMongoose<any>(model)
       }
     }
@@ -59,7 +59,5 @@ export const buildSchemaFromEntities = (
     }
   }
 
-  const schema = schemaComposer.buildSchema()
-
-  return schema
+  return schemaComposer
 }
