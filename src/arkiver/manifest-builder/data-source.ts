@@ -49,6 +49,16 @@ export class DataSourceBuilder<TName extends string> {
     this.builder.manifest.dataSources[chain] = this.dataSource = dataSource
   }
 
+  public setBlockRange(blockRange: bigint): DataSourceBuilder<TName> {
+    this.dataSource.options.blockRange = blockRange
+    return this
+  }
+
+  public setRpcUrl(rpcUrl: string): DataSourceBuilder<TName> {
+    this.dataSource.options.rpcUrl = rpcUrl
+    return this
+  }
+
   #addContract<const TAbi extends Abi>(
     nameOrAbi: string | TAbi,
     abi?: TAbi,

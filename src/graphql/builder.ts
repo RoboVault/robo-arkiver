@@ -58,6 +58,4 @@ export const buildSchemaFromEntities = (
       })
     }
   }
-
-  return schemaComposer
 }

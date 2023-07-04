@@ -62,7 +62,7 @@ export interface ArkiveManifest {
   entities: { model: mongoose.Model<any>; list: boolean; name: string }[]
   name: string
   version: string
-  schemaComposerCustomizer?: (sc: SchemaComposer) => SchemaComposer
+  schemaComposerCustomizer?: (sc: SchemaComposer) => void
 }
 
 export type DataSource = {

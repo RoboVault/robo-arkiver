@@ -41,6 +41,10 @@ export class Arkiver extends EventTarget {
         logger('arkiver').debug(`Connected to database`)
       }
       await this.initSources()
+      console.log(
+        `Arkive manifest: `,
+        this.manifest,
+      )
     } catch (e) {
       logger('arkiver').error(`Error running arkiver: ${e}`)
     }
@@ -63,6 +67,7 @@ export class Arkiver extends EventTarget {
         logger('arkiver').error(`No RPC URL found for chain ${chain}`)
         continue
       }
+      source.options.rpcUrl = rpcUrl
       const dataSource = new DataSource({
         arkiveId: this.arkiveData.id,
         arkiveVersion: this.arkiveData.deployment.major_version,

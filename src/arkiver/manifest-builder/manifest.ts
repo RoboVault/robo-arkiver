@@ -81,12 +81,11 @@ export class Manifest<TName extends string = ''> {
     if (problems) {
       throw new Error(`Invalid manifest: ${problems}`)
     }
-    console.log(this.manifest)
     return this.manifest
   }
 
   public extendSchema(
-    callbackFn: (schemaComposer: SchemaComposer) => SchemaComposer,
+    callbackFn: (schemaComposer: SchemaComposer) => void,
   ) {
     this.manifest.schemaComposerCustomizer = callbackFn
     return this
