@@ -1,7 +1,7 @@
 import { Arkive, ArkiveManifest } from './types.ts'
 import { DataSource } from './data-source.ts'
 import { mongoose } from '../deps.ts'
-import { assertChain, defaultArkiveData } from '../utils.ts'
+import { defaultArkiveData } from '../utils.ts'
 import { logger } from '../logger.ts'
 
 export class Arkiver extends EventTarget {
@@ -54,14 +54,15 @@ export class Arkiver extends EventTarget {
     logger('arkiver').debug(`Initializing data sources...`)
     const { dataSources } = this.manifest
     for (const [chain, source] of Object.entries(dataSources)) {
-      try {
-        assertChain(chain)
-      } catch (_e) {
-        logger('arkiver').error(
-          `Invalid chain ${chain} in manifest, ignoring...`,
-        )
+      if (source === undefined) {
+        // this should never happen but just in case
+        logger('arkiver').error(`No data source found for chain ${chain}`)
         continue
       }
+      // priority for rpcUrl is (highest to lowest):
+      // 1. rpcUrl passed into Arkiver constructor (cli args in local mode)
+      // 2. rpcUrl passed specified while building manifest
+      // 3. default rpcUrl for chain from viem's chain configs
       const rpcUrl = this.rpcUrls[chain] ?? source.options.rpcUrl
       if (rpcUrl === undefined) {
         logger('arkiver').error(`No RPC URL found for chain ${chain}`)
