@@ -54,6 +54,9 @@ export class Manifest<TName extends string = ''> {
       return this
     }
 
+    if (!(chain in supportedChains) && !optionsOrBuilderFn?.rpcUrl) {
+      throw new Error(`RPC URL is required for chain ${chain}`)
+    }
     return new DataSourceBuilder<TName>(this, chain, optionsOrBuilderFn)
   }
 
