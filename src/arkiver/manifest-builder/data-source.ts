@@ -1,8 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
-import { supportedChains } from '../../chains.ts'
 import { Abi, ExtractAbiEvent, ExtractAbiEventNames } from '../../deps.ts'
 import { ArkiveLib } from '../../lib/ArkiveLib.ts'
-import { getChainObjFromChainName } from '../../utils.ts'
+import { getChainObjFromChainName, raise } from '../../utils.ts'
 import {
   BlockHandler,
   ChainOptions,
@@ -11,7 +10,7 @@ import {
   ValidateSourcesObject,
 } from '../types.ts'
 import { ContractBuilder } from './contract.ts'
-import { Manifest } from './manifest.ts'
+import { Chains, Manifest } from './manifest.ts'
 
 type AddContractParams<
   TAbi extends Abi,
@@ -36,7 +35,7 @@ export class DataSourceBuilder<TName extends string> {
 
   constructor(
     private builder: Manifest<TName>,
-    public chain: keyof typeof supportedChains,
+    public chain: Chains,
     public options: Partial<ChainOptions> = {},
   ) {
     const dataSource: DataSource = this.builder.manifest.dataSources[chain] ?? {

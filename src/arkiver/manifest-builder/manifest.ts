@@ -7,6 +7,9 @@ import { DataSourceBuilder } from './data-source.ts'
 
 export const manifestVersion = 'v1'
 
+// deno-lint-ignore ban-types
+export type Chains = keyof typeof supportedChains | string & {}
+
 export class Manifest<TName extends string = ''> {
   public manifest: ArkiveManifest
 
@@ -28,17 +31,17 @@ export class Manifest<TName extends string = ''> {
   }
 
   public addChain(
-    chain: keyof typeof supportedChains,
+    chain: Chains,
     builderFn: (builder: DataSourceBuilder<TName>) => void,
   ): Manifest<TName>
 
   public addChain(
-    chain: keyof typeof supportedChains,
+    chain: Chains,
     options?: Partial<ChainOptions>,
   ): DataSourceBuilder<TName>
 
   public addChain(
-    chain: keyof typeof supportedChains,
+    chain: Chains,
     optionsOrBuilderFn?:
       | ((builder: DataSourceBuilder<TName>) => void)
       | Partial<ChainOptions>,
