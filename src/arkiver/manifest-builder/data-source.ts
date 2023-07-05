@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { Abi, ExtractAbiEvent, ExtractAbiEventNames } from '../../deps.ts'
 import { ArkiveLib } from '../../lib/ArkiveLib.ts'
-import { getChainObjFromChainName, raise } from '../../utils.ts'
+import { getChainObjFromChainName } from '../../utils.ts'
 import {
   BlockHandler,
   ChainOptions,
