@@ -30,7 +30,7 @@ import {
 } from '../utils.ts'
 import { Store } from './store.ts'
 import { MongoStatusProvider } from './providers/mongodb.ts'
-import { supportedChains } from '../chains.ts'
+import { Chains } from './manifest-builder/manifest.ts'
 
 interface NormalizedContracts {
   contracts: {
@@ -41,7 +41,7 @@ interface NormalizedContracts {
 }
 
 export class DataSource extends EventTarget {
-  private readonly chain: keyof typeof supportedChains
+  private readonly chain: Chains
   private readonly rpcUrl: string
   private readonly client: PublicClient<HttpTransport>
   private readonly blockRange: bigint
@@ -115,7 +115,7 @@ export class DataSource extends EventTarget {
   constructor(
     params: {
       contracts: Contract[]
-      chain: keyof typeof supportedChains
+      chain: Chains
       rpcUrl: string
       blockRange: bigint
       arkiveId: number

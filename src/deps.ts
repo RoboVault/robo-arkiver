@@ -23,7 +23,7 @@ export {
   type ExtractAbiEventNames,
 } from 'npm:abitype'
 export { default as mongoose, Schema, Types } from 'npm:mongoose'
-export { schemaComposer } from 'npm:graphql-compose'
+export { SchemaComposer, schemaComposer } from 'npm:graphql-compose'
 export { composeMongoose } from 'npm:graphql-compose-mongoose'
 export { LRUCache as Cache } from 'npm:lru-cache'
 export * as log from 'https://deno.land/std@0.181.0/log/mod.ts'
@@ -34,3 +34,4 @@ export {
 } from 'https://deno.land/std@0.181.0/log/handlers.ts'
 export { crypto } from 'https://deno.land/std@0.186.0/crypto/mod.ts'
 export { scope } from 'npm:arktype'
+export { GraphQLError } from 'npm:graphql'

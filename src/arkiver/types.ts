@@ -1,4 +1,3 @@
-import { supportedChains } from '../chains.ts'
 import {
   Abi,
   AbiEvent,
@@ -11,7 +10,9 @@ import {
   mongoose,
   PublicClient,
   RpcLog,
+  SchemaComposer,
 } from '../deps.ts'
+import { Chains } from './manifest-builder/manifest.ts'
 import { Store } from './store.ts'
 
 export interface Arkive {
@@ -55,12 +56,13 @@ export interface ChainOptions {
 
 export interface ArkiveManifest {
   dataSources: Partial<
-    Record<keyof typeof supportedChains, DataSource>
+    Record<Chains, DataSource>
   >
   // deno-lint-ignore no-explicit-any
   entities: { model: mongoose.Model<any>; list: boolean; name: string }[]
   name: string
   version: string
+  schemaComposerCustomizer?: (sc: SchemaComposer) => void
 }
 
 export type DataSource = {

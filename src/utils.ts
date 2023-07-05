@@ -1,3 +1,4 @@
+import { Chains } from './arkiver/manifest-builder/manifest.ts'
 import { Arkive, SafeLog, SafeRpcLog } from './arkiver/types.ts'
 import { supportedChains } from './chains.ts'
 
@@ -8,11 +9,11 @@ export const delay = (durationMs: number) => {
 }
 
 export const getChainObjFromChainName = (
-  chain: keyof typeof supportedChains,
+  chain: Chains,
 ) => {
-  const chainObj = supportedChains[chain]
+  const chainObj = supportedChains[chain as keyof typeof supportedChains]
   if (!chainObj) {
-    throw new Error(`Unsupported chain: ${chain}`)
+    return null
   }
   return chainObj
 }
@@ -86,4 +87,8 @@ export const JSONBigIntReviver = (_key: string, value: unknown) => {
     return BigInt((value as { _bigint: string })._bigint)
   }
   return value
+}
+
+export const raise = (e: string) => {
+  throw new Error(e)
 }
