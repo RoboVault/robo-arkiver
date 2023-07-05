@@ -88,6 +88,7 @@ command
   .option('--log-level <logLevel:string>', 'Log level', {
     default: 'INFO',
   })
+  .option('--gql-only', 'Only start GraphQL server')
   .action(async (opts, ...args) => {
     util.logHeader(version)
     await checkVersion(version)
