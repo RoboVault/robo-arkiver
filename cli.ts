@@ -112,9 +112,11 @@ command
 // list
 command
   .command('list', 'List all your arkives')
-  .action(async () => {
+  .option('-A, --all', 'List all arkives')
+  .option('-s, --status <status>', 'Filter by status')
+  .action(async (opts) => {
     await checkVersion(version)
-    await list.action()
+    await list.action(opts)
   })
 
 if (import.meta.main) {

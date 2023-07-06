@@ -1,3 +1,6 @@
+# v0.4.16 (unreleased)
+- feat: enhance `arkiver list` command, see `arkiver list --help`
+
 # v0.4.15
 - feat: populate relational entities on graphql endpoint
 - feat: add overload to `manifest.addChain` and `chain.addContract` functions to pass in a callback function that takes in a DataSourceBuilder and ContractBuilder instance respectively
