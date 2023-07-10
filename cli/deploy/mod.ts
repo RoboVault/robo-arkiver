@@ -1,6 +1,7 @@
-import { parseArkiveManifest } from '../../mod.ts'
+import { ArkiveManifest, parseArkiveManifest } from '../../mod.ts'
 import { join } from '../deps.ts'
 import { spinner } from '../spinner.ts'
+import { craftEndpoint, getSupabaseClient } from '../utils.ts'
 import { cleanup } from './cleanup.ts'
 import { pkg } from './pkg.ts'
 import { upload } from './upload.ts'
@@ -25,7 +26,8 @@ export const action = async (
     } catch (error) {
       throw new Error(`Error importing manifest.ts: ${error.message}`)
     }
-    const manifest = manifestImport.default ?? manifestImport.manifest
+    const manifest: ArkiveManifest = manifestImport.default ??
+      manifestImport.manifest
     if (!manifest) {
       throw new Error(
         `Manifest file must export a default or manifest object.`,
@@ -47,7 +49,29 @@ export const action = async (
     // cleanup
     await cleanup(tempPath)
 
-    spinner().succeed('Deployed successfully!')
+    spinner().succeed(`Deployed successfully!`)
+
+    const client = getSupabaseClient()
+    const { data: userData, error: userError } = await client.auth.getUser()
+
+    if (userError) {
+      console.error(userError)
+    } else {
+      const { data, error } = await client.from('user_profile').select(
+        'username',
+      ).eq('id', userData.user.id).single()
+
+      if (error) {
+        console.error(error)
+      } else {
+        const endpoint = craftEndpoint({
+          arkiveName: manifest.name,
+          environment: options.env ?? 'staging',
+          username: data.username,
+        })
+        console.log(`🚀 Arkive GraphQL endpoint ready at: ${endpoint}`)
+      }
+    }
   } catch (error) {
     spinner().fail('Deployment failed: ' + error.message)
   }

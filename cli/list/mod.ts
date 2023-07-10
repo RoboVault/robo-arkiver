@@ -1,5 +1,5 @@
 import { wait } from '../deps.ts'
-import { getSupabaseClient } from '../utils.ts'
+import { craftEndpoint, getSupabaseClient } from '../utils.ts'
 import { login } from '../login/mod.ts'
 import { SUPABASE_FUNCTIONS_URL } from '../constants.ts'
 import { Arkive, Deployment } from '../../src/arkiver/types.ts'
@@ -166,22 +166,4 @@ export const getUsername = async (userId: string) => {
   }
 
   return profileRes.data.username
-}
-
-export const craftEndpoint = (
-  params: {
-    username: string
-    arkiveName: string
-    // deno-lint-ignore ban-types
-    environment: 'prod' | 'staging' | string & {}
-    majorVersion: number
-  },
-) => {
-  const { arkiveName, environment, username, majorVersion } = params
-
-  const baseGraphQlUrl = environment === 'prod'
-    ? `https://data.arkiver.net/${username}`
-    : `https://data.staging.arkiver.net/${username}`
-
-  return `${baseGraphQlUrl}/${arkiveName}/${majorVersion}/graphql`
 }
