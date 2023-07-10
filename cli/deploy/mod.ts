@@ -1,5 +1,6 @@
 import { parseArkiveManifest } from '../../mod.ts'
-import { join, wait } from '../deps.ts'
+import { join } from '../deps.ts'
+import { spinner } from '../spinner.ts'
 import { cleanup } from './cleanup.ts'
 import { pkg } from './pkg.ts'
 import { upload } from './upload.ts'
@@ -12,9 +13,8 @@ export const action = async (
 
   if (dev) return deployDev(options, directory)
 
-  const spinner = wait('Packaging...').start()
-
   try {
+    spinner('Deploying...')
     // package directory
     const { fileName, tempPath } = await pkg(directory)
 
@@ -41,18 +41,15 @@ export const action = async (
       throw new Error(`Invalid manifest: ${problems}`)
     }
 
-    spinner.text = 'Uploading package...'
     // upload package
     await upload(fileName, tempPath, manifest, options)
 
-    spinner.text = 'Cleaning up...'
     // cleanup
     await cleanup(tempPath)
 
-    spinner.succeed('Deployed successfully!')
+    spinner().succeed('Deployed successfully!')
   } catch (error) {
-    spinner.fail('Deployment failed: ' + error.message)
-    console.error(error)
+    spinner().fail('Deployment failed: ' + error.message)
   }
 
   Deno.exit()

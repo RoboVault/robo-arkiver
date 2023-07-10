@@ -1,26 +1,19 @@
 import { join } from 'https://deno.land/std@0.175.0/path/mod.ts'
+import { $ } from '../deps.ts'
+import { spinner } from '../spinner.ts'
 
 export const pkg = async (dir: string) => {
-  const tempPath = await Deno.makeTempDir()
-  const fileName = crypto.randomUUID() + '.tar.gz'
-  const out = join(tempPath, fileName)
+  spinner().text = 'Packaging...'
+  try {
+    const tempPath = await Deno.makeTempDir()
+    const fileName = crypto.randomUUID() + '.tar.gz'
+    const out = join(tempPath, fileName)
 
-  const process = Deno.run({
-    cmd: ['tar', '-zcvf', out, '-C', dir, '.'],
-    stdout: 'piped',
-    stderr: 'piped',
-  })
+    await $`tar -zcvf ${out} -C ${dir} .`
 
-  const [status, err] = await Promise.all([
-    process.status(),
-    process.stderrOutput(),
-  ])
-  if (status.code !== 0) {
-    const errMsg = `Failed to build package: ${new TextDecoder().decode(err)}`
-    throw new Error(errMsg)
+    return { fileName, tempPath }
+  } catch (error) {
+    spinner().fail('Packaging failed: ' + error)
+    Deno.exit(1)
   }
-
-  process.close()
-
-  return { fileName, tempPath }
 }

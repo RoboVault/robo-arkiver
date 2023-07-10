@@ -2,6 +2,7 @@ import { getSupabaseClient } from '../utils.ts'
 import { login } from '../login/mod.ts'
 import { SUPABASE_FUNCTIONS_URL } from '../constants.ts'
 import { ArkiveManifest, JSONBigIntReplacer } from '../../mod.ts'
+import { spinner } from '../spinner.ts'
 
 export const upload = async (
   pkgName: string,
@@ -9,10 +10,12 @@ export const upload = async (
   manifest: ArkiveManifest,
   options: { public?: true; major?: true; env?: string },
 ) => {
+  spinner().text = 'Uploading...'
   const supabase = getSupabaseClient()
   const sessionRes = await supabase.auth.getSession()
 
   if (!sessionRes.data.session) {
+    spinner().info('Not logged in, logging in now...')
     await login({}, supabase)
   }
 
@@ -57,7 +60,7 @@ export const upload = async (
     },
   )
   if (!res.ok) {
-    throw new Error(await res.text())
+    spinner().fail(`Upload failed: ${await res.text()}`)
+    Deno.exit(1)
   }
-  console.log('Deployed successfully: ', await res.json())
 }

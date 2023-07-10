@@ -1,5 +1,10 @@
 # v0.4.16 (unreleased)
 - feat: enhance `arkiver list` command, see `arkiver list --help`
+- feat: added 3 new commands to the CLI:
+  - `arkiver keygen` to generate a new API key
+  - `arkiver keyrm` to remove an API key
+  - `arkiver keyls` to list all API keys
+- fix: bug where deploying while logged out causes issues when trying to login again in the same command
 
 # v0.4.15
 - feat: populate relational entities on graphql endpoint

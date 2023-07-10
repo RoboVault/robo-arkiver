@@ -11,7 +11,7 @@ export {
   createClient,
   SupabaseClient,
 } from 'https://esm.sh/@supabase/supabase-js@2.4.1'
-export { wait } from 'https://deno.land/x/wait@0.1.13/mod.ts'
+export { Spinner, wait } from 'https://deno.land/x/wait@0.1.13/mod.ts'
 export { default as $ } from 'https://deno.land/x/dax@0.31.0/mod.ts'
 export { delay } from 'https://deno.land/std@0.179.0/async/mod.ts'
 export { join } from 'https://deno.land/std@0.179.0/path/mod.ts'

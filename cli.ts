@@ -3,6 +3,9 @@ import {
   Command,
   deploy,
   init,
+  keygen,
+  keyls,
+  keyrm,
   list,
   login,
   logout,
@@ -118,6 +121,23 @@ command
     await checkVersion(version)
     await list.action(opts)
   })
+
+// keygen
+command
+  .command('keygen', 'Generate a new API key')
+  .action(keygen.action)
+
+// keyrm
+command
+  .command('keyrm', 'Delete an API key')
+  .arguments('<key:string>')
+  .action(async (_, key) => {
+    await keyrm.action(key)
+  })
+
+command
+  .command('keyls', 'List all API keys')
+  .action(keyls.action)
 
 if (import.meta.main) {
   await command.parse(Deno.args)
