@@ -24,7 +24,10 @@ export {
 } from 'npm:abitype'
 export { default as mongoose, Schema, Types } from 'npm:mongoose'
 export { SchemaComposer, schemaComposer } from 'npm:graphql-compose'
-export { composeMongoose } from 'npm:graphql-compose-mongoose'
+export {
+  composeMongoose,
+  type ObjectTypeComposerWithMongooseResolvers,
+} from 'npm:graphql-compose-mongoose'
 export { LRUCache as Cache } from 'npm:lru-cache'
 export * as log from 'https://deno.land/std@0.181.0/log/mod.ts'
 export * as colors from 'https://deno.land/std@0.181.0/fmt/colors.ts'

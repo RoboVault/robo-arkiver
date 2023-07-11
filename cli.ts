@@ -17,7 +17,7 @@ import {
 } from './cli/mod.ts'
 import 'https://deno.land/std@0.179.0/dotenv/load.ts'
 
-export const version = 'v0.4.16'
+export const version = 'v0.4.17'
 
 const command = new Command()
   .name('arkiver')
