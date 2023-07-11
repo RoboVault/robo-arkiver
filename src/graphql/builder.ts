@@ -1,16 +1,26 @@
 // deno-lint-ignore-file no-explicit-any
-import { composeMongoose, mongoose, SchemaComposer } from '../deps.ts'
+import {
+  composeMongoose,
+  mongoose,
+  ObjectTypeComposerWithMongooseResolvers,
+  SchemaComposer,
+} from '../deps.ts'
 
 export const buildSchemaFromEntities = (
   schemaComposer: SchemaComposer,
   entities: { model: mongoose.Model<any>; list: boolean }[],
 ) => {
   for (const { model, list } of entities) {
-    const getTC = (schemaComposer: any, model: any) => {
+    const getTC = (
+      schemaComposer: SchemaComposer,
+      model: mongoose.Model<any>,
+    ) => {
       try {
-        return schemaComposer.getAnyTC(model.modelName)
+        return schemaComposer.getOTC(
+          model.modelName,
+        ) as ObjectTypeComposerWithMongooseResolvers<any>
       } catch (_e) {
-        return composeMongoose<any>(model)
+        return composeMongoose<any>(model, { schemaComposer })
       }
     }
 
@@ -28,7 +38,7 @@ export const buildSchemaFromEntities = (
             [_id]: (source: any) => source[path],
           },
           projection: { [path]: 1 },
-        })
+        } as any)
       }
     }
 

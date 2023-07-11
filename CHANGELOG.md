@@ -1,3 +1,6 @@
+# v0.4.17
+- fix: bug in schema composer where it was not properly handling entities
+
 # v0.4.16
 - feat: enhance `arkiver list` command, see `arkiver list --help`
 - feat: added 3 new commands to the CLI:
