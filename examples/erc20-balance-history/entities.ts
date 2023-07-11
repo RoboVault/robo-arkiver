@@ -1,4 +1,4 @@
-import { createEntity } from 'https://deno.land/x/robo_arkiver@v0.4.15/mod.ts'
+import { createEntity } from 'https://deno.land/x/robo_arkiver@v0.4.17/mod.ts'
 
 // @note: "Index: true" enhances graphql queries
 
