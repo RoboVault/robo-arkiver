@@ -1,6 +1,5 @@
 import { Arkive, ArkiveManifest } from './types.ts'
 import { DataSource } from './data-source.ts'
-import { mongoose } from '../deps.ts'
 import { defaultArkiveData } from '../utils.ts'
 import { logger } from '../logger.ts'
 
@@ -9,21 +8,21 @@ export class Arkiver extends EventTarget {
   private arkiveData: Arkive
   private sources: DataSource[] = []
   private syncedCount = 0
-  private mongoConnection?: string
   private rpcUrls: Record<string, string>
+  private noDb: boolean
 
   constructor(params: {
     manifest: ArkiveManifest
-    mongoConnection?: string
     arkiveData?: Arkive
     rpcUrls: Record<string, string>
+    noDb: boolean
   }) {
     super()
-    const { mongoConnection, manifest, arkiveData, rpcUrls } = params
+    const { manifest, arkiveData, rpcUrls } = params
     this.manifest = manifest
     this.arkiveData = arkiveData ?? defaultArkiveData
-    this.mongoConnection = mongoConnection
     this.rpcUrls = rpcUrls
+    this.noDb = params.noDb
   }
 
   public async run() {
@@ -31,15 +30,6 @@ export class Arkiver extends EventTarget {
       `Running Arkive - ${this.arkiveData.name}`,
     )
     try {
-      if (this.mongoConnection !== undefined) {
-        logger('arkiver').debug(`Connecting to database...`)
-        await mongoose.connect(this.mongoConnection, {
-          dbName:
-            `${this.arkiveData.id}-${this.arkiveData.deployment.major_version}`,
-          // deno-lint-ignore no-explicit-any
-        } as any)
-        logger('arkiver').debug(`Connected to database`)
-      }
       await this.initSources()
       console.log(
         `Arkive manifest: `,
@@ -72,12 +62,12 @@ export class Arkiver extends EventTarget {
       const dataSource = new DataSource({
         arkiveId: this.arkiveData.id,
         arkiveVersion: this.arkiveData.deployment.major_version,
-        blockRange: source.options?.blockRange ?? 100n,
+        blockRange: source.options.blockRange,
         chain,
         contracts: source.contracts ?? [],
         rpcUrl: rpcUrl,
         blockSources: source.blockHandlers ?? [],
-        noDb: this.mongoConnection === undefined,
+        noDb: this.noDb,
         arkiveMinorVersion: this.arkiveData.deployment.minor_version,
       })
 

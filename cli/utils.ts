@@ -81,3 +81,23 @@ export const logHeader = (version: string) => {
     footerStyle,
   )
 }
+
+export const craftEndpoint = (
+  params: {
+    username: string
+    arkiveName: string
+    // deno-lint-ignore ban-types
+    environment: 'prod' | 'staging' | string & {}
+    majorVersion?: number
+  },
+) => {
+  const { arkiveName, environment, username, majorVersion } = params
+
+  const baseGraphQlUrl = environment === 'prod'
+    ? `https://data.arkiver.net/${username}`
+    : `https://data.staging.arkiver.net/${username}`
+
+  return `${baseGraphQlUrl}/${arkiveName}/${
+    majorVersion ? majorVersion + '/' : ''
+  }graphql`
+}

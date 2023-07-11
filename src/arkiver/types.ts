@@ -129,9 +129,11 @@ export type EventHandler<
   TAbiEvent extends AbiEvent,
   TEventName extends string,
   TAbi extends Abi,
-> = (ctx: EventHandlerContext<TAbiEvent, TEventName, TAbi>) => Promise<void>
+> = (
+  ctx: EventHandlerContext<TAbiEvent, TEventName, TAbi>,
+) => Promise<void> | void
 
-export type BlockHandler = (ctx: BlockHandlerContext) => Promise<void>
+export type BlockHandler = (ctx: BlockHandlerContext) => Promise<void> | void
 
 type ValidNameChars =
   | 'a'

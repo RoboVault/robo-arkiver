@@ -48,9 +48,15 @@ export class Manifest<TName extends string = ''> {
   ): Manifest<TName> | DataSourceBuilder<TName> {
     if (optionsOrBuilderFn && typeof optionsOrBuilderFn === 'function') {
       optionsOrBuilderFn(new DataSourceBuilder<TName>(this, chain))
+      if (!this.manifest.dataSources[chain]?.options.rpcUrl) {
+        throw new Error(`RPC URL is required for chain ${chain}`)
+      }
       return this
     }
 
+    if (!(chain in supportedChains) && !optionsOrBuilderFn?.rpcUrl) {
+      throw new Error(`RPC URL is required for chain ${chain}`)
+    }
     return new DataSourceBuilder<TName>(this, chain, optionsOrBuilderFn)
   }
 

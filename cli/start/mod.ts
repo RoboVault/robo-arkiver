@@ -8,8 +8,8 @@ import {
 import { $, createYoga, delay, join, log, logLevel, serve } from '../deps.ts'
 import { ArkiverMetadata } from '../../src/arkiver/arkive-metadata.ts'
 import { createManifestHandlers } from './logger.ts'
-import { colors, SchemaComposer } from '../../src/deps.ts'
-
+import { colors, mongoose, SchemaComposer } from '../../src/deps.ts'
+import { logger } from '../../src/logger.ts'
 
 export const action = async (
   options: {
@@ -19,6 +19,7 @@ export const action = async (
     db: boolean
     gql: boolean
     logLevel: string
+    gqlOnly?: true
   },
   directory: string,
 ) => {
@@ -41,10 +42,10 @@ export const action = async (
       Deno.exit(stopRes.code)
     }
 
-    const addSignalToCleanup = (signal: string) => {
+    const addSignalToCleanup = (signal: Deno.Signal) => {
       try {
-        Deno.addSignalListener('SIGINT', cleanup)
-      // deno-lint-ignore no-unused-vars no-empty
+        Deno.addSignalListener(signal, cleanup)
+        // deno-lint-ignore no-unused-vars no-empty
       } catch (e) {}
     }
 
@@ -112,20 +113,28 @@ export const action = async (
     return acc
   }, {} as Record<string, string>) ?? {}
 
-  const arkiver = new Arkiver({
-    manifest,
-    mongoConnection: options.db
-      ? options.mongoConnection ??
-        'mongodb://admin:password@localhost:27017'
-      : undefined,
-    rpcUrls,
-    arkiveData: {
-      ...defaultArkiveData,
-      name: manifest.name ?? 'my-arkive',
-    },
-  })
+  logger('arkiver').debug(`Connecting to database...`)
+  const connectionString = options.mongoConnection ??
+    'mongodb://admin:password@localhost:27017'
+  await mongoose.connect(connectionString, {
+    dbName: '0-0',
+    // deno-lint-ignore no-explicit-any
+  } as any)
+  logger('arkiver').debug(`Connected to database`)
 
-  await arkiver.run()
+  if (!options.gqlOnly) {
+    const arkiver = new Arkiver({
+      manifest,
+      noDb: !options.db,
+      rpcUrls,
+      arkiveData: {
+        ...defaultArkiveData,
+        name: manifest.name ?? 'my-arkive',
+      },
+    })
+
+    await arkiver.run()
+  }
 
   if (!options.gql || !options.db) {
     return

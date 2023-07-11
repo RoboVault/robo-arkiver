@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { Abi, ExtractAbiEvent, ExtractAbiEventNames } from '../../deps.ts'
 import { ArkiveLib } from '../../lib/ArkiveLib.ts'
-import { getChainObjFromChainName, raise } from '../../utils.ts'
+import { getChainObjFromChainName } from '../../utils.ts'
 import {
   BlockHandler,
   ChainOptions,
@@ -40,23 +40,19 @@ export class DataSourceBuilder<TName extends string> {
   ) {
     const dataSource: DataSource = this.builder.manifest.dataSources[chain] ?? {
       options: {
-        blockRange: 3000n,
+        blockRange: options.blockRange ?? 1000n,
         rpcUrl: options.rpcUrl ??
-          getChainObjFromChainName(chain)?.rpcUrls.public.http[0] ??
-          raise(`No RPC URL found for chain ${chain}`),
-        ...options,
+          getChainObjFromChainName(chain)?.rpcUrls.public.http[0] ?? '',
       },
     }
     this.builder.manifest.dataSources[chain] = this.dataSource = dataSource
   }
 
-  public setBlockRange(blockRange: bigint): DataSourceBuilder<TName> {
-    this.dataSource.options.blockRange = blockRange
-    return this
-  }
-
-  public setRpcUrl(rpcUrl: string): DataSourceBuilder<TName> {
-    this.dataSource.options.rpcUrl = rpcUrl
+  public setOptions(options: Partial<ChainOptions>): DataSourceBuilder<TName> {
+    this.dataSource.options = {
+      ...this.dataSource.options,
+      ...options,
+    }
     return this
   }
 

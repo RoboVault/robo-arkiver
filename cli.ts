@@ -3,6 +3,9 @@ import {
   Command,
   deploy,
   init,
+  keygen,
+  keyls,
+  keyrm,
   list,
   login,
   logout,
@@ -14,7 +17,7 @@ import {
 } from './cli/mod.ts'
 import 'https://deno.land/std@0.179.0/dotenv/load.ts'
 
-export const version = 'v0.4.15'
+export const version = 'v0.4.16'
 
 const command = new Command()
   .name('arkiver')
@@ -88,6 +91,7 @@ command
   .option('--log-level <logLevel:string>', 'Log level', {
     default: 'INFO',
   })
+  .option('--gql-only', 'Only start GraphQL server')
   .action(async (opts, ...args) => {
     util.logHeader(version)
     await checkVersion(version)
@@ -111,10 +115,29 @@ command
 // list
 command
   .command('list', 'List all your arkives')
-  .action(async () => {
+  .option('-A, --all', 'List all arkives')
+  .option('-s, --status <status>', 'Filter by status')
+  .action(async (opts) => {
     await checkVersion(version)
-    await list.action()
+    await list.action(opts)
   })
+
+// keygen
+command
+  .command('keygen', 'Generate a new API key')
+  .action(keygen.action)
+
+// keyrm
+command
+  .command('keyrm', 'Delete an API key')
+  .arguments('<key:string>')
+  .action(async (_, key) => {
+    await keyrm.action(key)
+  })
+
+command
+  .command('keyls', 'List all API keys')
+  .action(keyls.action)
 
 if (import.meta.main) {
   await command.parse(Deno.args)

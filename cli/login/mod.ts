@@ -1,4 +1,5 @@
-import { SupabaseClient, wait } from '../deps.ts'
+import { SupabaseClient } from '../deps.ts'
+import { spinner } from '../spinner.ts'
 import {
   getEmail,
   getPassword,
@@ -43,17 +44,17 @@ export const login = async (
     password = await getPassword()
   }
 
-  const spinner = wait('Logging in...').start()
+  spinner('Logging in...')
   const signInRes = await supabaseClient.auth.signInWithPassword({
     email,
     password,
   })
   if (signInRes.error) {
-    spinner.fail('Login failed')
+    spinner().fail('Login failed')
     throw signInRes.error
   }
 
-  spinner.succeed('Logged in successfully!')
+  spinner().succeed('Logged in successfully!')
 
   return signInRes
 }

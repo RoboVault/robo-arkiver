@@ -1,3 +1,14 @@
+# v0.4.16
+- feat: enhance `arkiver list` command, see `arkiver list --help`
+- feat: added 3 new commands to the CLI:
+  - `arkiver keygen` to generate a new API key
+  - `arkiver keyrm` to remove an API key
+  - `arkiver keyls` to list all API keys
+- feat: adjusted `arkiver init` command
+- feat: Add --gql-only option to arkiver start command to start only the graphQL server
+- feat: Change EventHandler and BlockHandler return type to be Promise<void> | void
+- fix: bug where deploying while logged out causes issues when trying to login again in the same command
+
 # v0.4.15
 - feat: populate relational entities on graphql endpoint
 - feat: add overload to `manifest.addChain` and `chain.addContract` functions to pass in a callback function that takes in a DataSourceBuilder and ContractBuilder instance respectively

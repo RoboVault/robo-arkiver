@@ -3,13 +3,11 @@ import { $, Input, join, prompt, Select, Toggle } from '../deps.ts'
 export const action = async () => {
   let pb = $.progress('Fetching templates...')
 
-  let templatesRes: Response
-
-  await pb.with(async () => {
-    templatesRes = await fetch(
+  const templatesRes = await pb.with(() =>
+    fetch(
       'https://api.github.com/repos/RoboVault/robo-arkiver/contents/examples',
     )
-  })
+  )
 
   if (!templatesRes!.ok) {
     console.log('Error fetching templates: ', templatesRes!.statusText)
@@ -52,8 +50,8 @@ export const action = async () => {
       default: templateNames[0].value,
     },
     {
-      name: 'vscode',
-      message: 'Are you using VSCode?',
+      name: 'git',
+      message: 'Initialize git repo?',
       type: Toggle,
       default: true,
     },
@@ -74,8 +72,8 @@ export const action = async () => {
     )
 
     await $`git remote add origin https://github.com/RoboVault/robo-arkiver && git pull origin main && rm -rf .git`
+      .quiet('both')
       .cwd(newDir)
-      .quiet('stdout')
 
     // traverse the template directory and move all files to the root
     for await (
@@ -88,38 +86,37 @@ export const action = async () => {
 
     await Deno.remove(join(newDir, 'examples'), { recursive: true })
 
-    if (arkive.vscode) {
-      const dir = arkive.dir ?? defaultPath
-      await Deno.mkdir(join(Deno.cwd(), dir, '.vscode'))
+    const dir = arkive.dir ?? defaultPath
+    await Deno.mkdir(join(Deno.cwd(), dir, '.vscode'))
 
-      const vscode = `{
+    const vscode = `{
     "deno.enable": true,
     "deno.unstable": true
   }`
-      await Deno.writeTextFile(
-        join(Deno.cwd(), dir, '.vscode', 'settings.json'),
-        vscode,
-      )
+    await Deno.writeTextFile(
+      join(Deno.cwd(), dir, '.vscode', 'settings.json'),
+      vscode,
+    )
 
-      const gitignore = `/.vscode
+    const gitignore = `/.vscode
   /.vscode/*
   /.vscode/**/*
   `
-      await Deno.writeTextFile(
-        join(Deno.cwd(), dir, '.gitignore'),
-        gitignore,
-      )
-    }
+    await Deno.writeTextFile(
+      join(Deno.cwd(), dir, '.gitignore'),
+      gitignore,
+    )
 
-    await $`git init && git add . && git commit -m "Initial commit"`
-      .cwd(newDir)
-      .quiet('stdout')
+    if (arkive.git) {
+      await $`git init && git add . && git commit -m "Initial commit"`
+        .cwd(newDir)
+        .quiet('stdout')
+    }
   } catch (e) {
     $.logError(`Error initializing arkive: ${e}`)
     return
   }
 
-  // spinner.succeed('Initialized arkive')
   pb.finish()
   $.logStep('Initialized arkive')
 }

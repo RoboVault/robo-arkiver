@@ -10,6 +10,7 @@ export const createManifestHandlers = (
   let manifestLoggers: Record<string, log.LoggerConfig> = {}
 
   for (const [name, dataSource] of Object.entries(manifest.dataSources)) {
+    if (!dataSource) continue
     const { handlers: contractHandlers, loggers: contractLoggers } =
       createContractHandlers({
         chain: name,
