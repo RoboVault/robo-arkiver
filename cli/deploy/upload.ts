@@ -1,5 +1,4 @@
-import { getSupabaseClient } from '../utils.ts'
-import { login } from '../login/mod.ts'
+import { getSupabaseClientAndLogin } from '../utils.ts'
 import { SUPABASE_FUNCTIONS_URL } from '../constants.ts'
 import { ArkiveManifest, JSONBigIntReplacer } from '../../mod.ts'
 import { spinner } from '../spinner.ts'
@@ -11,17 +10,7 @@ export const upload = async (
   options: { public?: true; major?: true; env?: string },
 ) => {
   spinner().text = 'Uploading...'
-  const supabase = getSupabaseClient()
-  const sessionRes = await supabase.auth.getSession()
-
-  if (!sessionRes.data.session) {
-    spinner().info('Not logged in, logging in now...')
-    await login({}, supabase)
-  }
-
-  if (!sessionRes.data.session) {
-    throw new Error('Not logged in')
-  }
+  const { session } = await getSupabaseClientAndLogin()
 
   const formData = new FormData()
   formData.append('name', manifest.name)
@@ -49,7 +38,7 @@ export const upload = async (
   const headers = new Headers()
   headers.append(
     'Authorization',
-    `Bearer ${sessionRes.data.session.access_token}`,
+    `Bearer ${session.access_token}`,
   )
   const res = await fetch(
     new URL('/arkives', SUPABASE_FUNCTIONS_URL),

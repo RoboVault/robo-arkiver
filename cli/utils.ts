@@ -1,5 +1,7 @@
 import { SUPABASE_ANON_PUBLIC_KEY, SUPABASE_URL } from './constants.ts'
 import { createClient, Input, Secret, z } from './deps.ts'
+import { login } from './login/mod.ts'
+import { spinner } from './spinner.ts'
 
 export const getEmail = async () => {
   const email = await Input.prompt('✉️  Email:')
@@ -55,6 +57,30 @@ export const getSupabaseClient = () => {
   return createClient(SUPABASE_URL, SUPABASE_ANON_PUBLIC_KEY, {
     auth: { storage: localStorage },
   })
+}
+
+export const getSupabaseClientAndLogin = async () => {
+  let supabase = getSupabaseClient()
+  let sessionRes = await supabase.auth.getSession()
+  if (!sessionRes.data.session) {
+    await login({}, supabase)
+  } else {
+    return { supabase, session: sessionRes.data.session }
+  }
+  supabase = getSupabaseClient()
+  sessionRes = await supabase.auth.getSession()
+
+  if (sessionRes.error) {
+    spinner().fail(sessionRes.error.message)
+    Deno.exit(1)
+  }
+
+  if (!sessionRes.data.session) {
+    spinner().fail('Not logged in')
+    Deno.exit(1)
+  }
+
+  return { supabase, session: sessionRes.data.session }
 }
 
 export const logHeader = (version: string) => {
