@@ -36,5 +36,5 @@ export {
   ConsoleHandler,
 } from 'https://deno.land/std@0.181.0/log/handlers.ts'
 export { crypto } from 'https://deno.land/std@0.186.0/crypto/mod.ts'
-export { scope } from 'npm:arktype'
+export { scope } from 'npm:arktype@1.0.14-alpha'
 export { GraphQLError } from 'npm:graphql'
