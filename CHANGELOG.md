@@ -1,3 +1,6 @@
+# v0.4.18
+- fix: fix version of arktype to fix export error
+
 # v0.4.17
 - fix: bug in schema composer where it was not properly handling entities
 
