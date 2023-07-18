@@ -9,8 +9,6 @@ export default new Manifest('spawn-sources')
     chain
       .setOptions({
         blockRange: 799n,
-        rpcUrl:
-          'https://nd-266-887-751.p2pify.com/eff2e208e3d6b166bc048d9b531350be',
       })
       .addContract({
         abi: UNISWAP_V2_FACTORY,
