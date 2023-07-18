@@ -1,17 +1,28 @@
-// deno-lint-ignore-file no-explicit-any
+// deno-lint-ignore-file no-explicit-any ban-types
 import { supportedChains } from '../../chains.ts'
-import { ArkiveManifest, ChainOptions, CheckManifestName } from '../types.ts'
-import { mongoose, SchemaComposer } from '../../deps.ts'
+import {
+  ArkiveManifest,
+  ArkiveManifestEventHandlers,
+  ChainOptions,
+  Chains,
+  CheckManifestName,
+} from '../types.ts'
+import {
+  Abi,
+  ExtractAbiEventNames,
+  mongoose,
+  SchemaComposer,
+} from '../../deps.ts'
 import { parseArkiveManifest } from '../manifest-validator.ts'
 import { DataSourceBuilder } from './data-source.ts'
 
 export const manifestVersion = 'v1'
 
-// deno-lint-ignore ban-types
-export type Chains = keyof typeof supportedChains | string & {}
-
-export class Manifest<TName extends string = ''> {
-  public manifest: ArkiveManifest
+export class Manifest<
+  TName extends string = '',
+  TChains extends Partial<Record<Chains, Record<string, Abi>>> = {},
+> {
+  public manifest: ArkiveManifest<TChains>
 
   constructor(name: CheckManifestName<TName, TName>) {
     if (name === undefined) {
@@ -27,44 +38,83 @@ export class Manifest<TName extends string = ''> {
       entities: [],
       name: formattedName,
       version: manifestVersion,
+      infer: {} as any,
     }
   }
 
-  public addChain(
-    chain: Chains,
-    builderFn: (builder: DataSourceBuilder<TName>) => void,
-  ): Manifest<TName>
+  public addChain<
+    TChain extends Exclude<Chains, keyof TChains>,
+    TContracts extends Record<string, Abi>,
+  >(
+    chain: TChain,
+    builderFn: (
+      builder: DataSourceBuilder<
+        TName,
+        TChains[TChain] extends {} ? TChains[TChain] : {}
+      >,
+    ) => DataSourceBuilder<TName, TContracts>,
+  ): Manifest<TName, { [key in TChain]: TContracts } & TChains>
 
-  public addChain(
-    chain: Chains,
+  public addChain<TChain extends Exclude<Chains, keyof TChains>>(
+    chain: TChain,
     options?: Partial<ChainOptions>,
-  ): DataSourceBuilder<TName>
+  ): DataSourceBuilder<
+    TName,
+    TChains[TChain] extends {} ? TChains[TChain] : {}
+  >
 
-  public addChain(
-    chain: Chains,
+  public addChain<
+    TChain extends Exclude<Chains, keyof TChains>,
+    TContracts extends Record<string, Abi>,
+  >(
+    chain: TChain,
     optionsOrBuilderFn?:
-      | ((builder: DataSourceBuilder<TName>) => void)
+      | ((
+        builder: DataSourceBuilder<
+          TName,
+          TChains[TChain] extends {} ? TChains[TChain] : {}
+        >,
+      ) => DataSourceBuilder<TName, TContracts>)
       | Partial<ChainOptions>,
-  ): Manifest<TName> | DataSourceBuilder<TName> {
+  ):
+    | Manifest<TName, TChains & { [key in TChain]: TContracts }>
+    | DataSourceBuilder<
+      TName,
+      TChains[TChain] extends {} ? TChains[TChain] : {}
+    > {
     if (optionsOrBuilderFn && typeof optionsOrBuilderFn === 'function') {
-      optionsOrBuilderFn(new DataSourceBuilder<TName>(this, chain))
+      optionsOrBuilderFn(
+        new DataSourceBuilder<
+          TName,
+          TChains[TChain] extends {} ? TChains[TChain] : {}
+        >(this as any, chain),
+      )
       if (!this.manifest.dataSources[chain]?.options.rpcUrl) {
         throw new Error(`RPC URL is required for chain ${chain}`)
       }
-      return this
+      return this as unknown as Manifest<
+        TName,
+        TChains & { [key in TChain]: TContracts }
+      >
     }
 
     if (!(chain in supportedChains) && !optionsOrBuilderFn?.rpcUrl) {
       throw new Error(`RPC URL is required for chain ${chain}`)
     }
-    return new DataSourceBuilder<TName>(this, chain, optionsOrBuilderFn)
+    return new DataSourceBuilder<
+      TName,
+      TChains[TChain] extends {} ? TChains[TChain] : {}
+    >(this as any, chain, optionsOrBuilderFn)
   }
 
-  private chain(
-    chain: keyof typeof supportedChains,
+  private chain<TChain extends Chains>(
+    chain: TChain,
     options?: Partial<ChainOptions>,
   ) {
-    return new DataSourceBuilder<TName>(this, chain, options)
+    return new DataSourceBuilder<
+      TName,
+      TChains[TChain] extends {} ? TChains[TChain] : {}
+    >(this, chain, options)
   }
 
   public addEntity(entity: mongoose.Model<any>) {
@@ -85,6 +135,10 @@ export class Manifest<TName extends string = ''> {
     return this
   }
 
+  public get eventHandlers(): ArkiveManifestEventHandlers<TChains> {
+    return {} as ArkiveManifestEventHandlers<TChains>
+  }
+
   public build() {
     const { problems } = parseArkiveManifest.manifest(this.manifest)
     if (problems) {
@@ -99,4 +153,21 @@ export class Manifest<TName extends string = ''> {
     this.manifest.schemaComposerCustomizer = callbackFn
     return this
   }
+}
+
+export const inferManifest = <
+  TChains extends Partial<Record<Chains, Record<string, Abi>>>,
+  TChainName extends keyof TChains,
+  TContractName extends keyof TChains[TChainName],
+  TEventName extends ExtractAbiEventNames<
+    TChains[TChainName][TContractName] extends Abi
+      ? TChains[TChainName][TContractName]
+      : never
+  >,
+>(
+  manifest: ArkiveManifest<TChains>,
+  params: { chain: TChainName; contract: TContractName; event: TEventName },
+) => {
+  const { chain, contract, event } = params
+  return manifest.infer[chain][contract][`on${event}`]
 }

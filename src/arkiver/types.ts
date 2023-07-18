@@ -1,3 +1,4 @@
+import { supportedChains } from '../chains.ts'
 import {
   Abi,
   AbiEvent,
@@ -12,10 +13,9 @@ import {
   RpcLog,
   SchemaComposer,
 } from '../deps.ts'
-import { Chains } from './manifest-builder/manifest.ts'
 import { Store } from './store.ts'
 
-export interface Arkive {
+export type Arkive = {
   id: number
   user_id: string
   name: string
@@ -24,7 +24,7 @@ export interface Arkive {
   deployment: Omit<Deployment, 'arkive'>
 }
 
-export interface Deployment {
+export type Deployment = {
   id: number
   arkive_id: number
   major_version: number
@@ -42,19 +42,24 @@ export interface Deployment {
   arkive: Omit<Arkive, 'deployment'>
 }
 
-export interface IBlockHandler {
+export type IBlockHandler = {
   handler: BlockHandler
   startBlockHeight: bigint | 'live'
   blockInterval: bigint
   name: string
 }
 
-export interface ChainOptions {
+export type ChainOptions = {
   blockRange: bigint
   rpcUrl: string
 }
 
-export interface ArkiveManifest {
+// deno-lint-ignore ban-types
+export type Chains = keyof typeof supportedChains | string & {}
+
+export type ArkiveManifest<
+  TChains extends Partial<Record<Chains, Record<string, Abi>>> = {},
+> = {
   dataSources: Partial<
     Record<Chains, DataSource>
   >
@@ -63,7 +68,54 @@ export interface ArkiveManifest {
   name: string
   version: string
   schemaComposerCustomizer?: (sc: SchemaComposer) => void
+  infer: {
+    [TChainName in keyof TChains]: {
+      [TContractName in keyof TChains[TChainName]]: {
+        [
+          TEventName in ExtractAbiEventNames<
+            TChains[TChainName][TContractName] extends Abi
+              ? TChains[TChainName][TContractName]
+              : never
+          > as `on${TEventName}`
+        ]: EventHandlerFor<
+          TChains[TChainName][TContractName] extends Abi
+            ? TChains[TChainName][TContractName]
+            : never,
+          TEventName
+        >
+      }
+    }
+  }
 }
+
+export type ArkiveManifestEventHandlers<
+  // deno-lint-ignore ban-types
+  TChains extends Partial<Record<Chains, Record<string, Abi>>> = {},
+> = {
+  [TChainName in keyof TChains]: {
+    [TContractName in keyof TChains[TChainName]]: {
+      [
+        TEventName in ExtractAbiEventNames<
+          TChains[TChainName][TContractName] extends Abi
+            ? TChains[TChainName][TContractName]
+            : never
+        > as `on${TEventName}`
+      ]: EventHandlerFor<
+        TChains[TChainName][TContractName] extends Abi
+          ? TChains[TChainName][TContractName]
+          : never,
+        TEventName
+      >
+    }
+  }
+}
+
+// export type InferEventHandler<
+//   TManifest extends ArkiveManifest,
+//   TChain extends keyof TManifest['infer'],
+//   TContract extends keyof TManifest['infer'][TChain],
+//   TEventName extends keyof TManifest['infer'][TChain][TContract],
+// > = TManifest['infer'][TChain][TContract][TEventName]
 
 export type DataSource = {
   contracts?: Contract[]
@@ -71,7 +123,7 @@ export type DataSource = {
   options: ChainOptions
 }
 
-export interface Contract {
+export type Contract = {
   abi: Abi
   sources: {
     address: string
@@ -81,7 +133,7 @@ export interface Contract {
   id: string
 }
 
-interface EventSource {
+type EventSource = {
   name: string
   // deno-lint-ignore no-explicit-any
   handler: EventHandler<any, any, any>
@@ -103,11 +155,11 @@ export type SafeLog<TAbiEvent extends AbiEvent> = RecursiveNonNullable<
 
 export type SafeRpcLog = RecursiveNonNullable<RpcLog>
 
-export interface EventHandlerContext<
+export type EventHandlerContext<
   TAbiEvent extends AbiEvent,
   TEventName extends string,
   TAbi extends Abi,
-> {
+> = {
   event: SafeLog<TAbiEvent>
   eventName: TEventName
   client: PublicClient
@@ -116,7 +168,7 @@ export interface EventHandlerContext<
   logger: log.Logger
 }
 
-export interface BlockHandlerContext {
+export type BlockHandlerContext = {
   block: SafeBlock
   client: PublicClient
   store: Store

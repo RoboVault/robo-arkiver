@@ -16,11 +16,12 @@ import { DataSourceBuilder } from './data-source.ts'
 export class ContractBuilder<
   const TAbi extends Abi,
   TName extends string,
+  TContracts extends Record<string, Abi>,
 > {
   public contract: Contract
 
   constructor(
-    private builder: DataSourceBuilder<TName>,
+    private builder: DataSourceBuilder<TName, TContracts>,
     abi: TAbi,
     name?: string,
   ) {
@@ -120,7 +121,7 @@ export class ContractBuilder<
   }
 }
 
-const hashAbi = (abi: Abi) => {
+export const hashAbi = (abi: Abi) => {
   const textEncoder = new TextEncoder()
   const str = JSON.stringify(abi)
   const hash = crypto.subtle.digestSync('SHA-256', textEncoder.encode(str))
@@ -129,5 +130,5 @@ const hashAbi = (abi: Abi) => {
     uint8Array,
     (byte) => byte.toString(16).padStart(2, '0'),
   ).join('')
-  return hexString
+  return hexString.slice(0, 6)
 }

@@ -5,19 +5,21 @@ import { getChainObjFromChainName } from '../../utils.ts'
 import {
   BlockHandler,
   ChainOptions,
+  Chains,
   DataSource,
   EventHandler,
   ValidateSourcesObject,
 } from '../types.ts'
-import { ContractBuilder } from './contract.ts'
-import { Chains, Manifest } from './manifest.ts'
+import { ContractBuilder, hashAbi } from './contract.ts'
+import { Manifest } from './manifest.ts'
 
 type AddContractParams<
   TAbi extends Abi,
   TSources extends Record<string, bigint>,
+  TContractName extends string,
 > = {
   abi: TAbi
-  name?: string
+  name: TContractName
   sources?: ValidateSourcesObject<TSources>
   eventHandlers?: Partial<
     {
@@ -30,7 +32,10 @@ type AddContractParams<
   >
 }
 
-export class DataSourceBuilder<TName extends string> {
+export class DataSourceBuilder<
+  TName extends string,
+  TContracts extends Record<string, Abi>,
+> {
   public dataSource: DataSource
 
   constructor(
@@ -48,7 +53,9 @@ export class DataSourceBuilder<TName extends string> {
     this.builder.manifest.dataSources[chain] = this.dataSource = dataSource
   }
 
-  public setOptions(options: Partial<ChainOptions>): DataSourceBuilder<TName> {
+  public setOptions(
+    options: Partial<ChainOptions>,
+  ): DataSourceBuilder<TName, TContracts> {
     this.dataSource.options = {
       ...this.dataSource.options,
       ...options,
@@ -56,8 +63,8 @@ export class DataSourceBuilder<TName extends string> {
     return this
   }
 
-  #addContract<const TAbi extends Abi>(
-    nameOrAbi: string | TAbi,
+  #addContract<const TAbi extends Abi, TContractName extends string>(
+    nameOrAbi: TContractName | TAbi,
     abi?: TAbi,
   ) {
     if (this.dataSource.contracts == undefined) {
@@ -67,22 +74,33 @@ export class DataSourceBuilder<TName extends string> {
       if (abi === undefined) {
         throw new Error('ABI is required when passing a name.')
       }
-      return new ContractBuilder<TAbi, TName>(this, abi, nameOrAbi)
+      return new ContractBuilder<
+        TAbi,
+        TName,
+        TContracts & { [key in TContractName]: TAbi }
+      >(
+        this,
+        abi,
+        nameOrAbi,
+      )
     }
-    return new ContractBuilder<TAbi, TName>(this, nameOrAbi)
+    return new ContractBuilder<TAbi, TName, TContracts>(
+      this,
+      nameOrAbi,
+    )
   }
 
   private contract<const TAbi extends Abi>(
     abi: TAbi,
-  ): ContractBuilder<TAbi, TName>
+  ): ContractBuilder<TAbi, TName, TContracts>
 
-  private contract<const TAbi extends Abi>(
-    name: string,
+  private contract<const TAbi extends Abi, TContractName extends string>(
+    name: TContractName,
     abi: TAbi,
-  ): ContractBuilder<TAbi, TName>
+  ): ContractBuilder<TAbi, TName, TContracts & { [key in TContractName]: TAbi }>
 
-  private contract<const TAbi extends Abi>(
-    nameOrAbi: string | TAbi,
+  private contract<const TAbi extends Abi, TContractName extends string>(
+    nameOrAbi: TContractName | TAbi,
     abi?: TAbi,
   ) {
     return this.#addContract(nameOrAbi, abi)
@@ -90,40 +108,68 @@ export class DataSourceBuilder<TName extends string> {
 
   public addContract<const TAbi extends Abi>(
     abi: TAbi,
-  ): ContractBuilder<TAbi, TName>
-
-  public addContract<const TAbi extends Abi>(
-    name: string,
-    abi: TAbi,
-  ): ContractBuilder<TAbi, TName>
+  ): ContractBuilder<TAbi, TName, TContracts>
 
   public addContract<
+    const TAbi extends Abi,
+    const TContractName extends string,
+  >(
+    name: TContractName,
+    abi: TAbi,
+  ): ContractBuilder<TAbi, TName, TContracts & { [key in TContractName]: TAbi }>
+
+  public addContract<
+    const TContractName extends string,
     const TAbi extends Abi,
     TSources extends Record<string, bigint>,
   >(
-    params: AddContractParams<TAbi, TSources>,
-  ): DataSourceBuilder<TName>
-
-  public addContract<const TAbi extends Abi>(
-    name: string,
-    abi: TAbi,
-    contractBuilderFn: (builder: ContractBuilder<TAbi, TName>) => void,
-  ): DataSourceBuilder<TName>
+    params: AddContractParams<TAbi, TSources, TContractName>,
+  ): DataSourceBuilder<TName, TContracts & { [key in TContractName]: TAbi }>
 
   public addContract<
     const TAbi extends Abi,
+    const TContractName extends string,
+  >(
+    name: TContractName,
+    abi: TAbi,
+    contractBuilderFn: (
+      builder: ContractBuilder<TAbi, TName, TContracts>,
+    ) => void,
+  ): DataSourceBuilder<TName, TContracts & { [key in TContractName]: TAbi }>
+
+  public addContract<
+    const TAbi extends Abi,
+    const TContractName extends string,
     TSources extends Record<string, bigint> = Record<
       string | number | symbol,
       never
     >,
   >(
-    nameOrAbiOrParams: string | TAbi | AddContractParams<TAbi, TSources>,
+    nameOrAbiOrParams:
+      | TContractName
+      | TAbi
+      | AddContractParams<TAbi, TSources, TContractName>,
     abi?: TAbi,
-    contractBuilderFn?: (builder: ContractBuilder<TAbi, TName>) => void,
-  ): ContractBuilder<TAbi, TName> | DataSourceBuilder<TName> {
+    contractBuilderFn?: (
+      builder: ContractBuilder<
+        TAbi,
+        TName,
+        TContracts & { [key in TContractName]: TAbi }
+      >,
+    ) => void,
+  ):
+    | ContractBuilder<
+      TAbi,
+      TName,
+      TContracts & { [key in TContractName]: TAbi }
+    >
+    | DataSourceBuilder<TName, TContracts & { [key in TContractName]: TAbi }> {
     if (contractBuilderFn && typeof nameOrAbiOrParams === 'string') {
       contractBuilderFn(this.#addContract(nameOrAbiOrParams, abi))
-      return this
+      return this as DataSourceBuilder<
+        TName,
+        TContracts & { [key in TContractName]: TAbi }
+      >
     }
     if (typeof nameOrAbiOrParams === 'object' && 'abi' in nameOrAbiOrParams) {
       const { abi, name, sources, eventHandlers } = nameOrAbiOrParams
@@ -139,9 +185,16 @@ export class DataSourceBuilder<TName extends string> {
       if (eventHandlers) {
         contractBuilder.addEventHandlers(eventHandlers)
       }
-      return this
+      return this as DataSourceBuilder<
+        TName,
+        TContracts & { [key in TContractName]: TAbi }
+      >
     }
-    return this.#addContract(nameOrAbiOrParams, abi)
+    return this.#addContract(nameOrAbiOrParams, abi) as ContractBuilder<
+      TAbi,
+      TName,
+      TContracts & { [key in TContractName]: TAbi }
+    >
   }
 
   public addBlockHandler(
@@ -178,9 +231,12 @@ export class DataSourceBuilder<TName extends string> {
       const sources = lib.getDataSources()
       for (const info of sources) {
         const { contract, handlers, abi } = info
-        chain.addContract(abi)
-          .addSources(contract as any)
-          .addEventHandlers(handlers)
+        chain.addContract({
+          abi,
+          name: hashAbi(abi),
+          eventHandlers: handlers,
+          sources: contract as any,
+        })
       }
     })
     return this
