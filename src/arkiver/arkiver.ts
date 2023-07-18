@@ -1,7 +1,8 @@
-import { Arkive, ArkiveManifest } from './types.ts'
+import { Arkive, ArkiveManifest, Contract } from './types.ts'
 import { DataSource } from './data-source.ts'
-import { defaultArkiveData } from '../utils.ts'
+import { defaultArkiveData, JSONBigIntReplacer } from '../utils.ts'
 import { logger } from '../logger.ts'
+import { ISpawnedSource, SpawnedSource } from './spawned-source.ts'
 
 export class Arkiver extends EventTarget {
   private readonly manifest: ArkiveManifest
@@ -36,19 +37,25 @@ export class Arkiver extends EventTarget {
         this.manifest,
       )
     } catch (e) {
-      logger('arkiver').error(`Error running arkiver: ${e}`)
+      logger('arkiver').error(`Error running arkiver: ${e} ${e.stack}`)
     }
   }
 
   private async initSources() {
     logger('arkiver').debug(`Initializing data sources...`)
     const { dataSources } = this.manifest
+    const spawnedSources = await this.#getSpawnedSources()
     for (const [chain, source] of Object.entries(dataSources)) {
       if (source === undefined) {
         // this should never happen but just in case
         logger('arkiver').error(`No data source found for chain ${chain}`)
         continue
       }
+      const chainSpawnedSources = spawnedSources[chain]
+      const contracts = this.#mergeContracts(
+        source.contracts,
+        chainSpawnedSources,
+      )
       // priority for rpcUrl is (highest to lowest):
       // 1. rpcUrl passed into Arkiver constructor (cli args in local mode)
       // 2. rpcUrl passed specified while building manifest
@@ -64,7 +71,7 @@ export class Arkiver extends EventTarget {
         arkiveVersion: this.arkiveData.deployment.major_version,
         blockRange: source.options.blockRange,
         chain,
-        contracts: source.contracts ?? [],
+        contracts,
         rpcUrl: rpcUrl,
         blockSources: source.blockHandlers ?? [],
         noDb: this.noDb,
@@ -92,5 +99,50 @@ export class Arkiver extends EventTarget {
       await dataSource.run()
       this.sources.push(dataSource)
     }
+  }
+
+  async #getSpawnedSources() {
+    const spawnedSources = await SpawnedSource.find({})
+    if (spawnedSources.length === 0) {
+      return {}
+    }
+    return spawnedSources.reduce((acc, source) => {
+      if (acc[source.chain] === undefined) {
+        acc[source.chain] = []
+      }
+      acc[source.chain].push(source)
+      return acc
+    }, {} as Record<string, ISpawnedSource[]>)
+  }
+
+  #mergeContracts(
+    sourceContracts: Contract[] | undefined,
+    spawnedSources: ISpawnedSource[] | undefined,
+  ) {
+    if (!sourceContracts) {
+      return []
+    }
+
+    if (!spawnedSources) {
+      return sourceContracts
+    }
+
+    for (const spawnedSource of spawnedSources) {
+      const contract = sourceContracts.find((c) =>
+        c.id === spawnedSource.contract
+      )
+      if (!contract) {
+        logger('arkiver').error(
+          `Spawned contract ${spawnedSource.contract} not found in manifest, skipping`,
+        )
+        continue
+      }
+      contract.sources.push({
+        address: spawnedSource.address,
+        startBlockHeight: BigInt(spawnedSource.startBlockHeight),
+      })
+    }
+
+    return sourceContracts
   }
 }

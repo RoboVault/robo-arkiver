@@ -1,6 +1,7 @@
 import {
   Abi,
   AbiEvent,
+  Address,
   Block,
   ExtractAbiEvent,
   ExtractAbiEventNames,
@@ -103,6 +104,11 @@ export type SafeLog<TAbiEvent extends AbiEvent> = RecursiveNonNullable<
 
 export type SafeRpcLog = RecursiveNonNullable<RpcLog>
 
+export type spawnContract = <TContractNames extends string = string>(params: {
+  address: Address
+  name: TContractNames
+}) => Promise<void>
+
 export interface EventHandlerContext<
   TAbiEvent extends AbiEvent,
   TEventName extends string,
@@ -114,6 +120,7 @@ export interface EventHandlerContext<
   store: Store
   contract: GetContractReturnType<TAbi, PublicClient>
   logger: log.Logger
+  spawnContract: spawnContract
 }
 
 export interface BlockHandlerContext {
@@ -121,6 +128,7 @@ export interface BlockHandlerContext {
   client: PublicClient
   store: Store
   logger: log.Logger
+  spawnContract: spawnContract
 }
 
 export type SafeBlock = RecursiveNonNullable<Block>

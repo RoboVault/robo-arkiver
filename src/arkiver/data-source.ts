@@ -586,9 +586,10 @@ export class DataSource extends EventTarget {
           )
 
           if (!handler) {
-            throw new Error(
-              `No handler set for topic ${log.topics[0]}-${contractId}`,
+            logger(this.chain).warning(
+              `No event handler set for ${log.topics[0]}-${contractId}`,
             )
+            continue
           }
 
           const event = decodeEventLog({
@@ -613,6 +614,7 @@ export class DataSource extends EventTarget {
                   publicClient: this.client,
                 }),
                 logger: logger(loggerKey),
+                spawnContract: this.spawnContract.bind(this),
               })
               break
             } catch (e) {
@@ -646,6 +648,7 @@ export class DataSource extends EventTarget {
                   client: this.client,
                   store: this.store,
                   logger: logger(loggerKey),
+                  spawnContract: this.spawnContract.bind(this),
                 })
                 break
               } catch (e) {
@@ -676,7 +679,9 @@ export class DataSource extends EventTarget {
 
           const eventHandler = this.agnosticEvents.get(topic)
           if (!eventHandler) {
-            logger(this.chain).error(`No event found for log ${log}`)
+            logger(this.chain).error(
+              `No event handler found for agnostic log ${log}`,
+            )
             continue
           }
 
@@ -703,6 +708,7 @@ export class DataSource extends EventTarget {
                   publicClient: this.client,
                 }),
                 logger: logger(loggerKey),
+                spawnContract: this.spawnContract.bind(this),
               })
               break
             } catch (e) {
@@ -909,5 +915,39 @@ export class DataSource extends EventTarget {
         this.normalizedContracts.signatureTopics.push(topic)
       }
     }
+  }
+
+  private async spawnContract(params: { address: string; name: string }) {
+    const { address, name } = params
+
+    const contract = this.contracts.find((c) => c.id === name)
+
+    if (!contract) {
+      logger(this.chain).error(
+        `Error while spawning contract ${name} with address ${address}: contract not found`,
+      )
+      return
+    }
+
+    const startBlockHeight = this.processedBlockHeight
+
+    const source = {
+      address,
+      startBlockHeight,
+    }
+
+    this.normalizedContracts.contracts.push(source)
+    this.addressToId.set(source.address.toLowerCase(), name)
+
+    await this.statusProvider.addSpawnedSource({
+      chain: this.chain,
+      contract: name,
+      address,
+      startBlockHeight: Number(startBlockHeight),
+    })
+
+    logger(this.chain).info(
+      `Spawned contract ${name} with address ${address} at block ${startBlockHeight}`,
+    )
   }
 }
