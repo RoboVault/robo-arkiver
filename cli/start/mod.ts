@@ -33,33 +33,40 @@ export const action = async (
   }
 
   if (!options.mongoConnection && options.db) {
-    const cleanup = async () => {
-      console.log(`\nCleaning up...`)
-      const stopRes = await $`docker stop ${
-        containerId.stdout.substring(0, 12)
-      }`
-        .stdout('piped')
-      Deno.exit(stopRes.code)
+    try {
+      const cleanup = async () => {
+        console.log(`\nCleaning up...`)
+        const stopRes = await $`docker stop ${
+          containerId.stdout.substring(0, 12)
+        }`
+          .stdout('piped')
+        Deno.exit(stopRes.code)
+      }
+
+      const addSignalToCleanup = (signal: Deno.Signal) => {
+        try {
+          Deno.addSignalListener(signal, cleanup)
+          // deno-lint-ignore no-unused-vars no-empty
+        } catch (e) {}
+      }
+
+      addSignalToCleanup('SIGINT')
+      addSignalToCleanup('SIGHUP')
+      addSignalToCleanup('SIGTERM')
+      addSignalToCleanup('SIGQUIT')
+      addSignalToCleanup('SIGTSTP')
+      addSignalToCleanup('SIGABRT')
+
+      const containerId =
+        await $`docker run --name arkiver_mongodb -d -p 27017:27017 --env MONGO_INITDB_ROOT_USERNAME=admin --env MONGO_INITDB_ROOT_PASSWORD=password --rm mongo`
+          .stdout('piped')
+      await delay(3000) // wait for db to start
+    } catch (e) {
+      console.error(
+        `Failed to start mongodb container: ${e.message}, ${e.stack}`,
+      )
+      Deno.exit(1)
     }
-
-    const addSignalToCleanup = (signal: Deno.Signal) => {
-      try {
-        Deno.addSignalListener(signal, cleanup)
-        // deno-lint-ignore no-unused-vars no-empty
-      } catch (e) {}
-    }
-
-    addSignalToCleanup('SIGINT')
-    addSignalToCleanup('SIGHUP')
-    addSignalToCleanup('SIGTERM')
-    addSignalToCleanup('SIGQUIT')
-    addSignalToCleanup('SIGTSTP')
-    addSignalToCleanup('SIGABRT')
-
-    const containerId =
-      await $`docker run --name arkiver_mongodb -d -p 27017:27017 --env MONGO_INITDB_ROOT_USERNAME=admin --env MONGO_INITDB_ROOT_PASSWORD=password --rm mongo`
-        .stdout('piped')
-    await delay(3000) // wait for db to start
   }
 
   const { manifest: manifestPath } = options
