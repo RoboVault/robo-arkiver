@@ -37,7 +37,7 @@ export const parseArkiveManifest = scope({
     name: 'string',
   },
   source: {
-    address: /^0x[a-fA-F0-9]{40}$/,
+    address: '/^0x[a-fA-F0-9]{40}$/ | "*"',
     startBlockHeight: 'bigint',
   },
   eventSource: {

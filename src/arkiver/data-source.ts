@@ -1,7 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import {
   Abi,
-  Block,
   createPublicClient,
   decodeEventLog,
   encodeEventTopics,
@@ -87,7 +86,7 @@ export class DataSource extends EventTarget {
     bigint,
     {
       blocks: {
-        block: Block
+        block: SafeBlock
         handlers: BlockHandler[]
       }[]
       nextFromBlock: bigint
@@ -450,7 +449,7 @@ export class DataSource extends EventTarget {
     )
 
     Promise.all(blocksPromises).then((blocks) => {
-      if (blocks.some((b) => b.block === null)) {
+      if (blocks.some((b) => b.block.number === null)) {
         logger(this.chain).debug(`Some blocks still pending, retrying...`)
         this.retryFetchBlocks.set(fromBlock, toBlock)
         return
@@ -461,7 +460,7 @@ export class DataSource extends EventTarget {
       this.blocksQueue.set(
         fromBlock,
         {
-          blocks,
+          blocks: blocks as { block: SafeBlock; handlers: BlockHandler[] }[],
           nextFromBlock,
         },
       )
@@ -496,21 +495,32 @@ export class DataSource extends EventTarget {
         `Processing logs and blocks from block ${this.processedBlockHeight}...`,
       )
 
-      const logsAndBlocks = [
+      const logsAndBlocks: (
+        | ({
+          blockNumber: `0x${string}`
+          type: 'log' | 'agnosticLog'
+        } & SafeRpcLog)
+        | {
+          blockNumber: bigint
+          type: 'block'
+          block: SafeBlock
+          handlers: BlockHandler[]
+        }
+      )[] = [
         ...logs.logs.map((log) => ({
           ...log,
           blockNumber: log.blockNumber,
-          type: 'log',
+          type: 'log' as const,
         })),
         ...blocks.blocks.map((block) => ({
           ...block,
           blockNumber: block.block.number,
-          type: 'block',
+          type: 'block' as const,
         })),
         ...agnosticLogs.logs.map((log) => ({
           ...log,
           blockNumber: log.blockNumber,
-          type: 'agnosticLog',
+          type: 'agnosticLog' as const,
         })),
       ]
 
@@ -533,11 +543,20 @@ export class DataSource extends EventTarget {
 
       logsAndBlocks.sort((a, b) => {
         a.blockNumber = !(typeof a.blockNumber === 'bigint')
-          ? BigInt(a.blockNumber ?? 0)
+          ? BigInt(a.blockNumber)
           : a.blockNumber
         b.blockNumber = !(typeof b.blockNumber === 'bigint')
-          ? BigInt(b.blockNumber ?? 0)
+          ? BigInt(b.blockNumber)
           : b.blockNumber
+        if (
+          (a.type === 'log' || a.type === 'agnosticLog') &&
+          (b.type === 'log' || b.type === 'agnosticLog')
+        ) {
+          const isEqual = a.blockNumber === b.blockNumber
+          if (isEqual) {
+            return parseInt(a.logIndex, 16) - parseInt(b.logIndex, 16)
+          }
+        }
         return Number((a.blockNumber ?? 0n) - (b.blockNumber ?? 0n))
       })
 
@@ -616,19 +635,14 @@ export class DataSource extends EventTarget {
             }
           }
         } else if (logOrBlock.type === 'block') {
-          const block = logOrBlock as {
-            block: SafeBlock
-            handlers: BlockHandler[]
-          }
-
-          for (const handler of block.handlers) {
+          for (const handler of logOrBlock.handlers) {
             const loggerKey = `${this.chain}-${handler.name}`
 
             let retries = 0
             while (true) {
               try {
                 await handler({
-                  block: block.block,
+                  block: logOrBlock.block,
                   client: this.client,
                   store: this.store,
                   logger: logger(loggerKey),
@@ -636,13 +650,13 @@ export class DataSource extends EventTarget {
                 break
               } catch (e) {
                 error =
-                  `Block handler ${handler.name} at block ${block.block.number}\n${e.stack}`
+                  `Block handler ${handler.name} at block ${logOrBlock.block.number}\n${e.stack}`
                 logger(loggerKey).error(error)
                 retries++
                 if (retries > this.maxHandlerRetries) {
                   this.dispatchEvent(new Event('handlerError'))
                   logger(loggerKey).debug(
-                    `Max retries reached for handler ${handler.name} at block ${block.block.number}, stopping ...`,
+                    `Max retries reached for handler ${handler.name} at block ${logOrBlock.block.number}, stopping ...`,
                   )
                   this.stop()
                   return

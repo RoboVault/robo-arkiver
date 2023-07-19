@@ -1,17 +1,18 @@
-import { wait } from '../deps.ts'
-import { craftEndpoint, getSupabaseClient } from '../utils.ts'
-import { login } from '../login/mod.ts'
+import {
+  craftEndpoint,
+  getSupabaseClient,
+  getSupabaseClientAndLogin,
+} from '../utils.ts'
 import { SUPABASE_FUNCTIONS_URL } from '../constants.ts'
 import { Arkive, Deployment } from '../../src/arkiver/types.ts'
 import { formatDistanceToNow } from 'npm:date-fns'
+import { spinner } from '../spinner.ts'
 
-type RawArkive = Omit<Arkive, 'deployment'> & {
-  deployments: (Omit<Deployment, 'created_at' | 'id'> & {
-    deployment_created_at: string
-    deployment_id: number
-  })[]
+type RawArkive = Omit<Arkive, 'deployment' | 'created_at'> & {
+  deployments: Omit<Deployment, 'arkive_id'>[]
   // deno-lint-ignore ban-types
   environment: 'staging' | 'prod' | string & {}
+  username: string
 }
 
 export const action = async (options: {
@@ -22,26 +23,15 @@ export const action = async (options: {
 
   if (dev) return listDev()
 
-  let spinner = wait('Fetching your arkives...').start()
+  spinner('Fetching your arkives...')
 
   try {
     // delete package
-    const supabase = getSupabaseClient()
-    const sessionRes = await supabase.auth.getSession()
-
-    if (!sessionRes.data.session) {
-      spinner.info('Not logged in, logging in now...')
-      await login({}, supabase)
-      spinner = wait('Fetching your arkives...').start()
-    }
+    const { supabase, session } = await getSupabaseClientAndLogin()
 
     const userRes = await supabase.auth.getUser()
     if (userRes.error) {
       throw userRes.error
-    }
-
-    if (!sessionRes.data.session) {
-      throw new Error('Not logged in')
     }
 
     const username = await getUsername(userRes.data.user.id)
@@ -49,7 +39,7 @@ export const action = async (options: {
     const headers = new Headers()
     headers.append(
       'Authorization',
-      `Bearer ${sessionRes.data.session.access_token}`,
+      `Bearer ${session.access_token}`,
     )
 
     const listRes = await fetch(
@@ -64,9 +54,11 @@ export const action = async (options: {
       throw new Error(await listRes.text())
     }
 
-    spinner.stop()
+    spinner().stop()
 
     const rawArkives = await listRes.json()
+
+    console.log(rawArkives)
 
     if (options.all) {
       const arkives = (rawArkives as RawArkive[]).flatMap((arkive) =>
@@ -74,13 +66,13 @@ export const action = async (options: {
           name: arkive.name,
           deployed: `${
             formatDistanceToNow(
-              new Date(deployment.deployment_created_at),
+              new Date(deployment.created_at),
             )
           } ago`,
           version: `${deployment.major_version}.${deployment.minor_version}`,
           status: deployment.status,
           arkive_id: arkive.id,
-          deployment_id: deployment.deployment_id.toString(),
+          deployment_id: deployment.id.toString(),
         })).filter((deployment) =>
           options.status ? deployment.status === options.status : true
         )
@@ -91,14 +83,14 @@ export const action = async (options: {
     } else {
       const arkives = (rawArkives as RawArkive[]).map((arkive) => {
         const latestDeployment = arkive.deployments.sort((a, b) =>
-          a.deployment_id - b.deployment_id
+          a.id - b.id
         )[0]
 
         return {
           name: arkive.name,
           deployed: `${
             formatDistanceToNow(
-              new Date(latestDeployment.deployment_created_at),
+              new Date(latestDeployment.created_at),
             )
           } ago`,
           version:
@@ -119,7 +111,7 @@ export const action = async (options: {
       console.table(arkives)
     }
   } catch (error) {
-    spinner.fail('Listing arkives failed: ' + error.message)
+    spinner().fail('Listing arkives failed: ' + error.message)
     return
   }
 }
