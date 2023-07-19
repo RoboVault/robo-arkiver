@@ -1,10 +1,10 @@
 import { spinner } from '../spinner.ts'
-import { getSupabaseClient } from '../utils.ts'
+import { getSupabaseClientAndLogin } from '../utils.ts'
 
 export const action = async (key: string) => {
   spinner(`Deleting key ${key}`)
 
-  const client = getSupabaseClient()
+  const { supabase: client } = await getSupabaseClientAndLogin()
 
   const { error } = await client.functions.invoke('api-key', {
     method: 'DELETE',
