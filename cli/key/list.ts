@@ -1,10 +1,10 @@
 import { spinner } from '../spinner.ts'
-import { getSupabaseClient } from '../utils.ts'
+import { getSupabaseClientAndLogin } from '../utils.ts'
 
 export const action = async () => {
   spinner('Fetching API keys')
 
-  const client = getSupabaseClient()
+  const { supabase: client } = await getSupabaseClientAndLogin()
 
   const { data, error } = await client.functions.invoke<{ api_key: string }[]>(
     'api-key',

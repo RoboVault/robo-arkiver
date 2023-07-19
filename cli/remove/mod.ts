@@ -1,7 +1,7 @@
 import { SUPABASE_FUNCTIONS_URL } from '../constants.ts'
-import { join, wait } from '../deps.ts'
-import { login } from '../login/mod.ts'
-import { getSupabaseClient } from '../utils.ts'
+import { join } from '../deps.ts'
+import { spinner } from '../spinner.ts'
+import { getSupabaseClientAndLogin } from '../utils.ts'
 
 export const action = async (
   options: { manifest: string },
@@ -11,7 +11,7 @@ export const action = async (
 
   if (dev) return deleteDev(options, directory)
 
-  const spinner = wait('Deleting...').start()
+  spinner('Deleting...')
 
   try {
     const { manifest: manifestPath } = options
@@ -36,26 +36,12 @@ export const action = async (
     }
 
     // delete package
-    const supabase = getSupabaseClient()
-    const sessionRes = await supabase.auth.getSession()
-
-    if (!sessionRes.data.session) {
-      await login({}, supabase)
-    }
-
-    const userRes = await supabase.auth.getUser()
-    if (userRes.error) {
-      throw userRes.error
-    }
-
-    if (!sessionRes.data.session) {
-      throw new Error('Not logged in')
-    }
+    const { session } = await getSupabaseClientAndLogin()
 
     const headers = new Headers()
     headers.append(
       'Authorization',
-      `Bearer ${sessionRes.data.session.access_token}`,
+      `Bearer ${session.access_token}`,
     )
 
     const deleteRes = await fetch(
@@ -70,9 +56,9 @@ export const action = async (
       throw new Error(await deleteRes.text())
     }
 
-    spinner.succeed('Deleted successfully!')
+    spinner().succeed('Deleted successfully!')
   } catch (error) {
-    spinner.fail('Deletion failed: ' + error.message)
+    spinner().fail('Deletion failed: ' + error.message)
     console.error(error)
   }
 
