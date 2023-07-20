@@ -27,10 +27,10 @@ export function assertChain(
 }
 
 export const bigIntMax = (...args: bigint[]) =>
-  args.reduce((m, e) => e > m ? e : m)
+  args.reduce((m, e) => e > m ? e : m, 0n)
 
 export const bigIntMin = (...args: bigint[]) =>
-  args.reduce((m, e) => e < m ? e : m)
+  args.reduce((m, e) => e < m ? e : m, 2n ** 256n)
 
 export function formatLog(
   log: SafeRpcLog,
