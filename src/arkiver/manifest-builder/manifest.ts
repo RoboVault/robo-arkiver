@@ -16,7 +16,7 @@ export class Manifest<
   TName extends string = '',
   TChains extends Partial<Record<Chains, Record<string, Abi>>> = {},
 > {
-  public manifest: ArkiveManifest<TChains>
+  public manifest: ArkiveManifest
 
   constructor(name: CheckManifestName<TName, TName>) {
     if (name === undefined) {
@@ -48,6 +48,9 @@ export class Manifest<
     ) => DataSourceBuilder<TName, TContracts>,
   ): Manifest<TName, { [key in TChain]: TContracts } & TChains>
 
+  /**
+   * @deprecated Use the builder function instead.
+   */
   public addChain<TChain extends Exclude<Chains, keyof TChains>>(
     chain: TChain,
     options?: Partial<ChainOptions>,
@@ -70,7 +73,7 @@ export class Manifest<
       ) => DataSourceBuilder<TName, TContracts>)
       | Partial<ChainOptions>,
   ):
-    | Manifest<TName, TChains & { [key in TChain]: TContracts }>
+    | Manifest<TName, { [key in TChain]: TContracts } & TChains>
     | DataSourceBuilder<
       TName,
       TChains[TChain] extends {} ? TChains[TChain] : {}
@@ -85,7 +88,10 @@ export class Manifest<
       if (!this.manifest.dataSources[chain]?.options.rpcUrl) {
         throw new Error(`RPC URL is required for chain ${chain}`)
       }
-      return this
+      return this as unknown as Manifest<
+        TName,
+        { [key in TChain]: TContracts } & TChains
+      >
     }
 
     if (!(chain in supportedChains) && !optionsOrBuilderFn?.rpcUrl) {
@@ -94,7 +100,7 @@ export class Manifest<
     return new DataSourceBuilder<
       TName,
       TChains[TChain] extends {} ? TChains[TChain] : {}
-    >(this, chain, optionsOrBuilderFn)
+    >(this as any, chain, optionsOrBuilderFn)
   }
 
   private chain<TChain extends Chains>(

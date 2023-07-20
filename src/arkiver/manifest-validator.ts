@@ -1,5 +1,5 @@
 import { supportedChains } from '../chains.ts'
-import { scope } from '../deps.ts'
+import { instanceOf, mongoose, scope } from '../deps.ts'
 
 export const parseArkiveManifest = scope({
   manifest: {
@@ -9,6 +9,7 @@ export const parseArkiveManifest = scope({
       Object.keys(supportedChains).map((chain) => [`${chain}?`, 'dataSource']),
     ) as Record<`${keyof typeof supportedChains}?`, 'dataSource'>,
     entities: 'entity[]',
+    'schemaComposerCustomizer?': 'Function',
   },
   dataSource: {
     options: 'chainOptions',
@@ -16,7 +17,7 @@ export const parseArkiveManifest = scope({
     'blockHandlers?': 'blockHandler[]',
   },
   entity: {
-    model: 'any',
+    model: instanceOf(mongoose.Model),
     list: 'boolean',
     name: 'string',
   },
@@ -29,6 +30,7 @@ export const parseArkiveManifest = scope({
     abi: 'any[]',
     sources: 'source[]',
     events: 'eventSource[]',
+    'factorySources?': 'any',
   },
   blockHandler: {
     handler: 'Function',

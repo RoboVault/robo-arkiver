@@ -8,29 +8,11 @@ import {
   Chains,
   DataSource,
   EventHandler,
+  MapAbiEventToArgsWithType,
   ValidateSourcesObject,
 } from '../types.ts'
 import { ContractBuilder, hashAbi } from './contract.ts'
 import { Manifest } from './manifest.ts'
-
-type AddContractParams<
-  TAbi extends Abi,
-  TSources extends Record<string, bigint>,
-  TContractName extends string,
-> = {
-  abi: TAbi
-  name: TContractName
-  sources?: ValidateSourcesObject<TSources>
-  eventHandlers?: Partial<
-    {
-      [eventName in ExtractAbiEventNames<TAbi>]: EventHandler<
-        ExtractAbiEvent<TAbi, eventName>,
-        eventName,
-        TAbi
-      >
-    }
-  >
-}
 
 export class DataSourceBuilder<
   TName extends string,
@@ -55,7 +37,7 @@ export class DataSourceBuilder<
 
   public setOptions(
     options: Partial<ChainOptions>,
-  ): DataSourceBuilder<TName, TContracts> {
+  ) {
     this.dataSource.options = {
       ...this.dataSource.options,
       ...options,
@@ -77,7 +59,7 @@ export class DataSourceBuilder<
       return new ContractBuilder<
         TAbi,
         TName,
-        TContracts & { [key in TContractName]: TAbi }
+        TContracts
       >(
         this,
         abi,
@@ -106,10 +88,16 @@ export class DataSourceBuilder<
     return this.#addContract(nameOrAbi, abi)
   }
 
+  /**
+   * @deprecated Use the overload which accepts an object with named parameters instead.
+   */
   public addContract<const TAbi extends Abi>(
     abi: TAbi,
   ): ContractBuilder<TAbi, TName, TContracts>
 
+  /**
+   * @deprecated Use the overload which accepts an object with named parameters instead.
+   */
   public addContract<
     const TAbi extends Abi,
     const TContractName extends string,
@@ -123,18 +111,7 @@ export class DataSourceBuilder<
     const TAbi extends Abi,
     TSources extends Record<string, bigint>,
   >(
-    params: AddContractParams<TAbi, TSources, TContractName>,
-  ): DataSourceBuilder<TName, TContracts & { [key in TContractName]: TAbi }>
-
-  public addContract<
-    const TAbi extends Abi,
-    const TContractName extends string,
-  >(
-    name: TContractName,
-    abi: TAbi,
-    contractBuilderFn: (
-      builder: ContractBuilder<TAbi, TName, TContracts>,
-    ) => void,
+    params: AddContractParams<TAbi, TSources, TContractName, TContracts>,
   ): DataSourceBuilder<TName, TContracts & { [key in TContractName]: TAbi }>
 
   public addContract<
@@ -148,15 +125,8 @@ export class DataSourceBuilder<
     nameOrAbiOrParams:
       | TContractName
       | TAbi
-      | AddContractParams<TAbi, TSources, TContractName>,
+      | AddContractParams<TAbi, TSources, TContractName, TContracts>,
     abi?: TAbi,
-    contractBuilderFn?: (
-      builder: ContractBuilder<
-        TAbi,
-        TName,
-        TContracts & { [key in TContractName]: TAbi }
-      >,
-    ) => void,
   ):
     | ContractBuilder<
       TAbi,
@@ -164,15 +134,9 @@ export class DataSourceBuilder<
       TContracts & { [key in TContractName]: TAbi }
     >
     | DataSourceBuilder<TName, TContracts & { [key in TContractName]: TAbi }> {
-    if (contractBuilderFn && typeof nameOrAbiOrParams === 'string') {
-      contractBuilderFn(this.#addContract(nameOrAbiOrParams, abi))
-      return this as DataSourceBuilder<
-        TName,
-        TContracts & { [key in TContractName]: TAbi }
-      >
-    }
     if (typeof nameOrAbiOrParams === 'object' && 'abi' in nameOrAbiOrParams) {
-      const { abi, name, sources, eventHandlers } = nameOrAbiOrParams
+      const { abi, name, sources, eventHandlers, factorySources } =
+        nameOrAbiOrParams
       let contractBuilder
       if (name) {
         contractBuilder = this.#addContract(name, abi)
@@ -185,16 +149,12 @@ export class DataSourceBuilder<
       if (eventHandlers) {
         contractBuilder.addEventHandlers(eventHandlers)
       }
-      return this as DataSourceBuilder<
-        TName,
-        TContracts & { [key in TContractName]: TAbi }
-      >
+      if (factorySources) {
+        contractBuilder.addFactorySources(factorySources)
+      }
+      return this as any
     }
-    return this.#addContract(nameOrAbiOrParams, abi) as ContractBuilder<
-      TAbi,
-      TName,
-      TContracts & { [key in TContractName]: TAbi }
-    >
+    return this.#addContract(nameOrAbiOrParams, abi) as any
   }
 
   public addBlockHandler(
@@ -241,4 +201,30 @@ export class DataSourceBuilder<
     })
     return this
   }
+}
+
+type AddContractParams<
+  TAbi extends Abi,
+  TSources extends Record<string, bigint>,
+  TContractName extends string,
+  TContracts extends Record<string, Abi>,
+> = {
+  abi: TAbi
+  name: TContractName
+  sources?: ValidateSourcesObject<TSources>
+  factorySources?: {
+    [KeyContractName in keyof TContracts]?: MapAbiEventToArgsWithType<
+      TContracts[KeyContractName],
+      'address'
+    >
+  }
+  eventHandlers?: Partial<
+    {
+      [eventName in ExtractAbiEventNames<TAbi>]: EventHandler<
+        ExtractAbiEvent<TAbi, eventName>,
+        eventName,
+        TAbi
+      >
+    }
+  >
 }

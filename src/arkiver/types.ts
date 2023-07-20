@@ -1,10 +1,14 @@
+import { UNISWAP_V2_PAIR } from '../../examples/factory-source/abis/UniswapV2Pair.ts'
 import { supportedChains } from '../chains.ts'
 import {
   Abi,
   AbiEvent,
+  AbiEventParameter,
+  AbiType,
   Block,
   ExtractAbiEvent,
   ExtractAbiEventNames,
+  ExtractAbiEvents,
   GetContractReturnType,
   Log,
   log,
@@ -14,6 +18,12 @@ import {
   SchemaComposer,
 } from '../deps.ts'
 import { Store } from './store.ts'
+
+declare module 'npm:abitype' {
+  export interface Config {
+    StrictAbiType: true
+  }
+}
 
 export type Arkive = {
   id: number
@@ -57,9 +67,7 @@ export type ChainOptions = {
 // deno-lint-ignore ban-types
 export type Chains = keyof typeof supportedChains | string & {}
 
-export type ArkiveManifest<
-  TChains extends Partial<Record<Chains, Record<string, Abi>>>,
-> = {
+export type ArkiveManifest = {
   dataSources: Partial<
     Record<Chains, DataSource>
   >
@@ -82,6 +90,7 @@ export type Contract = {
     address: string
     startBlockHeight: bigint
   }[]
+  factorySources?: Record<string, Record<string, string>>
   events: EventSource[]
   id: string
 }
@@ -235,3 +244,19 @@ export type ValidateSourcesObject<Sources extends Record<string, bigint>> =
       : 'Can\'t mix wildcard and specific addresses'
     : HexString<keyof Sources, 40>
     : `Source addresses must be strings`
+
+export type MapAbiEventToArgsWithType<
+  TAbi extends Abi,
+  TType extends AbiType,
+> = {
+  [
+    TEvent in ExtractAbiEvents<TAbi> as TEvent['name']
+  ]?: TEvent['inputs'][number] extends
+    infer TEventInput extends AbiEventParameter
+    ? TEventInput extends { type: TType } ? TEventInput['name']
+    : never
+    : never
+}
+// > = TEvents
+
+type Text = MapAbiEventToArgsWithType<typeof UNISWAP_V2_PAIR, 'address'>

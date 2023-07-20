@@ -9,6 +9,7 @@ import {
   Contract,
   EventHandler,
   HexString,
+  MapAbiEventToArgsWithType,
   ValidateSourcesObject,
 } from '../types.ts'
 import { DataSourceBuilder } from './data-source.ts'
@@ -72,6 +73,20 @@ export class ContractBuilder<
       this.addSource(address as any, startBlockHeight)
     }
     return this
+  }
+
+  public addFactorySources(
+    sources: {
+      [KeyContractName in keyof TContracts]?: MapAbiEventToArgsWithType<
+        TContracts[KeyContractName],
+        'address'
+      >
+    },
+  ) {
+    if (this.contract.factorySources == undefined) {
+      this.contract.factorySources = {}
+    }
+    Object.assign(this.contract.factorySources, sources)
   }
 
   private addEventHandler<
