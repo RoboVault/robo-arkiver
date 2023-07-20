@@ -4,7 +4,7 @@ import { Balance } from './entities.ts'
 
 export const transferHandler: EventHandlerFor<typeof erc20, 'Transfer'> =
   async (
-    { event, client, store, contract },
+    { event, client, store, contract, logger },
   ) => {
     const { from, to, value } = event.args
 
@@ -49,7 +49,6 @@ export const transferHandler: EventHandlerFor<typeof erc20, 'Transfer'> =
         },
       ),
     ])
-
     const senderNewBalance = senderBalance - parsedValue
     const receiverNewBalance = receiverBalance + parsedValue
 
@@ -66,4 +65,7 @@ export const transferHandler: EventHandlerFor<typeof erc20, 'Transfer'> =
       token: address,
       timestamp,
     })
+    logger.info(
+      `Transfer of ${parsedValue} from ${from} to ${to} on ${address}`,
+    )
   }

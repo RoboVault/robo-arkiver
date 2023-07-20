@@ -12,6 +12,7 @@ export const snapshotVault: BlockHandler = async ({
   block,
   client,
   store,
+  logger
 }): Promise<void> => {
   // Filter out vaults that haven't been deployed yet
   const liveVaults = VAULTS.filter((e) => e.block < Number(block.number))
@@ -54,16 +55,19 @@ export const snapshotVault: BlockHandler = async ({
 
   // Save the vault snapshots
   vaults.map((vault, i) => {
+    const sharePrice = parseFloat(
+      formatUnits(sharePrices[i], Number(vault.decimals)),
+    )
+    logger.info(`${vault.name} share price updated to ${sharePrice}`)
     return new VaultSnapshot({
-      id: `${vault.address}-${Number(block.number)}`,
+     // id: `${vault.address}-${Number(block.number)}`,
       block: Number(block.number),
       timestamp: Number(block.timestamp),
       vault: vault.address,
-      sharePrice: parseFloat(
-        formatUnits(sharePrices[i], Number(vault.decimals)),
-      ),
+      sharePrice: sharePrice,
       name: vault.name,
       symbol: vault.symbol,
     })
+    
   }).map((e) => e.save())
 }

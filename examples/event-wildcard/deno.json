@@ -1,0 +1,13 @@
+{
+    "tasks": {
+      "start": "scripts/start.sh",
+      "new": "docker run --name mongo -d -p 27017:27017 mongodb/mongodb-community-server:latest && scripts/start.sh",
+      "resetdb": "scripts/resetdb.sh",
+      "reset": "scripts/resetdb.sh && scripts/start.sh",
+      "newdb": "docker run --name mongo -d -p 27017:27017 mongodb/mongodb-community-server:latest",
+      "stopdb": "docker stop mongo",
+      "rmdb": "docker rm mongo",
+      "startdb": "docker start mongo",
+      "deploy": "arkiver deploy ./"
+    }
+  }

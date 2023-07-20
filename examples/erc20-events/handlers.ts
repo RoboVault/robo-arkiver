@@ -8,7 +8,7 @@ const TOKEN_DECIMALS = 18
 
 // deno-lint-ignore require-await
 export const onTransfer: EventHandlerFor<typeof erc20, 'Transfer'> = async (
-  { event },
+  { event, logger },
 ) => {
   const { from, to, value } = event.args
   const block = Number(event.blockNumber)
@@ -20,20 +20,25 @@ export const onTransfer: EventHandlerFor<typeof erc20, 'Transfer'> = async (
     value: formatUnits(value, TOKEN_DECIMALS),
   })
   record.save()
+  const parsedValue = parseFloat(formatUnits(value, TOKEN_DECIMALS))
+  logger.info(`Transfer of ${parsedValue} from ${from} to ${to} on ${event.address}`)
 }
 
 // deno-lint-ignore require-await
 export const onApproval: EventHandlerFor<typeof erc20, 'Approval'> = async (
-  { event },
+  { event, logger },
 ) => {
   const { owner, spender, value } = event.args
   const block = Number(event.blockNumber)
+  const parsedValue = parseFloat(formatUnits(value, TOKEN_DECIMALS))
   const record = new Approval({
     hash: event.transactionHash,
     block,
     owner,
     spender,
-    value: formatUnits(value, TOKEN_DECIMALS),
+    value: parsedValue,
   })
   record.save()
+  
+  logger.info(`Approval of ${parsedValue} from ${owner} to ${spender} on ${event.address}`)
 }
