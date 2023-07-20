@@ -614,7 +614,6 @@ export class DataSource extends EventTarget {
                   publicClient: this.client,
                 }),
                 logger: logger(loggerKey),
-                spawnContract: this.spawnContract.bind(this),
               })
               break
             } catch (e) {
@@ -648,7 +647,6 @@ export class DataSource extends EventTarget {
                   client: this.client,
                   store: this.store,
                   logger: logger(loggerKey),
-                  spawnContract: this.spawnContract.bind(this),
                 })
                 break
               } catch (e) {
@@ -708,7 +706,6 @@ export class DataSource extends EventTarget {
                   publicClient: this.client,
                 }),
                 logger: logger(loggerKey),
-                spawnContract: this.spawnContract.bind(this),
               })
               break
             } catch (e) {
@@ -918,36 +915,37 @@ export class DataSource extends EventTarget {
   }
 
   private async spawnContract(params: { address: string; name: string }) {
-    const { address, name } = params
+    // @TODO(hazelnutcloud): implement
+    // const { address, name } = params
 
-    const contract = this.contracts.find((c) => c.id === name)
+    // const contract = this.contracts.find((c) => c.id === name)
 
-    if (!contract) {
-      logger(this.chain).error(
-        `Error while spawning contract ${name} with address ${address}: contract not found`,
-      )
-      return
-    }
+    // if (!contract) {
+    //   logger(this.chain).error(
+    //     `Error while spawning contract ${name} with address ${address}: contract not found`,
+    //   )
+    //   return
+    // }
 
-    const startBlockHeight = this.processedBlockHeight
+    // const startBlockHeight = this.processedBlockHeight
 
-    const source = {
-      address,
-      startBlockHeight,
-    }
+    // const source = {
+    //   address,
+    //   startBlockHeight,
+    // }
 
-    this.normalizedContracts.contracts.push(source)
-    this.addressToId.set(source.address.toLowerCase(), name)
+    // this.normalizedContracts.contracts.push(source)
+    // this.addressToId.set(source.address.toLowerCase(), name)
 
-    await this.statusProvider.addSpawnedSource({
-      chain: this.chain,
-      contract: name,
-      address,
-      startBlockHeight: Number(startBlockHeight),
-    })
+    // await this.statusProvider.addSpawnedSource({
+    //   chain: this.chain,
+    //   contract: name,
+    //   address,
+    //   startBlockHeight: Number(startBlockHeight),
+    // })
 
-    logger(this.chain).info(
-      `Spawned contract ${name} with address ${address} at block ${startBlockHeight}`,
-    )
+    // logger(this.chain).info(
+    //   `Spawned contract ${name} with address ${address} at block ${startBlockHeight}`,
+    // )
   }
 }

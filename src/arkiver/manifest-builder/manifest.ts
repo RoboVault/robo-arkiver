@@ -2,17 +2,11 @@
 import { supportedChains } from '../../chains.ts'
 import {
   ArkiveManifest,
-  ArkiveManifestEventHandlers,
   ChainOptions,
   Chains,
   CheckManifestName,
 } from '../types.ts'
-import {
-  Abi,
-  ExtractAbiEventNames,
-  mongoose,
-  SchemaComposer,
-} from '../../deps.ts'
+import { Abi, mongoose, SchemaComposer } from '../../deps.ts'
 import { parseArkiveManifest } from '../manifest-validator.ts'
 import { DataSourceBuilder } from './data-source.ts'
 
@@ -38,7 +32,6 @@ export class Manifest<
       entities: [],
       name: formattedName,
       version: manifestVersion,
-      infer: {} as any,
     }
   }
 
@@ -92,10 +85,7 @@ export class Manifest<
       if (!this.manifest.dataSources[chain]?.options.rpcUrl) {
         throw new Error(`RPC URL is required for chain ${chain}`)
       }
-      return this as unknown as Manifest<
-        TName,
-        TChains & { [key in TChain]: TContracts }
-      >
+      return this
     }
 
     if (!(chain in supportedChains) && !optionsOrBuilderFn?.rpcUrl) {
@@ -104,7 +94,7 @@ export class Manifest<
     return new DataSourceBuilder<
       TName,
       TChains[TChain] extends {} ? TChains[TChain] : {}
-    >(this as any, chain, optionsOrBuilderFn)
+    >(this, chain, optionsOrBuilderFn)
   }
 
   private chain<TChain extends Chains>(
@@ -135,10 +125,6 @@ export class Manifest<
     return this
   }
 
-  public get eventHandlers(): ArkiveManifestEventHandlers<TChains> {
-    return {} as ArkiveManifestEventHandlers<TChains>
-  }
-
   public build() {
     const { problems } = parseArkiveManifest.manifest(this.manifest)
     if (problems) {
@@ -153,21 +139,4 @@ export class Manifest<
     this.manifest.schemaComposerCustomizer = callbackFn
     return this
   }
-}
-
-export const inferManifest = <
-  TChains extends Partial<Record<Chains, Record<string, Abi>>>,
-  TChainName extends keyof TChains,
-  TContractName extends keyof TChains[TChainName],
-  TEventName extends ExtractAbiEventNames<
-    TChains[TChainName][TContractName] extends Abi
-      ? TChains[TChainName][TContractName]
-      : never
-  >,
->(
-  manifest: ArkiveManifest<TChains>,
-  params: { chain: TChainName; contract: TContractName; event: TEventName },
-) => {
-  const { chain, contract, event } = params
-  return manifest.infer[chain][contract][`on${event}`]
 }

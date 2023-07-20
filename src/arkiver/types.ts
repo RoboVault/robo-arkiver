@@ -2,7 +2,6 @@ import { supportedChains } from '../chains.ts'
 import {
   Abi,
   AbiEvent,
-  Address,
   Block,
   ExtractAbiEvent,
   ExtractAbiEventNames,
@@ -59,7 +58,7 @@ export type ChainOptions = {
 export type Chains = keyof typeof supportedChains | string & {}
 
 export type ArkiveManifest<
-  TChains extends Partial<Record<Chains, Record<string, Abi>>> = {},
+  TChains extends Partial<Record<Chains, Record<string, Abi>>>,
 > = {
   dataSources: Partial<
     Record<Chains, DataSource>
@@ -69,54 +68,7 @@ export type ArkiveManifest<
   name: string
   version: string
   schemaComposerCustomizer?: (sc: SchemaComposer) => void
-  infer: {
-    [TChainName in keyof TChains]: {
-      [TContractName in keyof TChains[TChainName]]: {
-        [
-          TEventName in ExtractAbiEventNames<
-            TChains[TChainName][TContractName] extends Abi
-              ? TChains[TChainName][TContractName]
-              : never
-          > as `on${TEventName}`
-        ]: EventHandlerFor<
-          TChains[TChainName][TContractName] extends Abi
-            ? TChains[TChainName][TContractName]
-            : never,
-          TEventName
-        >
-      }
-    }
-  }
 }
-
-export type ArkiveManifestEventHandlers<
-  // deno-lint-ignore ban-types
-  TChains extends Partial<Record<Chains, Record<string, Abi>>> = {},
-> = {
-  [TChainName in keyof TChains]: {
-    [TContractName in keyof TChains[TChainName]]: {
-      [
-        TEventName in ExtractAbiEventNames<
-          TChains[TChainName][TContractName] extends Abi
-            ? TChains[TChainName][TContractName]
-            : never
-        > as `on${TEventName}`
-      ]: EventHandlerFor<
-        TChains[TChainName][TContractName] extends Abi
-          ? TChains[TChainName][TContractName]
-          : never,
-        TEventName
-      >
-    }
-  }
-}
-
-// export type InferEventHandler<
-//   TManifest extends ArkiveManifest,
-//   TChain extends keyof TManifest['infer'],
-//   TContract extends keyof TManifest['infer'][TChain],
-//   TEventName extends keyof TManifest['infer'][TChain][TContract],
-// > = TManifest['infer'][TChain][TContract][TEventName]
 
 export type DataSource = {
   contracts?: Contract[]
@@ -156,11 +108,6 @@ export type SafeLog<TAbiEvent extends AbiEvent> = RecursiveNonNullable<
 
 export type SafeRpcLog = RecursiveNonNullable<RpcLog>
 
-export type spawnContract = <TContractNames extends string = string>(params: {
-  address: Address
-  name: TContractNames
-}) => Promise<void>
-
 export type EventHandlerContext<
   TAbiEvent extends AbiEvent,
   TEventName extends string,
@@ -172,7 +119,6 @@ export type EventHandlerContext<
   store: Store
   contract: GetContractReturnType<TAbi, PublicClient>
   logger: log.Logger
-  spawnContract: spawnContract
 }
 
 export type BlockHandlerContext = {
@@ -180,7 +126,6 @@ export type BlockHandlerContext = {
   client: PublicClient
   store: Store
   logger: log.Logger
-  spawnContract: spawnContract
 }
 
 export type SafeBlock = RecursiveNonNullable<Block>
