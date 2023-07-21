@@ -14,7 +14,7 @@ import { logger } from '../../src/logger.ts'
 export const action = async (
   options: {
     manifest?: string
-    rpcUrl?: string[]
+    rpcUrl?: string[] | string
     mongoConnection?: string
     db: boolean
     gql: boolean
@@ -113,7 +113,10 @@ export const action = async (
       ...loggers,
     },
   })
-
+  
+  if(options.rpcUrl && !Array.isArray(options.rpcUrl)){
+    options.rpcUrl = [options.rpcUrl]
+  }
   const rpcUrls = options.rpcUrl?.reduce((acc, rpc) => {
     const [name, url] = rpc.split('=')
     acc[name] = url
