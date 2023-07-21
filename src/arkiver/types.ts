@@ -1,4 +1,3 @@
-import { UNISWAP_V2_PAIR } from '../../examples/factory-source/abis/UniswapV2Pair.ts'
 import { supportedChains } from '../chains.ts'
 import {
   Abi,
@@ -257,6 +256,3 @@ export type MapAbiEventToArgsWithType<
     : never
     : never
 }
-// > = TEvents
-
-type Text = MapAbiEventToArgsWithType<typeof UNISWAP_V2_PAIR, 'address'>

@@ -1,6 +1,6 @@
 import { Arkive, ArkiveManifest, Contract } from './types.ts'
 import { DataSource } from './data-source.ts'
-import { defaultArkiveData, JSONBigIntReplacer } from '../utils.ts'
+import { defaultArkiveData } from '../utils.ts'
 import { logger } from '../logger.ts'
 import { ISpawnedSource, SpawnedSource } from './spawned-source.ts'
 
