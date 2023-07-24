@@ -76,11 +76,6 @@ command
 command
   .command('start', 'Start local development arkiver')
   .arguments('<dir:string>')
-  .env(
-    "ARKIVER_RPC_URL=<rpcUrl:string>",
-    "RPC URL",
-    { prefix: "ARKIVER_" },
-  )
   .option('-m, --manifest <manifest:string>', 'Path to manifest file', {
     default: './manifest.ts',
   })

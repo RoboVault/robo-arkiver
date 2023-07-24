@@ -10,11 +10,13 @@ import { ArkiverMetadata } from '../../src/arkiver/arkive-metadata.ts'
 import { createManifestHandlers } from './logger.ts'
 import { colors, mongoose, SchemaComposer } from '../../src/deps.ts'
 import { logger } from '../../src/logger.ts'
+import { supportedChains } from '../../src/chains.ts'
+
 
 export const action = async (
   options: {
     manifest?: string
-    rpcUrl?: string[] | string
+    rpcUrl?: string[]
     mongoConnection?: string
     db: boolean
     gql: boolean
@@ -117,11 +119,32 @@ export const action = async (
   if(options.rpcUrl && !Array.isArray(options.rpcUrl)){
     options.rpcUrl = [options.rpcUrl]
   }
+
+   const getEnv = (key: string, defaultValue?: string): string => {
+    const value = Deno.env.get(key)
+    if (!value && !defaultValue) {
+      throw new Error(`Missing environment variable: ${key}`)
+    }
+    return value || defaultValue || ''
+  }
+
+  const collectRpcUrls = () => {
+    const rpcUrls: Record<string, string> = {}
+    for (const chain of Object.keys(supportedChains)) {
+      try {
+        rpcUrls[chain] = getEnv(`${chain.toUpperCase()}_RPC_URL`)
+      } catch (e) {}
+    }
+    return rpcUrls
+  }
+
   const rpcUrls = options.rpcUrl?.reduce((acc, rpc) => {
     const [name, url] = rpc.split('=')
     acc[name] = url
     return acc
-  }, {} as Record<string, string>) ?? {}
+  }, {} as Record<string, string>) ?? collectRpcUrls() ?? {}
+  console.log(`rpcUrls: `)
+  console.log(rpcUrls)
 
   logger('arkiver').debug(`Connecting to database...`)
   const connectionString = options.mongoConnection ??
