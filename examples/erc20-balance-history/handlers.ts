@@ -1,4 +1,4 @@
-import { formatUnits } from 'npm:viem'
+import { formatUnits, numberToHex, fromHex } from 'npm:viem'
 import { type EventHandlerFor } from 'https://deno.land/x/robo_arkiver@v0.4.17/mod.ts'
 import erc20 from './erc20.ts'
 import { Balance, BalanceHistory, Transfer } from './entities.ts'
@@ -18,15 +18,7 @@ const getBalance = async (user: string, token: string, client, block, store) => 
 			blockNumber: block.blockNumber,
       args: [user]
 		})
-    const decimals = await store.retrieve(`${token}:decimals`, async () => {
-      return await client.readContract({
-        abi: erc20,
-        token,
-        functionName: 'decimals',
-      })
-    })
-    userBalance = Number(formatUnits(userBalance, Number(decimals)))
-    return new Balance({ user, token, balance: Number(userBalance) })
+    return new Balance({ user, token, balance: numberToHex(userBalance) })
   }
 
   
@@ -60,7 +52,7 @@ export const onTransfer: EventHandlerFor<typeof erc20, 'Transfer'> = async (
   })
   record.save()
 
-  const updateBalance = async (user: string, value: number, client, block, store) => {
+  const updateBalance = async (user: string, value: bigint, client, block, store) => {
     // ignore zero address
     if (user === ZERO_ADDRESS) {
       return
@@ -76,7 +68,7 @@ export const onTransfer: EventHandlerFor<typeof erc20, 'Transfer'> = async (
     }
     
     // adjust the value
-    bal.balance += value
+    bal.balance = numberToHex(fromHex(bal.balance, 'bigint') + value)
 
     // Create a BalanceHistory entry to record
     // historic changes in the balance
@@ -98,9 +90,8 @@ export const onTransfer: EventHandlerFor<typeof erc20, 'Transfer'> = async (
   // Update the balances for both the sender and the receiver
   // note: user await here to ensure the handler is synchonous
   // 		 so te balances are updated
-  const amount = Number(formatUnits(value, Number(decimals)))
   await Promise.all([
-    updateBalance(from, -amount, client, block, store),
-    updateBalance(to, amount, client, block, store),
+    updateBalance(from, -value, client, block, store),
+    updateBalance(to, value, client, block, store),
   ])
 }

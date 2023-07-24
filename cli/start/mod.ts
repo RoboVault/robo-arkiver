@@ -143,8 +143,6 @@ export const action = async (
     acc[name] = url
     return acc
   }, {} as Record<string, string>) ?? collectRpcUrls() ?? {}
-  console.log(`rpcUrls: `)
-  console.log(rpcUrls)
 
   logger('arkiver').debug(`Connecting to database...`)
   const connectionString = options.mongoConnection ??
