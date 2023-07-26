@@ -1,4 +1,4 @@
-import { mongoose } from '../deps.ts'
+import { createEntity } from '../graphql/entity.ts'
 
 interface IArkiverMetadata {
   processedBlockHeight: number
@@ -11,20 +11,16 @@ interface IArkiverMetadata {
   arkiveMinorVersion: number
 }
 
-const arkiverMetadataSchema = new mongoose.Schema<IArkiverMetadata>({
-  processedBlockHeight: { type: Number, index: true },
-  chain: String,
-  eventHandlerCalls: Number,
-  blockHandlerCalls: Number,
-  errors: [String],
-  arkiveId: Number,
-  arkiveMajorVersion: Number,
-  arkiveMinorVersion: Number,
-})
-
-export const ArkiverMetadata = mongoose.model<IArkiverMetadata>(
-  'ArkiveMetadata',
-  arkiverMetadataSchema,
-  undefined,
-  { overwriteModels: true },
+export const ArkiverMetadata = createEntity<IArkiverMetadata>(
+  'ArkiverMetadata',
+  {
+    processedBlockHeight: { type: Number, index: true },
+    chain: { type: String, index: true },
+    eventHandlerCalls: Number,
+    blockHandlerCalls: Number,
+    errors: [String],
+    arkiveId: Number,
+    arkiveMajorVersion: Number,
+    arkiveMinorVersion: Number,
+  },
 )

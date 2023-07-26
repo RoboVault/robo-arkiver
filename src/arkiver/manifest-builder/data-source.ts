@@ -88,24 +88,6 @@ export class DataSourceBuilder<
     return this.#addContract(nameOrAbi, abi)
   }
 
-  /**
-   * @deprecated Use the overload which accepts an object with named parameters instead.
-   */
-  public addContract<const TAbi extends Abi>(
-    abi: TAbi,
-  ): ContractBuilder<TAbi, TName, TContracts>
-
-  /**
-   * @deprecated Use the overload which accepts an object with named parameters instead.
-   */
-  public addContract<
-    const TAbi extends Abi,
-    const TContractName extends string,
-  >(
-    name: TContractName,
-    abi: TAbi,
-  ): ContractBuilder<TAbi, TName, TContracts & { [key in TContractName]: TAbi }>
-
   public addContract<
     const TContractName extends string,
     const TAbi extends Abi,

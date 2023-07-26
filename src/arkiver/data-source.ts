@@ -1009,7 +1009,10 @@ export class DataSource extends EventTarget {
         continue
       }
 
-      if (joinedChildSources.has(childSource)) {
+      if (
+        joinedChildSources.has(childSource) ||
+        this.addressToId.has(childSource.toLowerCase())
+      ) {
         continue
       } else {
         joinedChildSources.add(childSource)

@@ -1,5 +1,5 @@
 import { supportedChains } from '../chains.ts'
-import { instanceOf, mongoose, scope } from '../deps.ts'
+import { scope } from '../deps.ts'
 
 export const parseArkiveManifest = scope({
   manifest: {
@@ -17,7 +17,7 @@ export const parseArkiveManifest = scope({
     'blockHandlers?': 'blockHandler[]',
   },
   entity: {
-    model: instanceOf(mongoose.Model),
+    model: 'Function',
     list: 'boolean',
     name: 'string',
   },
