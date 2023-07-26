@@ -8,6 +8,7 @@ import {
   optimism,
   polygon,
   polygonMumbai,
+  polygonZkEvm,
   sepolia,
 } from 'npm:viem/chains'
 
@@ -22,5 +23,6 @@ export const supportedChains = {
   optimism,
   mumbai: polygonMumbai,
   sepolia,
+  polygonZkEvm,
   localhost,
 } as const
