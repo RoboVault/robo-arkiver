@@ -132,7 +132,7 @@ export class Arkiver extends EventTarget {
         c.id === spawnedSource.contract
       )
       if (!contract) {
-        logger('arkiver').error(
+        logger('arkiver').debug(
           `Spawned contract ${spawnedSource.contract} not found in manifest, skipping`,
         )
         continue
