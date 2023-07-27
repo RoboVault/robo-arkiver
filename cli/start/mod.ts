@@ -125,8 +125,7 @@ export const action = async (
     'mongodb://admin:password@localhost:27017'
   await mongoose.connect(connectionString, {
     dbName: '0-0',
-    // deno-lint-ignore no-explicit-any
-  } as any)
+  })
   logger('arkiver').debug(`Connected to database`)
 
   if (!options.gqlOnly) {

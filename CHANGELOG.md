@@ -1,3 +1,38 @@
+# v0.4.19
+- Adds factory sources. added an example factory-source to showcase this. API looks like:
+```typescript
+new Manifest('factory-source')
+  .addChain('ethereum', (ethereum) =>
+    ethereum
+      .setOptions({
+        blockRange: 100n,
+      })
+      .addContract({
+        abi: UNISWAP_V2_FACTORY,
+        name: 'UniswapV2Factory',
+        sources: {
+          '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f': 17736650n,
+        },
+      })
+      .addContract({
+        abi: UNISWAP_V2_PAIR,
+        name: 'UniswapV2Pair',
+        factorySources: {
+          UniswapV2Factory: {
+            PairCreated: 'pair',
+          },
+        },
+        eventHandlers: {
+          Swap: onSwap,
+        },
+      }))
+  .build()
+```
+- remove deprecated overloads to `addContract`. this wont break compatibility because the function implementation stays the same
+- move lib exports from `mod.ts` to a new top-level `libs.ts` file
+- add polygonZkEvm to supportedChains
+- add top-level `utils.ts` file which export some useful utility function
+
 # v0.4.18
 - fix: fix version of arktype to fix export error
 

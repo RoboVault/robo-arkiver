@@ -1,5 +1,7 @@
 import { ArkiverMetadata } from '../arkive-metadata.ts'
+import { SpawnedSource } from '../spawned-source.ts'
 import {
+  AddSpawnedSourceParams,
   IndexedBlockHeightParams,
   SaveArkiveMetadataParams,
   StatusProvider,
@@ -55,5 +57,9 @@ export class MongoStatusProvider implements StatusProvider {
       `${params.chain}:${params.blockNumber}:metadata`,
       arkiverMetadata.save(),
     )
+  }
+
+  async addSpawnedSource(params: AddSpawnedSourceParams): Promise<void> {
+    await SpawnedSource.create(params)
   }
 }

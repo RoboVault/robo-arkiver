@@ -16,11 +16,14 @@ export {
 export {
   type Abi,
   type AbiEvent,
+  type AbiEventParameter,
   type AbiParametersToPrimitiveTypes,
   type AbiParameterToPrimitiveType,
+  type AbiType,
   type Address,
   type ExtractAbiEvent,
   type ExtractAbiEventNames,
+  type ExtractAbiEvents,
 } from 'npm:abitype'
 export { default as mongoose, Schema, Types } from 'npm:mongoose'
 export { SchemaComposer, schemaComposer } from 'npm:graphql-compose'
@@ -36,5 +39,5 @@ export {
   ConsoleHandler,
 } from 'https://deno.land/std@0.181.0/log/handlers.ts'
 export { crypto } from 'https://deno.land/std@0.186.0/crypto/mod.ts'
-export { scope } from 'npm:arktype@1.0.14-alpha'
+export { instanceOf, scope } from 'npm:arktype'
 export { GraphQLError } from 'npm:graphql'

@@ -7,8 +7,8 @@ export type SourceInfo = {
 }
 
 export abstract class ArkiveLib {
-  public sources: SourceInfo[]
-  public entities: mongoose.Model<any>[]
+  public sources: SourceInfo[] = []
+  public entities: mongoose.Model<any>[] = []
   public blockHandler: any
 
   public getDataSources() {

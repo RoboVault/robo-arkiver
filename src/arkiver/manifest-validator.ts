@@ -9,6 +9,7 @@ export const parseArkiveManifest = scope({
       Object.keys(supportedChains).map((chain) => [`${chain}?`, 'dataSource']),
     ) as Record<`${keyof typeof supportedChains}?`, 'dataSource'>,
     entities: 'entity[]',
+    'schemaComposerCustomizer?': 'Function',
   },
   dataSource: {
     options: 'chainOptions',
@@ -16,7 +17,7 @@ export const parseArkiveManifest = scope({
     'blockHandlers?': 'blockHandler[]',
   },
   entity: {
-    model: 'any',
+    model: 'Function',
     list: 'boolean',
     name: 'string',
   },
@@ -29,6 +30,7 @@ export const parseArkiveManifest = scope({
     abi: 'any[]',
     sources: 'source[]',
     events: 'eventSource[]',
+    'factorySources?': 'any',
   },
   blockHandler: {
     handler: 'Function',
