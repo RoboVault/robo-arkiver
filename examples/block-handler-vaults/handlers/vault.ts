@@ -1,5 +1,5 @@
 import { formatUnits, getContract } from 'npm:viem'
-import { type BlockHandler } from 'https://deno.land/x/robo_arkiver@v0.4.17/mod.ts'
+import { type BlockHandler } from 'https://deno.land/x/robo_arkiver@v0.4.19/mod.ts'
 import { VaultSnapshot } from '../entities/vault.ts'
 import { YearnV2Abi } from '../abis/YearnV2.ts'
 
