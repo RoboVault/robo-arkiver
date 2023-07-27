@@ -1,4 +1,4 @@
-import { Chains } from './arkiver/manifest-builder/manifest.ts'
+import { Chains } from './arkiver/types.ts'
 import { Arkive, SafeLog, SafeRpcLog } from './arkiver/types.ts'
 import { supportedChains } from './chains.ts'
 

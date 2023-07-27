@@ -48,9 +48,6 @@ export class Manifest<
     ) => DataSourceBuilder<TName, TContracts>,
   ): Manifest<TName, { [key in TChain]: TContracts } & TChains>
 
-  /**
-   * @deprecated Use the builder function instead.
-   */
   public addChain<TChain extends Exclude<Chains, keyof TChains>>(
     chain: TChain,
     options?: Partial<ChainOptions>,
