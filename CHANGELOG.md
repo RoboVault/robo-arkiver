@@ -31,7 +31,7 @@ new Manifest('factory-source')
 - remove deprecated overloads to `addContract`. this wont break compatibility because the function implementation stays the same
 - move lib exports from `mod.ts` to a new top-level `libs.ts` file
 - add polygonZkEvm to supportedChains
-- add top-level `utils.ts` file which export some useful utility functions
+- add top-level `utils.ts` file which export some useful utility function
 
 # v0.4.18
 - fix: fix version of arktype to fix export error
