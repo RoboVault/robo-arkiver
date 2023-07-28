@@ -12,8 +12,7 @@ Fast and Fully Type-Safe Blockchain Indexer
 
 # Features
 
-- **Fast** - Maximize indexing speed by minimizing I/O and caching data in
-  memory
+- **Fast** - Maximize indexing speed by minimizing I/O and caching data in memory
 - **Type-Safe** - End-to-end type-safety with TypeScript
 - **Flexible** - Write custom handlers to process data however you want
 - **Ergonomic** - Minimal configuration and easy to test locally
