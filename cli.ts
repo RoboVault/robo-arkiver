@@ -51,7 +51,7 @@ command.command('logout', 'Logout from RoboArkiver').action(logout.action)
 // deploy
 command
   .command('deploy', 'Deploy arkive')
-  .option('--public', 'Make arkive public')
+  .option('--private', 'Make arkive private')
   .option('--major', 'Deploy as major version')
   .option('--env <env:string>', 'Environment to deploy to')
   .arguments('<dir:string>')

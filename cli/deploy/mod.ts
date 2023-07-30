@@ -7,7 +7,7 @@ import { pkg } from './pkg.ts'
 import { upload } from './upload.ts'
 
 export const action = async (
-  options: { public?: true; major?: true; env?: string },
+  options: { private?: true; major?: true; env?: string },
   directory: string,
 ) => {
   const dev = options.env?.toLowerCase() === 'dev'
@@ -80,7 +80,7 @@ export const action = async (
 }
 
 const deployDev = async (
-  options: { public?: true; major?: true },
+  options: { private?: true; major?: true },
   directory: string,
 ) => {
   const manifestPath = join(Deno.cwd(), directory, 'manifest.ts')
