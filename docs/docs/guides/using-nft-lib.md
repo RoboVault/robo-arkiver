@@ -14,10 +14,11 @@ import { Manifest, Erc721Lib, Erc721Opts } from './deps.ts'
 const manifest = new Manifest('Erc721')
 const opts = Erc721Opts({
   contract: {"0xbd3531da5cf5857e7cfaa92426877b022e612cf8", 12876179}
+  // Use `async: true` if your Arkive needs to use metadata during syncing process. If you don't need to access metadata at sync consider that `async: false` is faster.
   async: true
 })
 manifest
-  .use(AaveLib.create(opts))
+  .use(Erc721Lib.create(opts))
 export default manifest.build()
 
 ```
