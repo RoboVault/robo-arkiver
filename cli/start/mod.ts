@@ -10,7 +10,7 @@ import { ArkiverMetadata } from '../../src/arkiver/arkive-metadata.ts'
 import { createManifestHandlers } from './logger.ts'
 import { colors, mongoose, SchemaComposer } from '../../src/deps.ts'
 import { logger } from '../../src/logger.ts'
-import { supportedChains } from '../../src/chains.ts'
+import { collectRpcUrls } from '../utils.ts'
 
 
 export const action = async (
@@ -115,29 +115,13 @@ export const action = async (
       ...loggers,
     },
   })
-  
-  if(options.rpcUrl && !Array.isArray(options.rpcUrl)){
-    options.rpcUrl = [options.rpcUrl]
-  }
 
-   const getEnv = (key: string, defaultValue?: string): string => {
-    const value = Deno.env.get(key)
-    if (!value && !defaultValue) {
-      throw new Error(`Missing environment variable: ${key}`)
-    }
-    return value || defaultValue || ''
-  }
-
-  const collectRpcUrls = () => {
-    const rpcUrls: Record<string, string> = {}
-    for (const chain of Object.keys(supportedChains)) {
-      try {
-        rpcUrls[chain] = getEnv(`${chain.toUpperCase()}_RPC_URL`)
-      } catch (e) {}
-    }
-    return rpcUrls
-  }
-
+  // An RPC for our Arkive is going to be assigned at some point.
+  // The order of assignment is as follows:
+  // 1. CLI command line option -r, --rpc-url
+  // 2. Env variables such as {CHAIN}_RPC_URL
+  // 3. RPC url defined in manifest
+  // 4. Default RPC of Viem
   const rpcUrls = options.rpcUrl?.reduce((acc, rpc) => {
     const [name, url] = rpc.split('=')
     acc[name] = url

@@ -2,11 +2,11 @@
 This Arkive keeps an accurate historical record of the sharePrice of a given set of YearnV2 Abi Vaults. sharePrice increases as profits are distributed to the vaults, but may also decrease if loss is incurred. It may be valuable to track this information in case of incidents or in order to optimize the vaults for instance. 
 ### Dependencies
 * Docker
-* Historical RPC (Infura, Ankr, Alchemy, etc)
+* Full Arkive RPC (Infura, Ankr, Alchemy, etc)
 
 ### Arkive Usage
 
-First make sure scripts/.env is configured correctly with your RPC endpoint. In this example we are connecting the `mainnet` with the Ankr public ETH endpoint.
+First make sure .env is configured correctly with your RPC endpoint. In this example we are connecting the `mainnet` with the Ankr public ETH endpoint.
 > RPC_URL=mainnet=https://rpc.ankr.com/eth
 
 All available tasks can been seen with

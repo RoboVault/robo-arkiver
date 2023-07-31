@@ -2,7 +2,7 @@
 This arkive handles `Transfer` events. It keeps track of the `Balance` entity. Balance starts at zero and in increased and decreased according to the `Transfer` event.
 ### Dependencies
 * Docker
-* Historical RPC (Infura, Ankr, Alchemy,  etc)
+* Full Arkive RPC (Infura, Ankr, Alchemy,  etc)
 
 ### Arkive Usage
 

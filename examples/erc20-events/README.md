@@ -2,11 +2,11 @@
 This Arkive has two entities, Transfer and Approval. The Arkive also has two corresponding event handlers onTransfer and onApproval which are triggered when the `Transfer` and `Approval` events are emitted by the source contract which is configured to `WETH` in the manifest. When the handlers are triggered they parse the amount and store either an Approval or Transfer entity in the database.
 ### Dependencies
 * Docker
-* Historical RPC (Infura, Ankr, Alchemy, etc)
+* Full Arkive RPC (Infura, Ankr, Alchemy, etc)
 
 ### Arkive Usage
 
-First make sure scripts/.env is configured correctly with your RPC endpoint. In this example we are connecting the `mainnet` with the Ankr public ETH endpoint.
+First make sure .env is configured correctly with your RPC endpoint. In this example we are connecting the `mainnet` with the Ankr public ETH endpoint.
 > RPC_URL=mainnet=https://rpc.ankr.com/eth
 
 All available tasks can been seen with
