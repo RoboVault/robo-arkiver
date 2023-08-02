@@ -1,9 +1,13 @@
+import { supportedChains } from '../chains.ts'
 import {
   Abi,
   AbiEvent,
+  AbiEventParameter,
+  AbiType,
   Block,
   ExtractAbiEvent,
   ExtractAbiEventNames,
+  ExtractAbiEvents,
   GetContractReturnType,
   Log,
   log,
@@ -12,10 +16,15 @@ import {
   RpcLog,
   SchemaComposer,
 } from '../deps.ts'
-import { Chains } from './manifest-builder/manifest.ts'
 import { Store } from './store.ts'
 
-export interface Arkive {
+declare module 'npm:abitype' {
+  export interface Config {
+    StrictAbiType: true
+  }
+}
+
+export type Arkive = {
   id: number
   user_id: string
   name: string
@@ -24,7 +33,7 @@ export interface Arkive {
   deployment: Omit<Deployment, 'arkive'>
 }
 
-export interface Deployment {
+export type Deployment = {
   id: number
   arkive_id: number
   major_version: number
@@ -42,19 +51,22 @@ export interface Deployment {
   arkive: Omit<Arkive, 'deployment'>
 }
 
-export interface IBlockHandler {
+export type IBlockHandler = {
   handler: BlockHandler
   startBlockHeight: bigint | 'live'
   blockInterval: bigint
   name: string
 }
 
-export interface ChainOptions {
+export type ChainOptions = {
   blockRange: bigint
   rpcUrl: string
 }
 
-export interface ArkiveManifest {
+// deno-lint-ignore ban-types
+export type Chains = keyof typeof supportedChains | string & {}
+
+export type ArkiveManifest = {
   dataSources: Partial<
     Record<Chains, DataSource>
   >
@@ -71,17 +83,18 @@ export type DataSource = {
   options: ChainOptions
 }
 
-export interface Contract {
+export type Contract = {
   abi: Abi
   sources: {
     address: string
     startBlockHeight: bigint
   }[]
+  factorySources?: Record<string, Record<string, string>>
   events: EventSource[]
   id: string
 }
 
-interface EventSource {
+type EventSource = {
   name: string
   // deno-lint-ignore no-explicit-any
   handler: EventHandler<any, any, any>
@@ -103,11 +116,11 @@ export type SafeLog<TAbiEvent extends AbiEvent> = RecursiveNonNullable<
 
 export type SafeRpcLog = RecursiveNonNullable<RpcLog>
 
-export interface EventHandlerContext<
+export type EventHandlerContext<
   TAbiEvent extends AbiEvent,
   TEventName extends string,
   TAbi extends Abi,
-> {
+> = {
   event: SafeLog<TAbiEvent>
   eventName: TEventName
   client: PublicClient
@@ -116,7 +129,7 @@ export interface EventHandlerContext<
   logger: log.Logger
 }
 
-export interface BlockHandlerContext {
+export type BlockHandlerContext = {
   block: SafeBlock
   client: PublicClient
   store: Store
@@ -230,3 +243,16 @@ export type ValidateSourcesObject<Sources extends Record<string, bigint>> =
       : 'Can\'t mix wildcard and specific addresses'
     : HexString<keyof Sources, 40>
     : `Source addresses must be strings`
+
+export type MapAbiEventToArgsWithType<
+  TAbi extends Abi,
+  TType extends AbiType,
+> = {
+  [
+    TEvent in ExtractAbiEvents<TAbi> as TEvent['name']
+  ]?: TEvent['inputs'][number] extends
+    infer TEventInput extends AbiEventParameter
+    ? TEventInput extends { type: TType } ? TEventInput['name']
+    : never
+    : never
+}

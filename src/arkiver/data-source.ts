@@ -13,6 +13,7 @@ import { logger } from '../logger.ts'
 import { StatusProvider } from './providers/interfaces.ts'
 import {
   BlockHandler,
+  Chains,
   Contract,
   EventHandler,
   IBlockHandler,
@@ -29,7 +30,6 @@ import {
 } from '../utils.ts'
 import { Store } from './store.ts'
 import { MongoStatusProvider } from './providers/mongodb.ts'
-import { Chains } from './manifest-builder/manifest.ts'
 
 interface NormalizedContracts {
   contracts: {
@@ -110,6 +110,12 @@ export class DataSource extends EventTarget {
   private isLive = false
   private noDb: boolean
   private maxHandlerRetries = 5
+  private factorySources: Map<string, { // topic to event parameter, abi, child topics and child contract name
+    eventParameter: string
+    abi: Abi
+    childTopics: string[]
+    childContractName: string
+  }> = new Map()
 
   constructor(
     params: {
@@ -269,7 +275,7 @@ export class DataSource extends EventTarget {
           ] as `0x${string}`[][],
         },
       ],
-    }).then((logs) => {
+    }).then(async (logs) => {
       if (
         logs.some((l) => {
           return l.blockHash === null ||
@@ -283,17 +289,23 @@ export class DataSource extends EventTarget {
         this.retryFetchLogs.set(fromBlock, toBlock)
         return
       }
+      const childLogs = await this.runFactories({
+        logs: logs as SafeRpcLog[],
+        fromBlock,
+        toBlock,
+      })
+      const joinedLogs = childLogs.concat(logs as SafeRpcLog[])
       logger(this.chain).debug(
-        `Fetched ${logs.length} logs from block ${fromBlock} to ${toBlock}...`,
+        `Fetched ${joinedLogs.length} logs from block ${fromBlock} to ${toBlock}...`,
       )
       this.logsQueue.set(fromBlock, {
-        logs: logs as SafeRpcLog[],
+        logs: joinedLogs as SafeRpcLog[],
         nextFromBlock,
       })
       this.retryFetchLogs.delete(fromBlock)
     }).catch((e) => {
       logger(this.chain).error(
-        `Error fetching logs from block ${fromBlock} to ${toBlock} for ${this.chain}: ${e}, retrying...`,
+        `Error fetching logs from block ${fromBlock} to ${toBlock} for ${this.chain}: ${e}\n${e.stack}, retrying...`,
       )
       this.retryFetchLogs.set(fromBlock, toBlock)
     })
@@ -337,7 +349,7 @@ export class DataSource extends EventTarget {
           topics: [topics],
         },
       ],
-    }).then((logs) => {
+    }).then(async (logs) => {
       if (
         logs.some((l) => {
           return l.blockHash === null ||
@@ -351,11 +363,17 @@ export class DataSource extends EventTarget {
         this.retryFetchAgnosticLogs.set(fromBlock, toBlock)
         return
       }
+      const childLogs = await this.runFactories({
+        logs: logs as SafeRpcLog[],
+        fromBlock,
+        toBlock,
+      })
+      const joinedLogs = childLogs.concat(logs as SafeRpcLog[])
       logger(this.chain).debug(
-        `Fetched ${logs.length} agnostic logs from block ${fromBlock} to ${toBlock}...`,
+        `Fetched ${joinedLogs.length} agnostic logs from block ${fromBlock} to ${toBlock}...`,
       )
       this.agnosticLogsQueue.set(fromBlock, {
-        logs: logs as SafeRpcLog[],
+        logs: joinedLogs as SafeRpcLog[],
         nextFromBlock,
       })
       this.retryFetchAgnosticLogs.delete(fromBlock)
@@ -586,9 +604,11 @@ export class DataSource extends EventTarget {
           )
 
           if (!handler) {
-            throw new Error(
-              `No handler set for topic ${log.topics[0]}-${contractId}`,
+            if (this.factorySources.get(log.topics[0] ?? 'anon')) continue
+            logger(this.chain).warning(
+              `No event handler set for ${log.topics[0]}-${contractId}`,
             )
+            continue
           }
 
           const event = decodeEventLog({
@@ -676,7 +696,9 @@ export class DataSource extends EventTarget {
 
           const eventHandler = this.agnosticEvents.get(topic)
           if (!eventHandler) {
-            logger(this.chain).error(`No event found for log ${log}`)
+            logger(this.chain).error(
+              `No event handler found for agnostic log ${log}`,
+            )
             continue
           }
 
@@ -848,7 +870,7 @@ export class DataSource extends EventTarget {
     )
 
     for (const contract of this.contracts) {
-      const { abi, events, sources, id } = contract
+      const { abi, events, sources, id, factorySources } = contract
 
       const lowestBlockHeight = bigIntMin(
         ...sources.map((s) => {
@@ -888,6 +910,8 @@ export class DataSource extends EventTarget {
         this.addressToId.set(source.address.toLowerCase(), id)
       }
 
+      const topics = []
+
       for (const event of events) {
         const { name, handler } = event
 
@@ -907,7 +931,153 @@ export class DataSource extends EventTarget {
         )
 
         this.normalizedContracts.signatureTopics.push(topic)
+        topics.push(topic)
+      }
+
+      if (!factorySources) continue
+
+      for (const [contractId, events] of Object.entries(factorySources)) {
+        const factoryContract = this.contracts.find((c) => c.id === contractId)
+        if (!factoryContract) {
+          logger(this.chain).warning(
+            `Factory contract ${contractId} not found for ${id}`,
+          )
+          continue
+        }
+        const agnosticSource = factoryContract.sources.find((s) =>
+          s.address === '*'
+        )
+        for (const [eventName, eventParameter] of Object.entries(events)) {
+          const topic = encodeEventTopics({
+            abi: factoryContract.abi,
+            eventName,
+          })[0]
+          if (agnosticSource) {
+            const existing = this.agnosticEvents.get(topic)
+            if (!existing) {
+              this.agnosticEvents.set(
+                topic,
+                {
+                  abi: factoryContract.abi,
+                  handler: () => {},
+                  startBlockHeight: agnosticSource.startBlockHeight,
+                  contractId: factoryContract.id,
+                },
+              )
+            }
+          } else {
+            this.normalizedContracts.signatureTopics.push(topic)
+          }
+          this.factorySources.set(topic, {
+            eventParameter,
+            abi: factoryContract.abi,
+            childTopics: topics,
+            childContractName: id,
+          })
+        }
       }
     }
+  }
+
+  private async runFactories(
+    params: { logs: SafeRpcLog[]; fromBlock: bigint; toBlock: bigint },
+  ) {
+    const { logs, fromBlock, toBlock } = params
+
+    const joinedChildSources = new Set()
+    const joinedChildTopics = new Set()
+
+    for (const log of logs) {
+      if (!log.topics[0]) continue
+
+      const factorySource = this.factorySources.get(log.topics[0])
+      if (!factorySource) continue
+
+      const { abi, childTopics, eventParameter, childContractName } =
+        factorySource
+
+      const decodedTopic = decodeEventLog({
+        abi,
+        data: log.data,
+        topics: log.topics,
+      })
+
+      const childSource =
+        (decodedTopic.args as Record<string, string>)[eventParameter]
+      if (!childSource) {
+        logger(this.chain).warning(`No child source found for ${log}`)
+        continue
+      }
+
+      if (
+        joinedChildSources.has(childSource) ||
+        this.addressToId.has(childSource.toLowerCase())
+      ) {
+        continue
+      } else {
+        joinedChildSources.add(childSource)
+        await this.spawnChildContract({
+          address: childSource,
+          name: childContractName,
+          startBlockHeight: BigInt(log.blockNumber),
+        })
+      }
+      childTopics.forEach((topic) => joinedChildTopics.add(topic))
+    }
+    if (joinedChildSources.size === 0) return []
+
+    const childLogs = await this.client.request({
+      method: 'eth_getLogs',
+      params: [
+        {
+          address: [...joinedChildSources] as `0x${string}`[],
+          fromBlock: `0x${fromBlock.toString(16)}`,
+          toBlock: `0x${toBlock.toString(16)}`,
+          topics: [
+            [...joinedChildTopics],
+          ] as `0x${string}`[][],
+        },
+      ],
+    })
+
+    logger(this.chain).debug(
+      `Fetched ${childLogs.length} child logs from block ${fromBlock} to ${toBlock}...`,
+    )
+
+    return childLogs as SafeRpcLog[]
+  }
+
+  private async spawnChildContract(
+    params: { address: string; name: string; startBlockHeight: bigint },
+  ) {
+    const { address, name, startBlockHeight } = params
+
+    const contract = this.contracts.find((c) => c.id === name)
+
+    if (!contract) {
+      logger(this.chain).error(
+        `Error while spawning contract ${name} with address ${address}: contract not found`,
+      )
+      return
+    }
+
+    const source = {
+      address,
+      startBlockHeight,
+    }
+
+    this.normalizedContracts.contracts.push(source)
+    this.addressToId.set(source.address.toLowerCase(), name)
+
+    await this.statusProvider.addSpawnedSource({
+      chain: this.chain,
+      contract: name,
+      address,
+      startBlockHeight: Number(startBlockHeight),
+    })
+
+    logger(this.chain).info(
+      `Spawned child contract ${name} with address ${address} at block ${startBlockHeight}`,
+    )
   }
 }

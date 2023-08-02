@@ -112,6 +112,8 @@ export const action = async () => {
         .cwd(newDir)
         .quiet('stdout')
     }
+
+    await $`deno cache --reload deps.ts`.cwd(newDir).quiet('stdout')
   } catch (e) {
     $.logError(`Error initializing arkive: ${e}`)
     return

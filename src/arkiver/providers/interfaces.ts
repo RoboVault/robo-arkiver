@@ -7,6 +7,9 @@ export interface StatusProvider {
   saveArkiveMetadata(
     params: SaveArkiveMetadataParams,
   ): Promise<void>
+  addSpawnedSource(
+    params: AddSpawnedSourceParams,
+  ): Promise<void>
 }
 
 export interface IndexedBlockHeightParams {
@@ -24,4 +27,11 @@ export interface SaveArkiveMetadataParams {
   arkiveId: number
   arkiveMajorVersion: number
   arkiveMinorVersion: number
+}
+
+export interface AddSpawnedSourceParams {
+  chain: string
+  address: string
+  contract: string
+  startBlockHeight: number
 }
