@@ -6,12 +6,13 @@ const manifest = new Manifest('yearn-vaults')
 
 manifest
   .addEntity(VaultSnapshot)
-  .addChain('mainnet')
-  .addBlockHandler({
-    blockInterval: 1000,
-    startBlockHeight: 12790000n,
-    handler: snapshotVault,
-  })
+  .addChain('mainnet', (chain) =>
+    chain
+      .addBlockHandler({
+        blockInterval: 1000,
+        startBlockHeight: 12790000n,
+        handler: snapshotVault,
+      }))
 
 export default manifest
   .build()

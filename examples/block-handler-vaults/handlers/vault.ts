@@ -1,7 +1,7 @@
 import { formatUnits, getContract } from 'npm:viem'
 import { type BlockHandler } from 'https://deno.land/x/robo_arkiver@v0.4.19/mod.ts'
 import { VaultSnapshot } from '../entities/vault.ts'
-import { YearnV2Abi } from '../abis/YearnV2.ts'
+import { YEARN_V2_ABI } from '../abis/YearnV2.ts'
 
 const VAULTS = [
   { address: '0xdA816459F1AB5631232FE5e97a05BBBb94970c95', block: 12796965 }, // yvDAI
@@ -12,7 +12,7 @@ export const snapshotVault: BlockHandler = async ({
   block,
   client,
   store,
-  logger
+  logger,
 }): Promise<void> => {
   // Filter out vaults that haven't been deployed yet
   const liveVaults = VAULTS.filter((e) => e.block < Number(block.number))
@@ -21,12 +21,12 @@ export const snapshotVault: BlockHandler = async ({
   const vaults = await Promise.all(liveVaults.map(async (vault) => {
     const contract = getContract({
       address: vault.address,
-      abi: YearnV2Abi,
+      abi: YEARN_V2_ABI,
       publicClient: client,
     })
     return {
       address: vault.address,
-      vault: { address: vault.address, abi: YearnV2Abi } as const,
+      vault: { address: vault.address, abi: YEARN_V2_ABI } as const,
       contract,
       name: await store.retrieve(
         `${vault.address}:name`,
@@ -47,7 +47,7 @@ export const snapshotVault: BlockHandler = async ({
   const sharePrices = await Promise.all(vaults.map((e) => {
     return client.readContract({
       address: e.address,
-      abi: YearnV2Abi,
+      abi: YEARN_V2_ABI,
       functionName: 'pricePerShare',
       blockNumber: block.number,
     })
@@ -60,7 +60,7 @@ export const snapshotVault: BlockHandler = async ({
     )
     logger.info(`${vault.name} share price updated to ${sharePrice}`)
     return new VaultSnapshot({
-     // id: `${vault.address}-${Number(block.number)}`,
+      // id: `${vault.address}-${Number(block.number)}`,
       block: Number(block.number),
       timestamp: Number(block.timestamp),
       vault: vault.address,
@@ -68,6 +68,5 @@ export const snapshotVault: BlockHandler = async ({
       name: vault.name,
       symbol: vault.symbol,
     })
-    
   }).map((e) => e.save())
 }

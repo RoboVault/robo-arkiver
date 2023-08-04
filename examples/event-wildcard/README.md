@@ -13,12 +13,12 @@ In this example we are attaching to the Transfer event on all contracts. This me
 The event data is parsed into a human readable format and logged to the console.
 ### Dependencies
 * Docker
-* Full Arkive RPC (Infura, Ankr, Alchemy, etc)
+* Full Archive RPC (Infura, Ankr, Alchemy, etc)
 
 ### Arkive Usage
 
 First make sure .env is configured correctly with your RPC endpoint. In this example we are connecting the `mainnet` with the Ankr public ETH endpoint.
-> RPC_URL=mainnet=https://rpc.ankr.com/eth
+> MAINNET_RPC_URL=https://rpc.ankr.com/eth
 
 All available tasks can been seen with
 > deno task

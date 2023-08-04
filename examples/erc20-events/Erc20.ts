@@ -1,4 +1,4 @@
-export default [{
+export const ERC_20_ABI = [{
   'inputs': [],
   'stateMutability': 'nonpayable',
   'type': 'constructor',

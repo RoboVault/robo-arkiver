@@ -129,7 +129,7 @@ export const craftEndpoint = (
   }graphql`
 }
 
-const getEnv = (key: string, defaultValue?: string): string => {
+export const getEnv = (key: string, defaultValue?: string): string => {
   const value = Deno.env.get(key)
   if (!value && !defaultValue) {
     throw new Error(`Missing environment variable: ${key}`)
@@ -137,12 +137,14 @@ const getEnv = (key: string, defaultValue?: string): string => {
   return value || defaultValue || ''
 }
 
-const collectRpcUrls = () => {
+export const collectRpcUrls = () => {
   const rpcUrls: Record<string, string> = {}
   for (const chain of Object.keys(supportedChains)) {
     try {
       rpcUrls[chain] = getEnv(`${chain.toUpperCase()}_RPC_URL`)
-    } catch (e) {}
+    } catch (_e) {
+      // ignore
+    }
   }
   return rpcUrls
 }

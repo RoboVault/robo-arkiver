@@ -2,12 +2,12 @@
 This Arkive keeps an accurate historical record of the balance of an account of a given ERC20 token. It uses the Balance entity as a mutable variable updates as events are handled and is used to keep track of an accounts balance as we sync eventually reflecting true onchain balance. BalanceHistory is an unchanging entity which stores balance over time and is indexed by the `block` field. 
 ### Dependencies
 * Docker
-* Full Arkive RPC (Infura, Ankr, Alchemy, etc)
+* Full Archive RPC (Infura, Ankr, Alchemy, etc)
 
 ### Arkive Usage
 
 First make sure .env is configured correctly with your RPC endpoint. In this example we are connecting the `mainnet` with the Ankr public ETH endpoint.
-> RPC_URL=mainnet=https://rpc.ankr.com/eth
+> MAINNET_RPC_URL=https://rpc.ankr.com/eth
 
 All available tasks can been seen with
 > deno task
