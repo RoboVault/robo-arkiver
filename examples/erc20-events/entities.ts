@@ -1,7 +1,7 @@
 import { createEntity } from 'https://deno.land/x/robo_arkiver@v0.4.19/mod.ts'
 
 // @note: "Index: true" enhances graphql queries
-export const Transfer = createEntity('Transfer', {
+export const Transfer = createEntity<any>('Transfer', {
   block: { type: Number, index: true },
   hash: String,
   from: String,
@@ -9,7 +9,7 @@ export const Transfer = createEntity('Transfer', {
   value: String,
 })
 
-export const Approval = createEntity('Approval', {
+export const Approval = createEntity<any>('Approval', {
   block: { type: Number, index: true },
   hash: String,
   owner: String,

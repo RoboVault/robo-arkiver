@@ -1,0 +1,13 @@
+{
+    "tasks": {
+      "start": "arkiver start ./ -c mongodb://localhost:27017",
+      "new": "docker run --name mongo -d -p 27017:27017 mongodb/mongodb-community-server:latest && arkiver start ./ -c mongodb://localhost:27017",
+      "resetdb": "docker stop mongo && docker rm mongo && docker run --name mongo -d -p 27017:27017 mongodb/mongodb-community-server:latest",
+      "reset": "docker stop mongo && docker rm mongo && docker run --name mongo -d -p 27017:27017 mongodb/mongodb-community-server:latest && arkiver start ./ -c mongodb://localhost:27017",
+      "newdb": "docker run --name mongo -d -p 27017:27017 mongodb/mongodb-community-server:latest",
+      "stopdb": "docker stop mongo",
+      "rmdb": "docker rm mongo",
+      "startdb": "docker start mongo",
+      "deploy": "arkiver deploy ./"
+    }
+  }

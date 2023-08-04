@@ -10,6 +10,8 @@ import { ArkiverMetadata } from '../../src/arkiver/arkive-metadata.ts'
 import { createManifestHandlers } from './logger.ts'
 import { colors, mongoose, SchemaComposer } from '../../src/deps.ts'
 import { logger } from '../../src/logger.ts'
+import { collectRpcUrls } from '../utils.ts'
+
 
 export const action = async (
   options: {
@@ -114,11 +116,17 @@ export const action = async (
     },
   })
 
+  // An RPC for our Arkive is going to be assigned at some point.
+  // The order of assignment is as follows:
+  // 1. CLI command line option -r, --rpc-url
+  // 2. Env variables such as {CHAIN}_RPC_URL
+  // 3. RPC url defined in manifest
+  // 4. Default RPC of Viem
   const rpcUrls = options.rpcUrl?.reduce((acc, rpc) => {
     const [name, url] = rpc.split('=')
     acc[name] = url
     return acc
-  }, {} as Record<string, string>) ?? {}
+  }, {} as Record<string, string>) ?? collectRpcUrls() ?? {}
 
   logger('arkiver').debug(`Connecting to database...`)
   const connectionString = options.mongoConnection ??

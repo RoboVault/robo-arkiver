@@ -7,7 +7,7 @@ export const upload = async (
   pkgName: string,
   tempPath: string,
   manifest: ArkiveManifest,
-  options: { public?: true; major?: true; env?: string },
+  options: { private?: true; major?: true; env?: string },
 ) => {
   spinner().text = 'Uploading...'
   const { session } = await getSupabaseClientAndLogin()
@@ -23,7 +23,7 @@ export const upload = async (
     'pkg',
     new File([await Deno.readFile(filePath)], pkgName),
   )
-  if (options.public) {
+  if (options.private === undefined) {
     formData.append('isPublic', 'on')
   }
   if (options.major) {

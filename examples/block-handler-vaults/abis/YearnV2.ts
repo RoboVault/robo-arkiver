@@ -1,4 +1,4 @@
-export const YearnV2Abi = [{
+export const YEARN_V2_ABI = [{
   'name': 'Transfer',
   'inputs': [{ 'name': 'sender', 'type': 'address', 'indexed': true }, {
     'name': 'receiver',
