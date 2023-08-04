@@ -131,7 +131,13 @@ export class Manifest<
   public build() {
     const { problems } = parseArkiveManifest.manifest(this.manifest)
     if (problems) {
-      throw new Error(`Invalid manifest: ${problems}`)
+      throw new Error(
+        `Invalid manifest: \n\t${
+          problems.map((p) =>
+            `${p.message} at: ${p.path?.map((p) => p.key).join('.')}`
+          ).join('\n\t')
+        }`,
+      )
     }
     return this.manifest
   }
