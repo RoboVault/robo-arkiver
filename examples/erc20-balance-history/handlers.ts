@@ -1,5 +1,5 @@
 import { formatUnits, fromHex, numberToHex } from 'npm:viem'
-import { type EventHandlerFor } from 'hhttps://deno.land/x/robo_arkiver@v0.4.20/mod.ts'
+import { type EventHandlerFor } from 'https://deno.land/x/robo_arkiver@v0.4.20/mod.ts'
 import erc20 from './erc20.ts'
 import { Balance, BalanceHistory, Transfer } from './entities.ts'
 
