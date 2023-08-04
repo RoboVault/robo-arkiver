@@ -1,3 +1,11 @@
+# v0.4.20
+- Add two new utility functions:
+  - `getClosestTimestamp`
+  - `getTimestampFromBlockNumber`
+- Update manifest validator to not use arktype
+- change --public options to --private in `arkiver deploy`
+- Updated examples 
+
 # v0.4.19
 - Adds factory sources. added an example factory-source to showcase this. API looks like:
 ```typescript

@@ -1,4 +1,4 @@
-import { Manifest } from 'https://deno.land/x/robo_arkiver@v0.4.19/mod.ts'
+import { Manifest } from 'hhttps://deno.land/x/robo_arkiver@v0.4.20/mod.ts'
 import { VaultSnapshot } from './entities/vault.ts'
 import { snapshotVault } from './handlers/vault.ts'
 
