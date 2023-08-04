@@ -16,7 +16,7 @@ export const Transfer = createEntity('Transfer', {
 export const Balance = createEntity('Balance', {
   token: String,
   user: String,
-  balance: Number,
+  balance: String,
 })
 
 // Contains all balance changes for every user
@@ -24,7 +24,7 @@ export const BalanceHistory = createEntity('BalanceHistory', {
   token: String,
   block: { type: Number, index: true },
   user: String,
-  balance: Number,
+  balance: String,
 })
 
 export const Entities = [Balance, BalanceHistory, Transfer]

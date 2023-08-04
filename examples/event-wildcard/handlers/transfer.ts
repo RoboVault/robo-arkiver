@@ -1,7 +1,7 @@
 import { EventHandlerFor, formatUnits } from '../deps.ts'
-import erc20 from '../abis/erc20.ts'
+import { ERC_20_ABI } from '../abis/Erc20.ts'
 
-export const transferHandler: EventHandlerFor<typeof erc20, 'Transfer'> =
+export const transferHandler: EventHandlerFor<typeof ERC_20_ABI, 'Transfer'> =
   async (
     { event, client, store, logger },
   ) => {
@@ -15,7 +15,7 @@ export const transferHandler: EventHandlerFor<typeof erc20, 'Transfer'> =
         `${address}:decimals`,
         async () =>
           await client.readContract({
-            abi: erc20,
+            abi: ERC_20_ABI,
             functionName: 'decimals',
             address,
           }),

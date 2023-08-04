@@ -2,6 +2,7 @@ import { SUPABASE_ANON_PUBLIC_KEY, SUPABASE_URL } from './constants.ts'
 import { createClient, Input, Secret, z } from './deps.ts'
 import { login } from './login/mod.ts'
 import { spinner } from './spinner.ts'
+import { supportedChains } from '../src/chains.ts'
 
 export const getEmail = async () => {
   const email = await Input.prompt('✉️  Email:')
@@ -126,4 +127,24 @@ export const craftEndpoint = (
   return `${baseGraphQlUrl}/${arkiveName}/${
     majorVersion ? majorVersion + '/' : ''
   }graphql`
+}
+
+export const getEnv = (key: string, defaultValue?: string): string => {
+  const value = Deno.env.get(key)
+  if (!value && !defaultValue) {
+    throw new Error(`Missing environment variable: ${key}`)
+  }
+  return value || defaultValue || ''
+}
+
+export const collectRpcUrls = () => {
+  const rpcUrls: Record<string, string> = {}
+  for (const chain of Object.keys(supportedChains)) {
+    try {
+      rpcUrls[chain] = getEnv(`${chain.toUpperCase()}_RPC_URL`)
+    } catch (_e) {
+      // ignore
+    }
+  }
+  return rpcUrls
 }
