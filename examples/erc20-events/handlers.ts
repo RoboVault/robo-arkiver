@@ -1,5 +1,5 @@
 import { formatUnits } from 'npm:viem'
-import { type EventHandlerFor } from 'https://deno.land/x/robo_arkiver@v0.4.20/mod.ts'
+import { type EventHandlerFor } from 'https://deno.land/x/robo_arkiver@v0.4.21/mod.ts'
 import { ERC_20_ABI } from './Erc20.ts'
 import { Approval, Transfer } from './entities.ts'
 

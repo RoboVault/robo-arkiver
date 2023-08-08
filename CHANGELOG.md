@@ -1,3 +1,6 @@
+# v0.4.21
+- Fix event type in event handler contexts
+
 # v0.4.20
 - Add two new utility functions:
   - `getClosestTimestamp`

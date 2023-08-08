@@ -1,4 +1,4 @@
-import { createEntity } from 'https://deno.land/x/robo_arkiver@v0.4.20/mod.ts'
+import { createEntity } from 'https://deno.land/x/robo_arkiver@v0.4.21/mod.ts'
 
 // @note: "Index: true" enhances graphql queries
 export const Transfer = createEntity<any>('Transfer', {

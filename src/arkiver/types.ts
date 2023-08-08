@@ -105,13 +105,16 @@ export type EventHandlerFor<
   TEventName extends ExtractAbiEventNames<TAbi>,
 > = EventHandler<ExtractAbiEvent<TAbi, TEventName>, TEventName, TAbi>
 
-type RecursiveNonNullable<T> = T extends Record<string, unknown> ? {
-    [K in keyof T]-?: RecursiveNonNullable<T[K]>
-  }
-  : NonNullable<T>
+type RecursiveNonNullable<T> = {
+  [K in keyof T]-?: RecursiveNonNullable<NonNullable<T[K]>>
+}
 
-export type SafeLog<TAbiEvent extends AbiEvent> = RecursiveNonNullable<
-  Log<bigint, number, TAbiEvent, true, [TAbiEvent]>
+export type SafeLog<TAbiEvent extends AbiEvent> = Log<
+  bigint,
+  number,
+  false,
+  TAbiEvent,
+  true
 >
 
 export type SafeRpcLog = RecursiveNonNullable<RpcLog>
