@@ -6,11 +6,13 @@ import {
 
 export type Scalar =
   | 'string'
-  | 'number'
+  | 'int'
+  | 'float'
   | 'boolean'
   | 'bigint'
   | 'objectId'
-export type ScalarWithRef = Scalar | { _schema: SchemaDefinition }
+// deno-lint-ignore no-explicit-any
+export type ScalarWithRef = Scalar | CollectionFactory<any, string>
 export type SchemaDefinition = {
   [key: string]: ScalarWithRef | [ScalarWithRef] | SchemaDefinition | [
     SchemaDefinition,
@@ -19,7 +21,8 @@ export type SchemaDefinition = {
 
 export type ScalarWithRefToType<T extends ScalarWithRef> = T extends 'string'
   ? string
-  : T extends 'number' ? number
+  : T extends 'int' ? number
+  : T extends 'float' ? number
   : T extends 'boolean' ? boolean
   : T extends 'bigint' ? bigint
   : T extends 'objectId' ? ObjectId
@@ -30,14 +33,14 @@ export type ScalarWithRefToType<T extends ScalarWithRef> = T extends 'string'
 
 export type Document<TSchemaDefinition extends SchemaDefinition> =
   | (
-    & (TSchemaDefinition['_id'] extends Scalar ? {
+    & (TSchemaDefinition['_id'] extends Exclude<Scalar, 'objectId'> ? {
         _id: ScalarWithRefToType<TSchemaDefinition['_id']>
       }
       : {
         _id?: ObjectId
       })
     & {
-      [Key in keyof TSchemaDefinition as Key extends '_id' ? never : Key]:
+      [Key in Exclude<keyof TSchemaDefinition, '_id'>]:
         TSchemaDefinition[Key] extends ScalarWithRef
           ? ScalarWithRefToType<TSchemaDefinition[Key]>
           : TSchemaDefinition[Key] extends [infer T extends ScalarWithRef]
