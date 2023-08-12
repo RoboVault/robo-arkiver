@@ -1,41 +1,66 @@
 import {
   GraphQLBoolean,
+  GraphQLError,
   GraphQLFieldConfig,
   GraphQLFieldResolver,
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
   GraphQLList,
+  GraphQLNonNull,
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLSchema,
   GraphQLString,
 } from 'npm:graphql'
+import { default as DataLoader } from 'npm:dataloader'
 import {
   CollectionFactory,
+  Document,
   Scalar,
   ScalarWithRef,
   SchemaDefinition,
 } from './collection.ts'
+import {
+  Database,
+  ObjectId,
+} from 'https://raw.githubusercontent.com/Robo-Labs/mongo/main/mod.ts'
 
 export class ArkiveSchemaComposer {
-  #types: Record<string, GraphQLObjectType> = {}
+  #collections = new Map<
+    string,
+    {
+      type: GraphQLObjectType
+      collection: CollectionFactory<{ _id: Scalar }, string>
+    }
+  >()
+  #loadedCollections = new Set<string>() // names of collections that are nested therefore needing a dataloader
 
   constructor() {}
 
   addCollection<TSchema extends SchemaDefinition>(
     collection: CollectionFactory<TSchema, string>,
   ) {
-    const schema = {
+    const existing = this.#collections.get(collection._name)
+    if (existing) return existing.type
+
+    collection._schema = {
       ...collection._schema,
       _id: collection._schema._id ?? 'objectId',
     }
-    const fields = this.#buildFields(collection._name, schema)
+
+    const fields = this.#buildFields(collection._name, collection._schema)
+
     const type = new GraphQLObjectType({
       name: collection._name,
       fields,
     })
-    this.#types[collection._name] = type
+
+    this.#collections.set(collection._name, {
+      collection: collection as CollectionFactory<{ _id: Scalar }, string>,
+      type,
+    })
+
     return type
   }
 
@@ -59,7 +84,14 @@ export class ArkiveSchemaComposer {
 
       let innerValue: ScalarWithRef | SchemaDefinition
       let type: GraphQLScalarType | GraphQLObjectType
-      let resolver: GraphQLFieldResolver<unknown, unknown> | undefined
+      let resolver:
+        | GraphQLFieldResolver<
+          Document<typeof schema>,
+          {
+            loaders: Map<string, DataLoader<unknown, unknown>>
+          }
+        >
+        | undefined
       const isArray = Array.isArray(value)
 
       if (isArray) {
@@ -68,17 +100,24 @@ export class ArkiveSchemaComposer {
         innerValue = value
       }
 
-      if (typeof innerValue === 'string') { // scalar
+      if (typeof innerValue === 'string') {
+        // scalar
         type = mapScalarToGraphQLType(innerValue)
-      } else if (typeof innerValue === 'function') { // nested collection
-        const existing = this.#types[innerValue._schema._name]
-        if (existing) {
-          type = existing
-        } else {
-          type = this.addCollection(innerValue)
-          resolver = (parent, args, context, info) => {} // @hazelnutcloud: implement resolver for nested collection using dataloader
+      } else if (typeof innerValue === 'function') {
+        // nested collection
+        type = this.addCollection(innerValue)
+        const name = innerValue._name
+        resolver = (parent, _args, { loaders }) => {
+          const loader = loaders.get(name)
+          if (!loader) throw new GraphQLError(`no loader for ${name}`)
+
+          return isArray
+            ? loader.loadMany(parent[key])
+            : loader.load(parent[key])
         }
-      } else { // nested object field
+        this.#loadedCollections.add(innerValue._name)
+      } else {
+        // nested object field
         const name = `${parentName}_${key}`
         const fields = this.#buildFields(
           name,
@@ -108,23 +147,36 @@ export class ArkiveSchemaComposer {
     return fields
   }
 
-  #buildQueryFieldsFromOuterTypes() {
+  #buildQueryFields() {
     const fields: Record<
       string,
       // deno-lint-ignore no-explicit-any
-      GraphQLFieldConfig<any, any, any>
+      GraphQLFieldConfig<any, { db: Database }, any>
     > = {}
 
-    for (const [key, value] of Object.entries(this.#types)) {
+    for (const [key, { type, collection }] of this.#collections.entries()) {
       fields[key] = {
-        type: value,
-        args: {}, // @hazelnutcloud: implement args
-        resolve: (parent, args, context, info) => {}, // @hazelnutcloud: implement resolver for query
+        type,
+        args: {
+          _id: {
+            type: new GraphQLNonNull(
+              mapScalarToGraphQLType(collection._schema._id),
+            ),
+          },
+        },
+        resolve: (_, { _id }, { db }) => {
+          if (collection._schema._id === 'objectId') {
+            _id = new ObjectId(_id)
+          }
+          return collection(db).findOne({ _id })
+        },
       }
       fields[`${key}s`] = {
-        type: new GraphQLList(value),
+        type: new GraphQLList(type),
         args: {}, // @hazelnutcloud: implement args
-        resolve: (parent, args, context, info) => {}, // @hazelnutcloud: implement resolver for query
+        resolve: (_, _args, { db }) => {
+          return collection(db).find().toArray()
+        }, // @hazelnutcloud: implement resolver for query
       }
     }
 
@@ -132,8 +184,8 @@ export class ArkiveSchemaComposer {
   }
 
   buildSchema() {
-    const fields = this.#buildQueryFieldsFromOuterTypes()
-    console.log('fields', fields)
+    const fields = this.#buildQueryFields()
+
     const queryObjectType = new GraphQLObjectType({
       name: 'Query',
       fields,
@@ -143,7 +195,28 @@ export class ArkiveSchemaComposer {
       query: queryObjectType,
     })
 
-    return schema
+    const createLoaders = (db: Database) => {
+      const loaders = new Map<string, DataLoader<unknown, unknown>>()
+
+      for (const [key, { collection }] of this.#collections.entries()) {
+        if (!this.#loadedCollections.has(key)) continue // skip collections that are not nested
+
+        loaders.set(
+          key,
+          new DataLoader(async (ids: readonly unknown[]) => {
+            const docs = await collection(db).find({
+              // deno-lint-ignore no-explicit-any
+              _id: { $in: ids as any[] },
+            }).toArray()
+            return ids.map((id) => docs.find((doc) => doc._id === id))
+          }),
+        )
+      }
+
+      return loaders
+    }
+
+    return { schema, createLoaders }
   }
 }
 

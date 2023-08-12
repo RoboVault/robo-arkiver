@@ -19,13 +19,17 @@ export type SchemaDefinition = {
   ]
 } & { _id?: Scalar }
 
-export type ScalarWithRefToType<T extends ScalarWithRef> = T extends 'string'
-  ? string
-  : T extends 'int' ? number
-  : T extends 'float' ? number
-  : T extends 'boolean' ? boolean
-  : T extends 'bigint' ? bigint
-  : T extends 'objectId' ? ObjectId
+export type ScalarTypeMap = {
+  string: string
+  int: number
+  float: number
+  boolean: boolean
+  bigint: bigint
+  objectId: ObjectId
+}
+
+export type ScalarWithRefToType<T extends ScalarWithRef> = T extends
+  keyof ScalarTypeMap ? ScalarTypeMap[T]
   : T extends { _schema: infer Schema extends SchemaDefinition }
     ? Schema extends { _id: infer Id extends Scalar } ? ScalarWithRefToType<Id>
     : ObjectId
@@ -57,9 +61,12 @@ export type Document<TSchemaDefinition extends SchemaDefinition> =
 export type CollectionFactory<
   TSchema extends SchemaDefinition,
   TName extends string,
-  TDocument extends Document<TSchema> = Document<TSchema>,
 > =
-  | { (db: Database): Collection<TDocument>; _schema: TSchema; _name: TName }
+  | {
+    (db: Database): Collection<Document<TSchema>>
+    _schema: TSchema
+    _name: TName
+  }
   | never
 
 export const createCollection = <
