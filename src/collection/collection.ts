@@ -50,9 +50,9 @@ export type Document<TSchemaDefinition extends SchemaDefinition> =
           : TSchemaDefinition[Key] extends [infer T extends ScalarWithRef]
             ? ScalarWithRefToType<T>[]
           : TSchemaDefinition[Key] extends SchemaDefinition
-            ? Document<TSchemaDefinition[Key]>
+            ? Omit<Document<TSchemaDefinition[Key]>, '_id'>
           : TSchemaDefinition[Key] extends [infer T extends SchemaDefinition]
-            ? Document<T>[]
+            ? Omit<Document<T>, '_id'>[]
           : never
     }
   )

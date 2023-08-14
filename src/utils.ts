@@ -92,3 +92,40 @@ export const JSONBigIntReviver = (_key: string, value: unknown) => {
 export const raise = (e: string) => {
   throw new Error(e)
 }
+
+export const isObject = (item: unknown) => {
+  return (item && typeof item === 'object' && !Array.isArray(item))
+}
+
+export function mergeDeep(
+  target: Record<string, unknown>,
+  source: Record<string, unknown>,
+) {
+  const output = Object.assign({}, target)
+  if (isObject(target) && isObject(source)) {
+    Object.keys(source).forEach((key) => {
+      if (isObject(source[key])) {
+        if (!(key in target)) {
+          Object.assign(output, { [key]: source[key] })
+        } else {
+          output[key] = mergeDeep(
+            target[key] as Record<string, unknown>,
+            source[key] as Record<string, unknown>,
+          )
+        }
+      } else {
+        Object.assign(output, { [key]: source[key] })
+      }
+    })
+  }
+  return output
+}
+
+export const isSuperset = (set: Set<unknown>, subset: Set<unknown>) => {
+  for (const elem of subset) {
+    if (!set.has(elem)) {
+      return false
+    }
+  }
+  return true
+}

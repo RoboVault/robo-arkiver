@@ -1,12 +1,10 @@
 import {
   GraphQLBoolean,
-  GraphQLEnumType,
   GraphQLError,
   GraphQLFieldConfig,
   GraphQLFieldResolver,
   GraphQLFloat,
   GraphQLID,
-  GraphQLInputObjectType,
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
@@ -28,6 +26,7 @@ import {
   ObjectId,
 } from 'https://raw.githubusercontent.com/Robo-Labs/mongo/main/mod.ts'
 import { buildArrayQueryArgs, FilterArg } from './filter.ts'
+import { buildAggregationStages } from './query.ts'
 
 export class ArkiveSchemaComposer {
   #collections = new Map<
@@ -179,15 +178,17 @@ export class ArkiveSchemaComposer {
         args: buildArrayQueryArgs(collection),
         resolve: (
           _,
-          _args: {
+          args: {
             filter?: FilterArg
             skip?: number
             limit?: number
             sort?: { field: string; order: 1 | -1 }
           },
           { db },
-        ) => { // TODO @hazelnutcloud: Implement resolver for multiple docs resolver
-          return collection(db).find({}).toArray()
+        ) => {
+          const aggStages = buildAggregationStages(args)
+          return collection(db).aggregate(aggStages)
+            .toArray()
         },
       }
     }

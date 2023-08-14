@@ -14,22 +14,22 @@ import {
 } from './collection.ts'
 
 export type NumberFilterField = {
-  eq?: number
-  ne?: number
-  in?: number[]
-  nin?: number[]
-  gt?: number
-  gte?: number
-  lt?: number
-  lte?: number
+  _eq?: number
+  _ne?: number
+  _in?: number[]
+  _nin?: number[]
+  _gt?: number
+  _gte?: number
+  _lt?: number
+  _lte?: number
 }
 
 export type StringFilterField = {
-  eq?: string
-  ne?: string
-  in?: string[]
-  nin?: string[]
-  regexp?: string
+  _eq?: string
+  _ne?: string
+  _in?: string[]
+  _nin?: string[]
+  _regex?: string
 }
 
 export type FilterArg = {
@@ -50,84 +50,103 @@ type GraphQLFilterArg = {
 }
 
 const createNumberFilterField = (
+  name: string,
   type: typeof GraphQLInt | typeof GraphQLFloat,
 ) => {
   return new GraphQLInputObjectType({
-    name: 'IntFilterField',
+    name,
     fields: {
-      eq: {
+      _eq: {
         type: type,
       },
-      ne: {
+      _ne: {
         type: type,
       },
-      in: {
+      _in: {
         type: new GraphQLList(type),
       },
-      nin: {
+      _nin: {
         type: new GraphQLList(type),
       },
-      gt: {
+      _gt: {
         type: type,
       },
-      gte: {
+      _gte: {
         type: type,
       },
-      lt: {
+      _lt: {
         type: type,
       },
-      lte: {
+      _lte: {
         type: type,
       },
     },
   })
 }
-const intFilterField = createNumberFilterField(GraphQLInt)
-const floatFilterField = createNumberFilterField(GraphQLFloat)
 
-const stringFilterField = new GraphQLInputObjectType({
-  name: 'StringFilterField',
-  fields: {
-    eq: {
-      type: GraphQLString,
-    },
-    ne: {
-      type: GraphQLString,
-    },
-    in: {
-      type: new GraphQLList(GraphQLString),
-    },
-    nin: {
-      type: new GraphQLList(GraphQLString),
-    },
-    regexp: {
-      type: GraphQLString,
-    },
-  },
-})
+const createIntFilterField = (name: string) =>
+  createNumberFilterField(name, GraphQLInt)
+const createFloatFilterField = (name: string) =>
+  createNumberFilterField(name, GraphQLFloat)
 
-export const mapScalarToFilterField = (scalar: ScalarWithRef):
-  | GraphQLInputObjectType
-  | typeof GraphQLBoolean => {
+const createStringFilterField = (name: string) =>
+  new GraphQLInputObjectType({
+    name,
+    fields: {
+      _eq: {
+        type: GraphQLString,
+      },
+      _ne: {
+        type: GraphQLString,
+      },
+      _in: {
+        type: new GraphQLList(GraphQLString),
+      },
+      _nin: {
+        type: new GraphQLList(GraphQLString),
+      },
+      _regex: {
+        type: GraphQLString,
+      },
+    },
+  })
+
+export const operatorSet = new Set<
+  keyof NumberFilterField | keyof StringFilterField
+>([
+  '_eq',
+  '_ne',
+  '_in',
+  '_nin',
+  '_gt',
+  '_gte',
+  '_lt',
+  '_lte',
+  '_regex',
+])
+
+export const mapScalarToFilterFieldCreator = (
+  scalar: ScalarWithRef,
+): (name: string) => GraphQLInputObjectType | typeof GraphQLBoolean => {
   if (typeof scalar === 'string') {
     switch (scalar) {
       case 'string':
-        return stringFilterField
+        return createStringFilterField
       case 'int':
-        return intFilterField
+        return createIntFilterField
       case 'float':
-        return floatFilterField
+        return createFloatFilterField
       case 'boolean':
-        return GraphQLBoolean
+        return () => GraphQLBoolean
       case 'bigint':
-        return intFilterField
+        return createIntFilterField
       case 'objectId':
-        return stringFilterField
+        return createStringFilterField
       default:
         throw new Error(`Unknown scalar type: ${scalar}`)
     }
   } else {
-    return mapScalarToFilterField(scalar._schema._id)
+    return mapScalarToFilterFieldCreator(scalar._schema._id)
   }
 }
 
@@ -188,7 +207,9 @@ const buildGraphQLFilterArgs = (
         typeof innerValue === 'string' || typeof innerValue === 'function'
       ) {
         acc[key] = {
-          type: mapScalarToFilterField(innerValue),
+          type: mapScalarToFilterFieldCreator(innerValue)(
+            `${parentName}_${key}`,
+          ),
         }
       } else {
         acc[key] = {
@@ -206,6 +227,7 @@ const buildGraphQLFilterArgs = (
 }
 
 export const buildArrayQueryArgs = (
+  // deno-lint-ignore no-explicit-any
   collection: CollectionFactory<any, string>,
 ) => {
   const filter: GraphQLInputObjectType = new GraphQLInputObjectType({
