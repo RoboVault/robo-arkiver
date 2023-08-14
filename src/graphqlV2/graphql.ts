@@ -1,10 +1,12 @@
 import {
   GraphQLBoolean,
+  GraphQLEnumType,
   GraphQLError,
   GraphQLFieldConfig,
   GraphQLFieldResolver,
   GraphQLFloat,
   GraphQLID,
+  GraphQLInputObjectType,
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
@@ -25,13 +27,14 @@ import {
   Database,
   ObjectId,
 } from 'https://raw.githubusercontent.com/Robo-Labs/mongo/main/mod.ts'
+import { buildArrayQueryArgs, FilterArg } from './filter.ts'
 
 export class ArkiveSchemaComposer {
   #collections = new Map<
     string,
     {
       type: GraphQLObjectType
-      collection: CollectionFactory<{ _id: Scalar }, string>
+      collection: CollectionFactory<Required<SchemaDefinition>, string>
     }
   >()
   #loadedCollections = new Set<string>() // names of collections that are nested therefore needing a dataloader
@@ -173,10 +176,19 @@ export class ArkiveSchemaComposer {
       }
       fields[`${key}s`] = {
         type: new GraphQLList(type),
-        args: {}, // @hazelnutcloud: implement args
-        resolve: (_, _args, { db }) => {
-          return collection(db).find().toArray()
-        }, // @hazelnutcloud: implement resolver for query
+        args: buildArrayQueryArgs(collection),
+        resolve: (
+          _,
+          _args: {
+            filter?: FilterArg
+            skip?: number
+            limit?: number
+            sort?: { field: string; order: 1 | -1 }
+          },
+          { db },
+        ) => { // TODO @hazelnutcloud: Implement resolver for multiple docs resolver
+          return collection(db).find({}).toArray()
+        },
       }
     }
 
@@ -205,8 +217,7 @@ export class ArkiveSchemaComposer {
           key,
           new DataLoader(async (ids: readonly unknown[]) => {
             const docs = await collection(db).find({
-              // deno-lint-ignore no-explicit-any
-              _id: { $in: ids as any[] },
+              _id: { $in: ids as never[] },
             }).toArray()
             return ids.map((id) => docs.find((doc) => doc._id === id))
           }),

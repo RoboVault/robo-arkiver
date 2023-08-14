@@ -3,10 +3,12 @@ import { createCollection } from './collection.ts'
 import { ArkiveSchemaComposer } from './graphql.ts'
 import { MongoClient } from 'https://raw.githubusercontent.com/Robo-Labs/mongo/main/mod.ts'
 
+// TODO @hazelnutcloud: Implement tests
+
 // Deno.test('graphql', async () => {
 const pool = createCollection('pool', {
   _id: 'string',
-  symbol: 'string',
+  symbol: ['string'],
 })
 
 const dailyPoolVolume = createCollection('dailyPoolVolume', {
@@ -30,7 +32,11 @@ const db = client.database('test')
 
 await pool(db).insertOne({
   _id: '0x123',
-  symbol: 'ETH',
+  symbol: ['ETH'],
+})
+
+await pool(db).findOne({
+  symbol: {},
 })
 
 await dailyPoolVolume(db).insertOne({
