@@ -48,20 +48,22 @@ const buildFilterStage = (
   let stage: AggregatePipeline<any> = {}
 
   for (const [key, value] of Object.entries(filter)) {
+    const newKey = parentName ? `${parentName}.${key}` : key
+
     if (key === 'OR' || key === 'AND') {
       continue
     } else if (
-      typeof value === 'boolean' ||
-      isSuperset(operatorSet, new Set(Object.keys(value)))
+      typeof value === 'boolean'
     ) {
-      const newKey = parentName ? `${parentName}.${key}` : key
+      stage[newKey] = value
+    } else if (isSuperset(operatorSet, new Set(Object.keys(value)))) {
       stage[newKey] = Object.fromEntries(
         Object.entries(value).map(([k, v]) => {
+          if (k === '_regex') v = new RegExp(v) //TODO @hazelnutcloud: this is a hack to get regex working, use GraphQLScalarType instead
           return [k.replace('_', '$'), v]
         }),
       )
     } else {
-      const newKey = parentName ? `${parentName}.${key}` : key
       const innerStage = buildFilterStage(value, newKey)
 
       stage = mergeDeep(stage, innerStage)

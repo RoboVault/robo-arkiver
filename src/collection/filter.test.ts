@@ -21,11 +21,11 @@ Deno.test('buildSortEnumValues', () => {
     a: {
       value: 'a',
     },
-    'b.c': {
-      value: 'b.c',
+    'b_c': {
+      value: 'b_c',
     },
-    'd.e.f': {
-      value: 'd.e.f',
+    'd_e_f': {
+      value: 'd_e_f',
     },
   })
 })
