@@ -1,4 +1,4 @@
-import { AggregatePipeline } from 'https://raw.githubusercontent.com/Robo-Labs/mongo/main/mod.ts'
+import { AggregatePipeline } from 'https://deno.land/x/mongo@v0.32.0/mod.ts'
 import { FilterArg, operatorSet } from './filter.ts'
 import { isSuperset, mergeDeep } from '../utils.ts'
 
@@ -52,14 +52,12 @@ const buildFilterStage = (
 
     if (key === 'OR' || key === 'AND') {
       continue
-    } else if (
-      typeof value === 'boolean'
-    ) {
+    } else if (typeof value === 'boolean') {
       stage[newKey] = value
     } else if (isSuperset(operatorSet, new Set(Object.keys(value)))) {
       stage[newKey] = Object.fromEntries(
         Object.entries(value).map(([k, v]) => {
-          if (k === '_regex') v = new RegExp(v) //TODO @hazelnutcloud: this is a hack to get regex working, use GraphQLScalarType instead
+          if (k === '_regex') v = new RegExp(v)
           return [k.replace('_', '$'), v]
         }),
       )

@@ -1,9 +1,8 @@
-import { createYoga } from 'npm:graphql-yoga'
-import { MongoClient } from 'https://raw.githubusercontent.com/Robo-Labs/mongo/main/mod.ts'
+import { MongoClient } from 'https://deno.land/x/mongo@v0.32.0/mod.ts'
 import { createCollection } from "../../src/collection/collection.ts";
 import { ArkiveSchemaComposer } from "../../src/collection/graphql.ts";
 
-// TODO @hazelnutcloud: Implement tests
+// TODO @hazelnutcloud: Implement tests for graphql schema builder
 
 // Deno.test('graphql', async () => {
 const pool = createCollection('pool', {
@@ -44,10 +43,6 @@ await pool(db).insertOne({
   symbol: ['ETH'],
 })
 
-await pool(db).findOne({
-  symbol: {},
-})
-
 await dailyPoolVolume(db).insertOne({
   pool: '0x123',
   timestamp: 123,
@@ -60,22 +55,3 @@ await dailyPoolVolume(db).insertOne({
 		}
 	}
 })
-
-const yoga = createYoga({
-  schema,
-  context: () => ({
-    db,
-    loaders: createLoaders(db),
-  }),
-})
-
-Deno.serve({
-  port: 4000,
-  onListen: ({
-    hostname,
-    port,
-  }) => console.log(`Listening on http://${hostname}:${port}`),
-}, yoga.fetch)
-
-// console.log(schema)
-// })

@@ -23,10 +23,7 @@ import {
   ScalarWithRef,
   SchemaDefinition,
 } from './collection.ts'
-import {
-  Database,
-  ObjectId,
-} from 'https://raw.githubusercontent.com/Robo-Labs/mongo/main/mod.ts'
+import { Database, ObjectId } from 'https://deno.land/x/mongo@v0.32.0/mod.ts'
 import { buildArrayQueryArgs, FilterArg } from './filter.ts'
 import { buildAggregationStages } from './query.ts'
 

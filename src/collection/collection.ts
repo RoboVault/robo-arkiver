@@ -2,7 +2,7 @@ import {
   Collection,
   Database,
   ObjectId,
-} from 'https://raw.githubusercontent.com/Robo-Labs/mongo/main/mod.ts'
+} from 'https://deno.land/x/mongo@v0.32.0/mod.ts'
 
 export type Scalar =
   | 'string'

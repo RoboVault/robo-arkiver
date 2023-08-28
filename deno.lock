@@ -362,7 +362,9 @@
       "graphql": "graphql@16.7.1",
       "graphql-compose": "graphql-compose@9.0.10_graphql@16.7.1",
       "graphql-compose-mongoose": "graphql-compose-mongoose@9.8.0_graphql-compose@9.0.10__graphql@16.7.1_mongoose@7.4.2_graphql@16.7.1",
+      "graphql-scalars": "graphql-scalars@1.22.2_graphql@16.7.1",
       "graphql-yoga": "graphql-yoga@4.0.3_graphql@16.7.1",
+      "json-bigint-patch": "json-bigint-patch@0.0.8",
       "lru-cache": "lru-cache@10.0.1",
       "mongoose": "mongoose@7.4.2",
       "viem": "viem@1.6.0_ws@8.12.0"
@@ -623,6 +625,13 @@
           "graphql-type-json": "graphql-type-json@0.3.2_graphql@16.7.1"
         }
       },
+      "graphql-scalars@1.22.2_graphql@16.7.1": {
+        "integrity": "sha512-my9FB4GtghqXqi/lWSVAOPiTzTnnEzdOXCsAC2bb5V7EFNQjVjwy3cSSbUvgYOtDuDibd+ZsCDhz+4eykYOlhQ==",
+        "dependencies": {
+          "graphql": "graphql@16.7.1",
+          "tslib": "tslib@2.6.1"
+        }
+      },
       "graphql-type-json@0.3.2_graphql@16.7.1": {
         "integrity": "sha512-J+vjof74oMlCWXSvt0DOf2APEdZOCdubEvGDUAlqH//VBYcOYsGgRW7Xzorr44LvkjiuvecWc8fChxuZZbChtg==",
         "dependencies": {
@@ -659,6 +668,10 @@
         "dependencies": {
           "ws": "ws@8.12.0"
         }
+      },
+      "json-bigint-patch@0.0.8": {
+        "integrity": "sha512-xa0LTQsyaq8awYyZyuUsporWisZFiyqzxGW8CKM3t7oouf0GFAKYJnqAm6e9NLNBQOCtOLvy614DEiRX/rPbnA==",
+        "dependencies": {}
       },
       "kareem@2.5.1": {
         "integrity": "sha512-7jFxRVm+jD+rkq3kY0iZDJfsO2/t4BBPeEb2qKn2lR/9KhuksYk5hxzfRYWMPV8P/x2d0kHD306YyWLzjjH+uA==",
