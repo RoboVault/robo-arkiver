@@ -1,8 +1,4 @@
-import {
-  Collection,
-  Database,
-  ObjectId,
-} from 'https://deno.land/x/mongo@v0.32.0/mod.ts'
+import { Collection, Database, ObjectId } from '../deps.ts'
 
 export type Scalar =
   | 'string'

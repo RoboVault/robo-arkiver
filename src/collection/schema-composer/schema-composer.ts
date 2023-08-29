@@ -22,8 +22,8 @@ import {
   Scalar,
   ScalarWithRef,
   SchemaDefinition,
-} from './collection.ts'
-import { Database, ObjectId } from 'https://deno.land/x/mongo@v0.32.0/mod.ts'
+} from '../collection.ts'
+import { Database, ObjectId } from '../../deps.ts'
 import { buildArrayQueryArgs, FilterArg } from './filter.ts'
 import { buildAggregationStages } from './query.ts'
 

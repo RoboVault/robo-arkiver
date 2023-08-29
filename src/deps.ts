@@ -40,3 +40,10 @@ export {
 } from 'https://deno.land/std@0.181.0/log/handlers.ts'
 export { crypto } from 'https://deno.land/std@0.186.0/crypto/mod.ts'
 export { GraphQLError } from 'npm:graphql'
+export {
+  Collection,
+  Database,
+  MongoClient,
+  ObjectId,
+} from 'https://raw.githubusercontent.com/Robo-Labs/mongo/main/mod.ts'
+export type { AggregatePipeline } from 'https://raw.githubusercontent.com/Robo-Labs/mongo/main/mod.ts'

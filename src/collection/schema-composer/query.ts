@@ -1,6 +1,6 @@
-import { AggregatePipeline } from 'https://deno.land/x/mongo@v0.32.0/mod.ts'
+import { AggregatePipeline } from '../../deps.ts'
 import { FilterArg, operatorSet } from './filter.ts'
-import { isSuperset, mergeDeep } from '../utils.ts'
+import { isSuperset, mergeDeep } from '../../utils.ts'
 
 export const buildAggregationStages = (queryArgs: {
   filter?: FilterArg

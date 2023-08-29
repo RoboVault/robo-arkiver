@@ -11,7 +11,7 @@ import {
   CollectionFactory,
   ScalarWithRef,
   SchemaDefinition,
-} from './collection.ts'
+} from '../collection.ts'
 
 export type NumberFilterField = {
   _eq?: number

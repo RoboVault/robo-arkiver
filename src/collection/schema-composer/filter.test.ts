@@ -1,4 +1,4 @@
-import { createCollection } from './collection.ts'
+import { createCollection } from '../collection.ts'
 import { buildSortEnumValues } from './filter.ts'
 import { assertEquals } from 'https://deno.land/std@0.190.0/testing/asserts.ts'
 
