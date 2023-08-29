@@ -1,4 +1,5 @@
 import { supportedChains } from '../chains.ts'
+import { CollectionFactory } from '../collection/collection.ts'
 import {
   Abi,
   AbiEvent,
@@ -72,6 +73,12 @@ export type ArkiveManifest = {
   >
   // deno-lint-ignore no-explicit-any
   entities: { model: mongoose.Model<any>; list: boolean; name: string }[]
+  collections: {
+    // deno-lint-ignore no-explicit-any
+    collection: CollectionFactory<any, string>
+    list: boolean
+    name: string
+  }[]
   name: string
   version: string
   schemaComposerCustomizer?: (sc: SchemaComposer) => void

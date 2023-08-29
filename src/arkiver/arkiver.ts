@@ -2,7 +2,8 @@ import { Arkive, ArkiveManifest, Contract } from './types.ts'
 import { DataSource } from './data-source.ts'
 import { defaultArkiveData } from '../utils.ts'
 import { logger } from '../logger.ts'
-import { ISpawnedSource, SpawnedSource } from './spawned-source.ts'
+import { SpawnedSource } from './spawned-source.ts'
+import { Database } from '../deps.ts'
 
 export class Arkiver extends EventTarget {
   private readonly manifest: ArkiveManifest
@@ -11,12 +12,14 @@ export class Arkiver extends EventTarget {
   private syncedCount = 0
   private rpcUrls: Record<string, string>
   private noDb: boolean
+  private db?: Database
 
   constructor(params: {
     manifest: ArkiveManifest
     arkiveData?: Arkive
     rpcUrls: Record<string, string>
     noDb: boolean
+    db?: Database
   }) {
     super()
     const { manifest, arkiveData, rpcUrls } = params
@@ -24,6 +27,7 @@ export class Arkiver extends EventTarget {
     this.arkiveData = arkiveData ?? defaultArkiveData
     this.rpcUrls = rpcUrls
     this.noDb = params.noDb
+    this.db = params.db
   }
 
   public async run() {
@@ -102,7 +106,11 @@ export class Arkiver extends EventTarget {
   }
 
   async #getSpawnedSources() {
-    const spawnedSources = await SpawnedSource.find({})
+    if (!this.db) return {}
+
+    const collection = SpawnedSource(this.db)
+
+    const spawnedSources = await collection.find().toArray()
     if (spawnedSources.length === 0) {
       return {}
     }
@@ -112,12 +120,12 @@ export class Arkiver extends EventTarget {
       }
       acc[source.chain].push(source)
       return acc
-    }, {} as Record<string, ISpawnedSource[]>)
+    }, {} as Record<string, typeof SpawnedSource.infer[]>)
   }
 
   #mergeContracts(
     sourceContracts: Contract[] | undefined,
-    spawnedSources: ISpawnedSource[] | undefined,
+    spawnedSources: typeof SpawnedSource.infer[] | undefined,
   ) {
     if (!sourceContracts) {
       return []

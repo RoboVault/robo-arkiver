@@ -6,11 +6,19 @@ import {
   defaultArkiveData,
 } from '../../mod.ts'
 import { $, createYoga, delay, join, log, logLevel, serve } from '../deps.ts'
-import { ArkiverMetadata } from '../../src/arkiver/arkive-metadata.ts'
+import { ArkiveMetadata } from '../../src/arkiver/arkive-metadata.ts'
 import { createManifestHandlers } from './logger.ts'
-import { colors, mongoose, SchemaComposer } from '../../src/deps.ts'
-import { logger } from '../../src/logger.ts'
+import {
+  colors,
+  MongoClient,
+  mongoose,
+  SchemaComposer,
+} from '../../src/deps.ts'
 import { collectRpcUrls } from '../utils.ts'
+import { GraphQLSchema } from 'npm:graphql'
+import { mergeSchemas } from 'npm:@graphql-tools/schema'
+import { ArkiveSchemaComposer } from '../../src/collection/schema-composer/schema-composer.ts'
+import { SpawnedSource } from '../../src/arkiver/spawned-source.ts'
 
 export const action = async (
   options: {
@@ -127,14 +135,16 @@ export const action = async (
     return acc
   }, {} as Record<string, string>) ?? collectRpcUrls() ?? {}
 
-  logger('arkiver').debug(`Connecting to database...`)
   const connectionString = options.mongoConnection ??
     'mongodb://admin:password@localhost:27017'
-  await mongoose.connect(connectionString, {
-    dbName: '0-0',
-    // deno-lint-ignore no-explicit-any
-  } as any)
-  logger('arkiver').debug(`Connected to database`)
+
+  // Collections V2
+  let db
+  if (options.db) {
+    const client = new MongoClient()
+    await client.connect(connectionString)
+    db = client.database('0-0')
+  }
 
   if (!options.gqlOnly) {
     const arkiver = new Arkiver({
@@ -145,36 +155,62 @@ export const action = async (
         ...defaultArkiveData,
         name: manifest.name ?? 'my-arkive',
       },
+      db,
     })
 
     await arkiver.run()
   }
 
-  if (!options.gql || !options.db) {
+  if (!options.gql || !options.db || !db) {
     return
   }
 
-  const schemaComposer = new SchemaComposer()
+  const schemas: GraphQLSchema[] = []
 
-  buildSchemaFromEntities(
-    schemaComposer,
-    [...manifest.entities, { model: ArkiverMetadata, list: true }],
-  )
+  if (manifest.entities.length > 0) {
+    await mongoose.connect(connectionString, {
+      dbName: '0-0',
+      // deno-lint-ignore no-explicit-any
+    } as any)
+    const schemaComposer = new SchemaComposer()
 
-  if (manifest.schemaComposerCustomizer) {
-    manifest.schemaComposerCustomizer(schemaComposer)
+    buildSchemaFromEntities(
+      schemaComposer,
+      manifest.entities,
+    )
+
+    if (manifest.schemaComposerCustomizer) {
+      manifest.schemaComposerCustomizer(schemaComposer)
+    }
+
+    const schema = schemaComposer.buildSchema()
+
+    schemas.push(schema)
   }
 
-  const schema = schemaComposer.buildSchema()
+  const asc = new ArkiveSchemaComposer()
+  asc.addCollection(ArkiveMetadata)
+  asc.addCollection(SpawnedSource)
+  manifest.collections.forEach((collection) => {
+    asc.addCollection(collection.collection)
+  })
+  const { schema: ascSchema, createLoaders } = asc.buildSchema()
+  schemas.push(ascSchema)
+
+  const schema = mergeSchemas({
+    schemas,
+  })
 
   const yoga = createYoga({
     schema,
-    fetchAPI: {
-      Response,
-    },
     graphiql: {
       title: 'Arkiver Playground',
     },
+    context: {
+      db,
+      loaders: createLoaders(db),
+    },
+    landingPage: false,
   })
 
   await serve(yoga, {

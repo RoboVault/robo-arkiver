@@ -62,6 +62,7 @@ export type CollectionFactory<
     (db: Database): Collection<Document<TSchema>>
     _schema: TSchema
     _name: TName
+    infer: Document<TSchema>
   }
   | never
 
@@ -78,6 +79,7 @@ export const createCollection = <
 
   col._schema = schema
   col._name = name
+  col.infer = {} as Document<TSchema>
 
   return col
 }

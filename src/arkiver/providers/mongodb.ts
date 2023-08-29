@@ -1,4 +1,5 @@
-import { ArkiverMetadata } from '../arkive-metadata.ts'
+import { Database } from '../../deps.ts'
+import { ArkiveMetadata } from '../arkive-metadata.ts'
 import { SpawnedSource } from '../spawned-source.ts'
 import {
   AddSpawnedSourceParams,
@@ -8,58 +9,53 @@ import {
 } from './interfaces.ts'
 
 export class MongoStatusProvider implements StatusProvider {
+  #arkiveMetadataCollection: ReturnType<typeof ArkiveMetadata>
+  #spawnedSourceCollection: ReturnType<typeof SpawnedSource>
+
+  constructor(db: Database) {
+    this.#arkiveMetadataCollection = ArkiveMetadata(db)
+    this.#spawnedSourceCollection = SpawnedSource(db)
+  }
+
   async getIndexedBlockHeight(
     params: IndexedBlockHeightParams,
   ): Promise<number> {
     const { chain } = params
 
-    const arkiverMetadata = await ArkiverMetadata.find({ chain }).sort({
-      processedBlockHeight: -1,
-    }).limit(1)
+    const arkiveMetadata = await this.#arkiveMetadataCollection.find({ chain })
+      .sort({
+        processedBlockHeight: -1,
+      }).limit(1).toArray()
 
-    return arkiverMetadata[0]?.processedBlockHeight || 0
+    return arkiveMetadata[0]?.processedBlockHeight || 0
   }
 
   async saveArkiveMetadata(
     params: SaveArkiveMetadataParams,
   ): Promise<void> {
-    const arkiverMetadata = await params.store.retrieve(
-      `${params.chain}:${params.blockNumber}:metadata`,
-      async () =>
-        await ArkiverMetadata.findOne({
-          chain: params.chain,
-          processedBlockHeight: Number(params.blockNumber),
-        }) ??
-          new ArkiverMetadata({
-            processedBlockHeight: 0,
-            chain: params.chain,
-            blockHandlerCalls: 0,
-            eventHandlerCalls: 0,
-            errors: [],
-            arkiveId: params.arkiveId,
-            arkiveMajorVersion: params.arkiveMajorVersion,
-            arkiveMinorVersion: params.arkiveMinorVersion,
-          }),
-    )
-    arkiverMetadata.processedBlockHeight = Number(
-      params.blockNumber,
-    )
-    if (params.type === 'block') {
-      arkiverMetadata.blockHandlerCalls++
-    } else {
-      arkiverMetadata.eventHandlerCalls++
-    }
-    if (params.error !== undefined) {
-      arkiverMetadata.errors.push(params.error)
-    }
-
-    params.store.set(
-      `${params.chain}:${params.blockNumber}:metadata`,
-      arkiverMetadata.save(),
-    )
+    await this.#arkiveMetadataCollection.updateOne({
+      _id: `${params.chain}:${params.blockNumber}`,
+    }, {
+      $setOnInsert: {
+        processedBlockHeight: Number(params.blockNumber),
+        chain: params.chain,
+        arkiveId: params.arkiveId,
+        arkiveMajorVersion: params.arkiveMajorVersion,
+        arkiveMinorVersion: params.arkiveMinorVersion,
+      },
+      $inc: {
+        [params.type === 'block' ? 'blockHandlerCalls' : 'eventHandlerCalls']:
+          1,
+      },
+      $push: {
+        errors: params.error,
+      },
+    }, {
+      upsert: true,
+    })
   }
 
   async addSpawnedSource(params: AddSpawnedSourceParams): Promise<void> {
-    await SpawnedSource.create(params)
+    await this.#spawnedSourceCollection.insertOne(params)
   }
 }

@@ -9,6 +9,7 @@ import {
 import { Abi, mongoose, SchemaComposer } from '../../deps.ts'
 import { parseArkiveManifest } from '../manifest-validator.ts'
 import { DataSourceBuilder } from './data-source.ts'
+import { CollectionFactory } from '../../collection/collection.ts'
 
 export const manifestVersion = 'v1'
 
@@ -30,6 +31,7 @@ export class Manifest<
     this.manifest = {
       dataSources: {},
       entities: [],
+      collections: [],
       name: formattedName,
       version: manifestVersion,
     }
@@ -124,6 +126,26 @@ export class Manifest<
       model: entity,
       list: true,
       name: entity.modelName,
+    })))
+    return this
+  }
+
+  public addCollection(collection: CollectionFactory<any, string>) {
+    this.manifest.collections.push({
+      collection,
+      list: true,
+      name: collection._name,
+    })
+    return this
+  }
+
+  public addCollections(
+    collections: CollectionFactory<any, string>[],
+  ) {
+    this.manifest.collections.push(...collections.map((collection) => ({
+      collection,
+      list: true,
+      name: collection._name,
     })))
     return this
   }
