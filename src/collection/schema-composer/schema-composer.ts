@@ -14,7 +14,11 @@ import {
   GraphQLSchema,
   GraphQLString,
 } from 'npm:graphql'
-import { GraphQLBigInt, GraphQLObjectID } from 'npm:graphql-scalars'
+import {
+  GraphQLBigInt,
+  GraphQLDateTime,
+  GraphQLObjectID,
+} from 'npm:graphql-scalars'
 import { default as DataLoader } from 'npm:dataloader'
 import {
   CollectionFactory,
@@ -245,7 +249,8 @@ export const mapScalarToGraphQLType = (scalar: Scalar) => {
       return GraphQLBigInt
     case 'objectId':
       return GraphQLObjectID
-    default:
-      throw new Error(`Unknown scalar type: ${scalar}`)
+    case 'date':
+      return GraphQLDateTime
   }
+  scalar satisfies never
 }

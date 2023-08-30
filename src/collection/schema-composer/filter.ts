@@ -12,6 +12,7 @@ import {
   ScalarWithRef,
   SchemaDefinition,
 } from '../collection.ts'
+import { GraphQLDateTime } from 'npm:graphql-scalars'
 
 export type NumberFilterField = {
   _eq?: number
@@ -22,6 +23,12 @@ export type NumberFilterField = {
   _gte?: number
   _lt?: number
   _lte?: number
+}
+
+export type DateFilterField = {
+  [key in keyof NumberFilterField]?: NumberFilterField[key] extends
+    ((infer _)[] | undefined) ? Date[]
+    : Date
 }
 
 export type StringFilterField = {
@@ -36,6 +43,7 @@ export type FilterArg = {
   [key: string]:
     | NumberFilterField
     | StringFilterField
+    | DateFilterField
     | boolean
     | Omit<FilterArg, 'AND' | 'OR'>
 } & {
@@ -51,7 +59,7 @@ type GraphQLFilterArg = {
 
 const createNumberFilterField = (
   name: string,
-  type: typeof GraphQLInt | typeof GraphQLFloat,
+  type: typeof GraphQLInt | typeof GraphQLFloat | typeof GraphQLDateTime,
 ) => {
   return new GraphQLInputObjectType({
     name,
@@ -88,6 +96,8 @@ const createIntFilterField = (name: string) =>
   createNumberFilterField(name, GraphQLInt)
 const createFloatFilterField = (name: string) =>
   createNumberFilterField(name, GraphQLFloat)
+const createDateFilterField = (name: string) =>
+  createNumberFilterField(name, GraphQLDateTime)
 
 const createStringFilterField = (name: string) =>
   new GraphQLInputObjectType({
@@ -140,11 +150,12 @@ export const mapScalarToFilterFieldCreator = (
         return () => GraphQLBoolean
       case 'bigint':
         return createIntFilterField
+      case 'date':
+        return createDateFilterField
       case 'objectId':
         return createStringFilterField
-      default:
-        throw new Error(`Unknown scalar type: ${scalar}`)
     }
+    scalar satisfies never
   } else {
     return mapScalarToFilterFieldCreator(scalar._schema._id)
   }

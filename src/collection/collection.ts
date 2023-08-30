@@ -6,6 +6,7 @@ export type Scalar =
   | 'float'
   | 'boolean'
   | 'bigint'
+  | 'date'
   | 'objectId'
 // deno-lint-ignore no-explicit-any
 export type ScalarWithRef = Scalar | CollectionFactory<any, string>
@@ -21,6 +22,7 @@ export type ScalarTypeMap = {
   float: number
   boolean: boolean
   bigint: bigint
+  date: Date
   objectId: ObjectId
 }
 
