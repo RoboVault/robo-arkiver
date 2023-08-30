@@ -79,6 +79,7 @@ export class Arkiver extends EventTarget {
         rpcUrl: rpcUrl,
         blockSources: source.blockHandlers ?? [],
         noDb: this.noDb,
+        db: this.db,
         arkiveMinorVersion: this.arkiveData.deployment.minor_version,
       })
 

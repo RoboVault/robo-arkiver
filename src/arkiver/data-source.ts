@@ -32,6 +32,7 @@ import {
 import { Store } from './store.ts'
 import { MongoStatusProvider } from './providers/mongodb.ts'
 import { getTimestampFromBlockNumber } from '../utils/timestamp.ts'
+import { mockStatusProvider } from './providers/mock.ts'
 
 interface NormalizedContracts {
   contracts: {
@@ -118,7 +119,7 @@ export class DataSource extends EventTarget {
     childTopics: string[]
     childContractName: string
   }> = new Map()
-  private db: Database
+  private db?: Database
 
   constructor(
     params: {
@@ -131,7 +132,7 @@ export class DataSource extends EventTarget {
       arkiveMinorVersion: number
       blockSources: IBlockHandler[]
       noDb: boolean
-      db: Database
+      db?: Database
     },
   ) {
     super()
@@ -148,7 +149,9 @@ export class DataSource extends EventTarget {
     this.arkiveVersion = params.arkiveVersion
     this.arkiveMinorVersion = params.arkiveMinorVersion
     this.db = params.db
-    this.statusProvider = new MongoStatusProvider(this.db)
+    this.statusProvider = this.db
+      ? new MongoStatusProvider(this.db)
+      : mockStatusProvider
     this.noDb = params.noDb
   }
 
@@ -647,7 +650,7 @@ export class DataSource extends EventTarget {
                   publicClient: this.client,
                 }),
                 logger: logger(loggerKey),
-                db: this.db,
+                db: this.db ?? null as unknown as Database,
                 getTimestampMs,
               })
               break
@@ -682,7 +685,7 @@ export class DataSource extends EventTarget {
                   client: this.client,
                   store: this.store,
                   logger: logger(loggerKey),
-                  db: this.db,
+                  db: this.db ?? null as unknown as Database,
                 })
                 break
               } catch (e) {
@@ -751,7 +754,7 @@ export class DataSource extends EventTarget {
                   publicClient: this.client,
                 }),
                 logger: logger(loggerKey),
-                db: this.db,
+                db: this.db ?? null as unknown as Database,
                 getTimestampMs,
               })
               break

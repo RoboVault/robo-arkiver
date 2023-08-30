@@ -94,6 +94,12 @@ export const action = async (
     )
   }
 
+  if (!manifest.dataSources) {
+    throw new Error(
+      `Error while reading manifest. Did you properly export the manifest?`,
+    )
+  }
+
   const { handlers, loggers } = createManifestHandlers(
     manifest,
     options.logLevel.toUpperCase() as log.LevelName,
