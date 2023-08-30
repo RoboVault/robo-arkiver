@@ -17,3 +17,5 @@ export {
   JSONBigIntReviver,
 } from './src/utils.ts'
 export { parseArkiveManifest } from './src/arkiver/manifest-validator.ts'
+export { createCollection } from "./src/collection/collection.ts"
+export { ArkiveSchemaComposer } from "./src/collection/schema-composer/schema-composer.ts"
