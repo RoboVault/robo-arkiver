@@ -2,6 +2,7 @@
 import {
   Abi,
   createPublicClient,
+  Database,
   decodeEventLog,
   encodeEventTopics,
   getContract,
@@ -30,6 +31,7 @@ import {
 } from '../utils.ts'
 import { Store } from './store.ts'
 import { MongoStatusProvider } from './providers/mongodb.ts'
+import { getTimestampFromBlockNumber } from '../utils/timestamp.ts'
 
 interface NormalizedContracts {
   contracts: {
@@ -116,6 +118,7 @@ export class DataSource extends EventTarget {
     childTopics: string[]
     childContractName: string
   }> = new Map()
+  private db: Database
 
   constructor(
     params: {
@@ -128,6 +131,7 @@ export class DataSource extends EventTarget {
       arkiveMinorVersion: number
       blockSources: IBlockHandler[]
       noDb: boolean
+      db: Database
     },
   ) {
     super()
@@ -143,7 +147,8 @@ export class DataSource extends EventTarget {
     this.arkiveId = params.arkiveId
     this.arkiveVersion = params.arkiveVersion
     this.arkiveMinorVersion = params.arkiveMinorVersion
-    this.statusProvider = new MongoStatusProvider()
+    this.db = params.db
+    this.statusProvider = new MongoStatusProvider(this.db)
     this.noDb = params.noDb
   }
 
@@ -617,6 +622,15 @@ export class DataSource extends EventTarget {
             topics: [log.topics[0]!, ...log.topics.slice(1)],
           })
 
+          const formattedEvent = formatLog(log, event as any)
+
+          const getTimestampMs = () =>
+            getTimestampFromBlockNumber({
+              client: this.client,
+              store: this.store,
+              blockNumber: formattedEvent.blockNumber,
+            })
+
           const loggerKey = `${this.chain}-${contractId}-${event.eventName}`
 
           let retries = 0
@@ -626,13 +640,15 @@ export class DataSource extends EventTarget {
                 eventName: event.eventName,
                 client: this.client,
                 store: this.store,
-                event: formatLog(log, event as any),
+                event: formattedEvent,
                 contract: getContract({
                   abi: handler.abi,
                   address: log.address,
                   publicClient: this.client,
                 }),
                 logger: logger(loggerKey),
+                db: this.db,
+                getTimestampMs,
               })
               break
             } catch (e) {
@@ -666,6 +682,7 @@ export class DataSource extends EventTarget {
                   client: this.client,
                   store: this.store,
                   logger: logger(loggerKey),
+                  db: this.db,
                 })
                 break
               } catch (e) {
@@ -708,6 +725,15 @@ export class DataSource extends EventTarget {
             topics: [log.topics[0]!, ...log.topics.slice(1)],
           })
 
+          const formattedEvent = formatLog(log, event as any)
+
+          const getTimestampMs = () =>
+            getTimestampFromBlockNumber({
+              client: this.client,
+              store: this.store,
+              blockNumber: formattedEvent.blockNumber,
+            })
+
           const loggerKey =
             `${this.chain}-${eventHandler.contractId}-${event.eventName}`
 
@@ -718,13 +744,15 @@ export class DataSource extends EventTarget {
                 eventName: event.eventName,
                 client: this.client,
                 store: this.store,
-                event: formatLog(log, event as any),
+                event: formattedEvent,
                 contract: getContract({
                   abi: eventHandler.abi,
                   address: log.address,
                   publicClient: this.client,
                 }),
                 logger: logger(loggerKey),
+                db: this.db,
+                getTimestampMs,
               })
               break
             } catch (e) {

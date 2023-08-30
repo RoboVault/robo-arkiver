@@ -6,6 +6,7 @@ import {
   AbiEventParameter,
   AbiType,
   Block,
+  Database,
   ExtractAbiEvent,
   ExtractAbiEventNames,
   ExtractAbiEvents,
@@ -137,6 +138,8 @@ export type EventHandlerContext<
   store: Store
   contract: GetContractReturnType<TAbi, PublicClient>
   logger: log.Logger
+  db: Database
+  getTimestampMs: () => Promise<number>
 }
 
 export type BlockHandlerContext = {
@@ -144,6 +147,7 @@ export type BlockHandlerContext = {
   client: PublicClient
   store: Store
   logger: log.Logger
+  db: Database
 }
 
 export type SafeBlock = RecursiveNonNullable<Block>
