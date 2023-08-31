@@ -1,33 +1,7 @@
-import { $, Input, join, prompt, Select, Toggle } from '../deps.ts'
+import { $, Input, join, prompt, Toggle } from '../deps.ts'
+import { spinner } from '../spinner.ts'
 
 export const action = async () => {
-  let pb = $.progress('Fetching templates...')
-
-  const templatesRes = await pb.with(() =>
-    fetch(
-      'https://api.github.com/repos/RoboVault/robo-arkiver/contents/examples',
-    )
-  )
-
-  if (!templatesRes!.ok) {
-    console.log('Error fetching templates: ', templatesRes!.statusText)
-    return
-  }
-
-  const templates = await templatesRes!.json() as {
-    name: string
-    type: string
-  }[]
-
-  const templateNames: { value: string; name: string }[] = templates.filter((
-    t,
-  ) => t.type === 'dir').map((
-    t,
-  ) => ({
-    value: t.name,
-    name: t.name,
-  }))
-
   const defaultPath = './cool-new-arkive'
 
   const arkive = await prompt([
@@ -43,13 +17,6 @@ export const action = async () => {
       },
     },
     {
-      name: 'template',
-      message: 'Which template would you like to use?',
-      type: Select,
-      options: templateNames,
-      default: templateNames[0].value,
-    },
-    {
       name: 'git',
       message: 'Initialize git repo?',
       type: Toggle,
@@ -58,9 +25,8 @@ export const action = async () => {
   ])
 
   const newDir = join(Deno.cwd(), arkive.dir ?? defaultPath)
-  const template = arkive.template ?? templateNames[0].value
 
-  pb = $.progress('Initializing arkive...')
+  spinner('Initializing arkive...').stopAndPersist()
 
   try {
     await $`git init ${newDir} && cd ${newDir} && git config core.sparseCheckout true`
@@ -68,18 +34,17 @@ export const action = async () => {
 
     await Deno.writeFile(
       join(newDir, '.git', 'info', 'sparse-checkout'),
-      new TextEncoder().encode(`examples/${template}`),
+      new TextEncoder().encode(`examples/simple`),
     )
 
     await $`git remote add origin https://github.com/RoboVault/robo-arkiver && git pull origin main && rm -rf .git`
-      .quiet('both')
       .cwd(newDir)
 
     // traverse the template directory and move all files to the root
     for await (
-      const entry of Deno.readDir(join(newDir, `examples/${template}`))
+      const entry of Deno.readDir(join(newDir, `examples/simple`))
     ) {
-      const source = join(newDir, `examples/${template}`, entry.name)
+      const source = join(newDir, `examples/simple`, entry.name)
       const destination = join(newDir, entry.name)
       await Deno.rename(source, destination)
     }
@@ -113,12 +78,11 @@ export const action = async () => {
         .quiet('stdout')
     }
 
-    await $`deno cache --reload deps.ts`.cwd(newDir).quiet('stdout')
+    await $`deno cache --reload deps.ts`.cwd(newDir)
   } catch (e) {
     $.logError(`Error initializing arkive: ${e}`)
     return
   }
 
-  pb.finish()
-  $.logStep('Initialized arkive')
+  spinner().succeed('Initialized arkive!')
 }
