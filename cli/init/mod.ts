@@ -34,7 +34,7 @@ export const action = async () => {
 
     await Deno.writeFile(
       join(newDir, '.git', 'info', 'sparse-checkout'),
-      new TextEncoder().encode(`examples/simple`),
+      new TextEncoder().encode(`examples/basic`),
     )
 
     await $`git remote add origin https://github.com/RoboVault/robo-arkiver && git pull origin main && rm -rf .git`
@@ -42,9 +42,9 @@ export const action = async () => {
 
     // traverse the template directory and move all files to the root
     for await (
-      const entry of Deno.readDir(join(newDir, `examples/simple`))
+      const entry of Deno.readDir(join(newDir, `examples/basic`))
     ) {
-      const source = join(newDir, `examples/simple`, entry.name)
+      const source = join(newDir, `examples/basic`, entry.name)
       const destination = join(newDir, entry.name)
       await Deno.rename(source, destination)
     }

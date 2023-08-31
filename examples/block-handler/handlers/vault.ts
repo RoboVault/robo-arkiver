@@ -1,6 +1,6 @@
 import { formatUnits, getContract } from 'npm:viem'
-import { type BlockHandler } from 'https://deno.land/x/robo_arkiver@v0.4.21/mod.ts'
-import { VaultSnapshot } from '../entities/vault.ts'
+import { type BlockHandler } from '../deps.ts'
+import { VaultSnapshot } from '../collections/vault.ts'
 import { YEARN_V2_ABI } from '../abis/YearnV2.ts'
 
 const VAULTS = [
@@ -13,6 +13,7 @@ export const snapshotVault: BlockHandler = async ({
   client,
   store,
   logger,
+  db,
 }): Promise<void> => {
   // Filter out vaults that haven't been deployed yet
   const liveVaults = VAULTS.filter((e) => e.block < Number(block.number))
@@ -53,20 +54,21 @@ export const snapshotVault: BlockHandler = async ({
     })
   }))
 
+  const vaultSnapshot = VaultSnapshot(db)
+
   // Save the vault snapshots
-  vaults.map((vault, i) => {
+  vaultSnapshot.insertMany(vaults.map((vault, i) => {
     const sharePrice = parseFloat(
       formatUnits(sharePrices[i], Number(vault.decimals)),
     )
     logger.info(`${vault.name} share price updated to ${sharePrice}`)
-    return new VaultSnapshot({
-      // id: `${vault.address}-${Number(block.number)}`,
+    return {
       block: Number(block.number),
       timestamp: Number(block.timestamp),
       vault: vault.address,
       sharePrice: sharePrice,
       name: vault.name,
       symbol: vault.symbol,
-    })
-  }).map((e) => e.save())
+    }
+  }))
 }
