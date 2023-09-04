@@ -2,7 +2,7 @@ import { MongoClient } from '../../src/deps.ts'
 import { createCollection } from '../../src/collection/collection.ts'
 import { ArkiveSchemaComposer } from '../../src/collection/schema-composer/schema-composer.ts'
 import { createYoga } from 'npm:graphql-yoga'
-import { assertEquals } from 'https://deno.land/std@0.154.0/testing/asserts.ts'
+import { assertEquals, assertMatch } from 'https://deno.land/std@0.190.0/testing/asserts.ts'
 
 // TODO @hazelnutcloud: Implement tests for graphql schema builder
 
@@ -13,15 +13,16 @@ Deno.test('Arkive schema composer', async (t) => {
   })
 
   const dailyPoolVolume = createCollection('dailyPoolVolume', {
-		_id: 'string',
     pool,
-    timestamp: 'int',
+    timestamp: 'date',
+		block: 'bigint',
+		isLatest: 'boolean',
     stat: {
       volume: 'float',
-      volumeChange: 'float',
+      volumeChange: 'int',
       innerStat: {
         innerVolume: 'float',
-        innerVolumeChange: 'float',
+        innerVolumeChange: 'int',
       },
     },
   })
@@ -47,14 +48,15 @@ Deno.test('Arkive schema composer', async (t) => {
   })
 
   await dailyPoolVolume(db).insertOne({
-		_id: '0x123-123',
     pool: '0x123',
-    timestamp: 123,
+    timestamp: new Date(123),
+		block: 123n,
+		isLatest: true,
     stat: {
-      volume: 1,
+      volume: 1.5,
       volumeChange: 2,
       innerStat: {
-        innerVolume: 3,
+        innerVolume: 3.5,
         innerVolumeChange: 4,
       },
     },
@@ -75,9 +77,15 @@ Deno.test('Arkive schema composer', async (t) => {
 					_id
 					symbol
 				}
-				dailyPoolVolume(_id: "0x123-123") {
+				dailyPoolVolumes {
 					_id
+					pool {
+						_id
+						symbol
+					}
 					timestamp
+					block
+					isLatest
 					stat {
 						volume
 						volumeChange
@@ -101,27 +109,22 @@ Deno.test('Arkive schema composer', async (t) => {
 		const res = await yoga(req)
 
 		const body = await res.json()
+		console.log(body)
 
-		assertEquals(body, {
-			data: {
-				pool: {
-					_id: '0x123',
-					symbol: ['ETH'],
-				},
-				dailyPoolVolume: {
-					_id: '0x123-123',
-					timestamp: 123,
-					stat: {
-						volume: 1,
-						volumeChange: 2,
-						innerStat: {
-							innerVolume: 3,
-							innerVolumeChange: 4,
-						},
-					},
-				},
-			},
-		})
+		assertEquals(body.data.pool._id, '0x123')
+		assertEquals(body.data.pool.symbol[0], 'ETH')
+
+		assertEquals(Array.isArray(body.data.dailyPoolVolumes) && body.data.dailyPoolVolumes.length, 1)
+		assertMatch(body.data.dailyPoolVolumes[0]._id, /^[0-9a-f]{24}$/)
+		assertEquals(body.data.dailyPoolVolumes[0].pool._id, '0x123')
+		assertEquals(body.data.dailyPoolVolumes[0].pool.symbol[0], 'ETH')
+		assertEquals(new Date(body.data.dailyPoolVolumes[0].timestamp).getTime(), 123)
+		assertEquals(body.data.dailyPoolVolumes[0].block, 123)
+		assertEquals(body.data.dailyPoolVolumes[0].isLatest, true)
+		assertEquals(body.data.dailyPoolVolumes[0].stat.volume, 1.5)
+		assertEquals(body.data.dailyPoolVolumes[0].stat.volumeChange, 2)
+		assertEquals(body.data.dailyPoolVolumes[0].stat.innerStat.innerVolume, 3.5)
+		assertEquals(body.data.dailyPoolVolumes[0].stat.innerStat.innerVolumeChange, 4)
 	})
 
 	client.close()

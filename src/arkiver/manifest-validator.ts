@@ -13,7 +13,7 @@ import {
   string,
   union,
   url,
-} from 'https://deno.land/x/valibot@v0.8.0/mod.ts'
+} from 'https://deno.land/x/valibot@v0.13.1/mod.ts'
 
 const manifestSchema = object({
   name: string('Name must be a string'),
@@ -69,6 +69,11 @@ const manifestSchema = object({
     list: boolean('Entity\'s list property must be a boolean'),
     name: string('Entity\'s name property must be a string'),
   })),
+  collections: optional(array(object({
+    collection: special((input) => typeof input === 'function'),
+    list: boolean('Collection\'s list property must be a boolean'),
+    name: string('Collection\'s name property must be a string'),
+  }))),
   schemaComposerCustomizer: optional(
     special((input) => typeof input === 'function'),
   ),

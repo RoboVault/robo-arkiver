@@ -74,7 +74,7 @@ export type ArkiveManifest = {
   >
   // deno-lint-ignore no-explicit-any
   entities: { model: mongoose.Model<any>; list: boolean; name: string }[]
-  collections: {
+  collections?: {
     // deno-lint-ignore no-explicit-any
     collection: CollectionFactory<any, string>
     list: boolean

@@ -2,7 +2,6 @@ import {
   ArkiveConsoleLogHandler,
   ArkiveManifest,
   Arkiver,
-  buildSchemaFromEntities,
   defaultArkiveData,
 } from '../../mod.ts'
 import { $, createYoga, delay, join, log, logLevel, serve } from '../deps.ts'
@@ -10,6 +9,7 @@ import { ArkiveMetadata } from '../../src/arkiver/arkive-metadata.ts'
 import { createManifestHandlers } from './logger.ts'
 import {
   colors,
+  Database,
   MongoClient,
   mongoose,
   SchemaComposer,
@@ -19,6 +19,7 @@ import { GraphQLSchema } from 'npm:graphql'
 import { mergeSchemas } from 'npm:@graphql-tools/schema'
 import { ArkiveSchemaComposer } from '../../src/collection/schema-composer/schema-composer.ts'
 import { SpawnedSource } from '../../src/arkiver/spawned-source.ts'
+import { buildSchemaFromEntities } from '../../src/graphql/builder.ts'
 
 export const action = async (
   options: {
@@ -145,7 +146,7 @@ export const action = async (
     'mongodb://admin:password@localhost:27017'
 
   // Collections V2
-  let db
+  let db: Database | undefined
   if (options.db) {
     const client = new MongoClient()
     await client.connect(connectionString)
@@ -197,7 +198,7 @@ export const action = async (
   const asc = new ArkiveSchemaComposer()
   asc.addCollection(ArkiveMetadata)
   asc.addCollection(SpawnedSource)
-  manifest.collections.forEach((collection) => {
+  manifest.collections?.forEach((collection) => {
     asc.addCollection(collection.collection)
   })
   const { schema: ascSchema, createLoaders } = asc.buildSchema()
@@ -212,10 +213,10 @@ export const action = async (
     graphiql: {
       title: 'Arkiver Playground',
     },
-    context: {
+    context: () => ({
       db,
-      loaders: createLoaders(db),
-    },
+      loaders: createLoaders(db!),
+    }),
     landingPage: false,
   })
 

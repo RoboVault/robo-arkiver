@@ -5,7 +5,6 @@ import {
   GraphQLFieldConfig,
   GraphQLFieldResolver,
   GraphQLFloat,
-  GraphQLID,
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
@@ -80,13 +79,6 @@ export class ArkiveSchemaComposer {
     > = {}
 
     for (const [key, value] of Object.entries(schema)) {
-      if (key === '_id') {
-        fields[key] = {
-          type: GraphQLID,
-        }
-        continue
-      }
-
       let innerValue: ScalarWithRef | SchemaDefinition
       let type: GraphQLScalarType | GraphQLObjectType
       let resolver:

@@ -131,6 +131,9 @@ export class Manifest<
   }
 
   public addCollection(collection: CollectionFactory<any, string>) {
+    if (!this.manifest.collections) {
+      this.manifest.collections = []
+    }
     this.manifest.collections.push({
       collection,
       list: true,
@@ -142,6 +145,9 @@ export class Manifest<
   public addCollections(
     collections: CollectionFactory<any, string>[],
   ) {
+    if (!this.manifest.collections) {
+      this.manifest.collections = []
+    }
     this.manifest.collections.push(...collections.map((collection) => ({
       collection,
       list: true,

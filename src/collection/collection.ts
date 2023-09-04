@@ -75,8 +75,12 @@ export const createCollection = <
   name: TName,
   schema: TSchema,
 ): CollectionFactory<TSchema, TName> => {
+  let _col: Collection<Document<TSchema>> | undefined
+
   const col = (db: Database) => {
-    return db.collection<Document<TSchema>>(name)
+    if (_col) return _col
+    _col = db.collection<Document<TSchema>>(name)
+    return _col
   }
 
   col._schema = schema

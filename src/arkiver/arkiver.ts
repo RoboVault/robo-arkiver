@@ -35,7 +35,7 @@ export class Arkiver extends EventTarget {
       `Running Arkive - ${this.arkiveData.name}`,
     )
     try {
-      await this.initSources()
+      await this.#initSources()
       console.log(
         `Arkive manifest: `,
         this.manifest,
@@ -45,7 +45,7 @@ export class Arkiver extends EventTarget {
     }
   }
 
-  private async initSources() {
+  async #initSources() {
     logger('arkiver').debug(`Initializing data sources...`)
     const { dataSources } = this.manifest
     const spawnedSources = await this.#getSpawnedSources()
