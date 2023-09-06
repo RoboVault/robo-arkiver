@@ -1,7 +1,6 @@
 export { formatUnits } from 'npm:viem'
 export {
   createCollection,
-  createEntity,
   type EventHandlerFor,
   Manifest,
-} from '../../mod.ts'
+} from 'https://deno.land/x/robo_arkiver@v0.5.0/mod.ts'

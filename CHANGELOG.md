@@ -1,3 +1,9 @@
+# v0.5.0 (Unreleased)
+- ## Collections
+  - New api for storing and querying your data
+  - Replaces the old entities api
+  - See [Collections](https://arkiver.net/docs/collections) for more info
+
 # v0.4.21
 - Fix event type in event handler contexts
 

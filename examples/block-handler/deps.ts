@@ -1,8 +1,7 @@
 export { formatUnits } from 'npm:viem'
 export {
+  type BlockHandler,
   createCollection,
-  createEntity,
   type EventHandlerFor,
   Manifest,
-	type BlockHandler
 } from '../../mod.ts'

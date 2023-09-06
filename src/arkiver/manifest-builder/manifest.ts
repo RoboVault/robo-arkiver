@@ -112,7 +112,10 @@ export class Manifest<
     >(this, chain, options)
   }
 
-  public addEntity(entity: mongoose.Model<any>) {
+  /**
+   * @deprecated Use addCollection instead
+   */
+  private addEntity(entity: mongoose.Model<any>) {
     this.manifest.entities.push({
       model: entity,
       list: true,
@@ -121,7 +124,10 @@ export class Manifest<
     return this
   }
 
-  public addEntities(entities: mongoose.Model<any>[]) {
+  /**
+   * @deprecated Use addCollections instead
+   */
+  private addEntities(entities: mongoose.Model<any>[]) {
     this.manifest.entities.push(...entities.map((entity) => ({
       model: entity,
       list: true,
