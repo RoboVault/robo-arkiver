@@ -1,3 +1,6 @@
+#v0.4.22
+- Fix bug where decoding event log from wildcard sources would sometimes fail
+
 # v0.4.21
 - Fix event type in event handler contexts
 
