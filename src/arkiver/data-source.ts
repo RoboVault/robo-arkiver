@@ -722,7 +722,6 @@ export class DataSource extends EventTarget {
             continue
           }
 
-
           const loggerKey =
             `${this.chain}-${eventHandler.contractId}-${event.eventName}`
 
