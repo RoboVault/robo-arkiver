@@ -710,15 +710,15 @@ export class DataSource extends EventTarget {
                 topics: [log.topics[0]!, ...log.topics.slice(1)],
               })
             } catch (e) {
+              logger(this.chain).warning(
+                `Failed to decode event log ${log}. Likely a signature miss-match\n${e}`,
+              )
               return
             }
           }
 
           const event = decode()
           if (!event) {
-            logger(this.chain).info(
-              `Failed to decode event log ${log}. Likely a signature miss-match`,
-            )
             continue
           }
 
