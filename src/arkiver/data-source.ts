@@ -702,11 +702,25 @@ export class DataSource extends EventTarget {
             continue
           }
 
-          const event = decodeEventLog({
-            abi: eventHandler.abi,
-            data: log.data,
-            topics: [log.topics[0]!, ...log.topics.slice(1)],
-          })
+          const decode = () => {
+            try {
+              return decodeEventLog({
+                abi: eventHandler.abi,
+                data: log.data,
+                topics: [log.topics[0]!, ...log.topics.slice(1)],
+              })
+            } catch (e) {
+              logger(this.chain).warning(
+                `Failed to decode event log ${log}. Likely a signature miss-match\n${e}`,
+              )
+              return
+            }
+          }
+
+          const event = decode()
+          if (!event) {
+            continue
+          }
 
           const loggerKey =
             `${this.chain}-${eventHandler.contractId}-${event.eventName}`
