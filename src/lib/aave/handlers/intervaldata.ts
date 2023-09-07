@@ -1,5 +1,5 @@
-import { BlockHandler, Store } from '../../../../mod.ts'
-import { type Block, type PublicClient } from 'npm:viem'
+import { Store } from '../../../../mod.ts'
+import { type Block, type PublicClient } from '../../../deps.ts'
 import { AavePoolDataAbi } from '../abis/AavePoolDataAbi.ts'
 import { AaveIntervalData } from '../entities/aaveintervaldata.ts'
 import { getPoolDataAddress, getPools } from './entityutil.ts'
@@ -8,7 +8,7 @@ const nearestInterval = (now: number, interval: number) => {
   return Math.floor(now / interval) * interval
 }
 
-const toNumber = (n: bigint, decimals: number = 0) => {
+const toNumber = (n: bigint, decimals = 0) => {
   return Number(n) / (10 ** decimals)
 }
 

@@ -6,13 +6,13 @@ import {
   GraphQLInt,
   GraphQLList,
   GraphQLString,
-} from 'npm:graphql'
+} from 'npm:graphql@16.8.0'
 import {
   CollectionFactory,
   ScalarWithRef,
   SchemaDefinition,
 } from '../collection.ts'
-import { GraphQLDateTime } from 'npm:graphql-scalars'
+import { GraphQLDateTime } from 'npm:graphql-scalars@1.22.2'
 
 export type NumberFilterField = {
   _eq?: number

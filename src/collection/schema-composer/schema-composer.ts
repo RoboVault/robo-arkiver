@@ -12,13 +12,13 @@ import {
   GraphQLScalarType,
   GraphQLSchema,
   GraphQLString,
-} from 'npm:graphql'
+} from 'npm:graphql@16.8.0'
 import {
   GraphQLBigInt,
   GraphQLDateTime,
   GraphQLObjectID,
-} from 'npm:graphql-scalars'
-import { default as DataLoader } from 'npm:dataloader'
+} from 'npm:graphql-scalars@1.22.2'
+import { default as DataLoader } from 'npm:dataloader@2.2.2'
 import {
   CollectionFactory,
   Document,

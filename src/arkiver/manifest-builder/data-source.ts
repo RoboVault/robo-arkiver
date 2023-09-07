@@ -1,6 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
 import { Abi, ExtractAbiEvent, ExtractAbiEventNames } from '../../deps.ts'
-import { ArkiveLib } from '../../lib/ArkiveLib.ts'
 import { getChainObjFromChainName } from '../../utils.ts'
 import {
   BlockHandler,
@@ -11,7 +10,7 @@ import {
   MapAbiEventToArgsWithType,
   ValidateSourcesObject,
 } from '../types.ts'
-import { ContractBuilder, hashAbi } from './contract.ts'
+import { ContractBuilder } from './contract.ts'
 import { Manifest } from './manifest.ts'
 
 export class DataSourceBuilder<
@@ -157,29 +156,6 @@ export class DataSourceBuilder<
       startBlockHeight,
       blockInterval: BigInt(blockInterval),
       name: handler.name,
-    })
-    return this
-  }
-
-  public use(libs: ArkiveLib[]) {
-    libs.forEach((lib) => {
-      const chain = this.builder.addEntities(lib.getEntities())
-        .addChain(this.chain, {
-          blockRange: this.options.blockRange ? this.options.blockRange : 3000n,
-        })
-      if (Object.keys(lib.getBlockHandler()).length > 0) {
-        chain.addBlockHandler(lib.getBlockHandler())
-      }
-      const sources = lib.getDataSources()
-      for (const info of sources) {
-        const { contract, handlers, abi } = info
-        chain.addContract({
-          abi,
-          name: hashAbi(abi),
-          eventHandlers: handlers,
-          sources: contract as any,
-        })
-      }
     })
     return this
   }

@@ -1,9 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
 import {
   Abi,
-  crypto,
   ExtractAbiEvent,
   ExtractAbiEventNames,
+  keccak256,
+  toHex,
 } from '../../deps.ts'
 import {
   Contract,
@@ -137,13 +138,7 @@ export class ContractBuilder<
 }
 
 export const hashAbi = (abi: Abi) => {
-  const textEncoder = new TextEncoder()
   const str = JSON.stringify(abi)
-  const hash = crypto.subtle.digestSync('SHA-256', textEncoder.encode(str))
-  const uint8Array = new Uint8Array(hash)
-  const hexString = Array.from(
-    uint8Array,
-    (byte) => byte.toString(16).padStart(2, '0'),
-  ).join('')
-  return hexString.slice(0, 6)
+  const hash = keccak256(toHex(str))
+  return hash.slice(0, 6)
 }

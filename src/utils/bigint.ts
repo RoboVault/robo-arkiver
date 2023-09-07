@@ -1,4 +1,4 @@
-import { formatUnits } from './deps.ts'
+import { formatUnits } from '../deps.ts'
 
 export const bigIntToFloat = (amount: bigint, decimals: number | bigint) => {
   const _decimals = typeof decimals === 'bigint' ? Number(decimals) : decimals

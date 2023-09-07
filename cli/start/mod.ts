@@ -4,7 +4,7 @@ import {
   Arkiver,
   defaultArkiveData,
 } from '../../mod.ts'
-import { $, createYoga, delay, join, log, logLevel, serve } from '../deps.ts'
+import { $, createYoga, join, log, logLevel, serve } from '../deps.ts'
 import { ArkiveMetadata } from '../../src/arkiver/arkive-metadata.ts'
 import { createManifestHandlers } from './logger.ts'
 import {
@@ -14,7 +14,7 @@ import {
   mongoose,
   SchemaComposer,
 } from '../../src/deps.ts'
-import { collectRpcUrls } from '../utils.ts'
+import { collectRpcUrls, delay } from '../utils.ts'
 import { GraphQLSchema } from 'npm:graphql'
 import { mergeSchemas } from 'npm:@graphql-tools/schema'
 import { ArkiveSchemaComposer } from '../../src/collection/schema-composer/schema-composer.ts'

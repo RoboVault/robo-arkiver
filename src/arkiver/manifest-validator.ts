@@ -83,9 +83,9 @@ export const parseArkiveManifest = {
   manifest: (manifest: unknown) => {
     const result = safeParse(manifestSchema, manifest)
     if (result.success) {
-      return { data: result.data }
+      return { data: result.output }
     } else {
-      return { problems: result.error.issues }
+      return { problems: result.issues }
     }
   },
 }

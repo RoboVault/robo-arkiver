@@ -1,18 +1,21 @@
-export { delay } from 'https://deno.land/std@0.179.0/async/mod.ts'
 export {
   type Block,
+  type Chain,
   createPublicClient,
   decodeEventLog,
   type DecodeEventLogReturnType,
   encodeEventTopics,
+  formatUnits,
   getContract,
   type GetContractReturnType,
   http,
   type HttpTransport,
+  keccak256,
   type Log,
   type PublicClient,
   type RpcLog,
-} from 'npm:viem'
+  toHex,
+} from 'npm:viem@1.10.4'
 export {
   type Abi,
   type AbiEvent,
@@ -24,22 +27,21 @@ export {
   type ExtractAbiEvent,
   type ExtractAbiEventNames,
   type ExtractAbiEvents,
-} from 'npm:abitype'
-export { default as mongoose, Schema, Types } from 'npm:mongoose'
-export { SchemaComposer, schemaComposer } from 'npm:graphql-compose'
+} from 'npm:abitype@0.9.8'
+export { default as mongoose, Schema, Types } from 'npm:mongoose@7.5.0'
+export { SchemaComposer, schemaComposer } from 'npm:graphql-compose@9.0.10'
 export {
   composeMongoose,
   type ObjectTypeComposerWithMongooseResolvers,
-} from 'npm:graphql-compose-mongoose'
-export { LRUCache as Cache } from 'npm:lru-cache'
-export * as log from 'https://deno.land/std@0.181.0/log/mod.ts'
-export * as colors from 'https://deno.land/std@0.181.0/fmt/colors.ts'
+} from 'npm:graphql-compose-mongoose@9.8.0'
+export { LRUCache as Cache } from 'npm:lru-cache@10.0.1'
+export * as log from 'https://deno.land/std@0.201.0/log/mod.ts'
+export * as colors from 'https://deno.land/std@0.201.0/fmt/colors.ts'
 export {
   BaseHandler,
   ConsoleHandler,
-} from 'https://deno.land/std@0.181.0/log/handlers.ts'
-export { crypto } from 'https://deno.land/std@0.186.0/crypto/mod.ts'
-export { GraphQLError } from 'npm:graphql'
+} from 'https://deno.land/std@0.201.0/log/handlers.ts'
+export { GraphQLError } from 'npm:graphql@16.8.0'
 export {
   Collection,
   Database,

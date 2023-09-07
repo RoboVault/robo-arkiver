@@ -1,6 +1,6 @@
 import { createCollection } from '../collection.ts'
 import { buildSortEnumValues } from './filter.ts'
-import { assertEquals } from 'https://deno.land/std@0.190.0/testing/asserts.ts'
+import { assertEquals } from 'https://deno.land/std@0.201.0/assert/assert_equals.ts'
 
 Deno.test('buildSortEnumValues', () => {
   const collection = createCollection('test', {

@@ -1,7 +1,9 @@
 import {
   assertEquals,
+} from 'https://deno.land/std@0.201.0/assert/assert_equals.ts'
+import {
   assertExists,
-} from 'https://deno.land/std@0.192.0/testing/asserts.ts'
+} from 'https://deno.land/std@0.201.0/assert/assert_exists.ts'
 import { Manifest } from './manifest-builder/manifest.ts'
 import { parseArkiveManifest } from './manifest-validator.ts'
 

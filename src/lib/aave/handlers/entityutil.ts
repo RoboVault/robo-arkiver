@@ -1,4 +1,4 @@
-import { type Address, type PublicClient } from 'npm:viem'
+import { type Address, type PublicClient } from '../../../deps.ts'
 import { Erc20 } from '../abis/Erc20.ts'
 import { Store } from '../../../../mod.ts'
 import { Erc20Token, Erc20TokenType } from '../entities/erc20token.ts'
@@ -31,7 +31,7 @@ export const AavePoolData: { [key: string]: Address } = {
   'metis': '0x99411FC17Ad1B56f49719E3850B2CDcc0f9bBFd8',
 }
 
-export async function getTokenId(
+export function getTokenId(
   client: PublicClient,
   token: Address | string,
 ) {
@@ -111,7 +111,7 @@ export async function getToken(client: PublicClient, address: Address) {
   let decimals = 18
   let symbol = 'MKR'
   if (address != '0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2') {
-    ;[decimals, symbol] = await Promise.all([
+    [decimals, symbol] = await Promise.all([
       client.readContract({
         address: address as Address,
         abi: Erc20,

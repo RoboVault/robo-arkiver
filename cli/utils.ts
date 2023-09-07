@@ -4,6 +4,12 @@ import { login } from './login/mod.ts'
 import { spinner } from './spinner.ts'
 import { supportedChains } from '../src/chains.ts'
 
+export const delay = (durationMs: number) => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, durationMs)
+  })
+}
+
 export const getEmail = async () => {
   const email = await Input.prompt('✉️  Email:')
   if (!email) {

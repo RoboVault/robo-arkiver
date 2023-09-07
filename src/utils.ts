@@ -1,6 +1,6 @@
-import { Chains } from './arkiver/types.ts'
-import { Arkive, SafeLog, SafeRpcLog } from './arkiver/types.ts'
+import { Arkive, SafeRpcLog } from './arkiver/types.ts'
 import { supportedChains } from './chains.ts'
+import { Log } from './deps.ts'
 
 export const delay = (durationMs: number) => {
   return new Promise((resolve) => {
@@ -9,7 +9,7 @@ export const delay = (durationMs: number) => {
 }
 
 export const getChainObjFromChainName = (
-  chain: Chains,
+  chain: string,
 ) => {
   const chainObj = supportedChains[chain as keyof typeof supportedChains]
   if (!chainObj) {
@@ -44,8 +44,14 @@ export function formatLog(
     transactionHash: log.transactionHash,
     transactionIndex: parseInt(log.transactionIndex, 16),
     ...({ args, eventName }),
+  } satisfies Log<
+    bigint,
+    number,
+    false,
     // deno-lint-ignore no-explicit-any
-  } satisfies SafeLog<any>
+    any,
+    true
+  >
 }
 
 export const defaultArkiveData: Arkive = {

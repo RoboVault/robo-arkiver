@@ -1,8 +1,8 @@
 import { MongoClient } from '../../src/deps.ts'
 import { createCollection } from '../../src/collection/collection.ts'
 import { ArkiveSchemaComposer } from '../../src/collection/schema-composer/schema-composer.ts'
-import { createYoga } from 'npm:graphql-yoga'
-import { assertEquals, assertMatch } from 'https://deno.land/std@0.190.0/testing/asserts.ts'
+import { createYoga } from 'npm:graphql-yoga@4.0.4'
+import { assert } from 'https://deno.land/std@0.201.0/assert/assert.ts'
 
 // TODO @hazelnutcloud: Implement tests for graphql schema builder
 
@@ -111,20 +111,20 @@ Deno.test('Arkive schema composer', async (t) => {
 		const body = await res.json()
 		console.log(body)
 
-		assertEquals(body.data.pool._id, '0x123')
-		assertEquals(body.data.pool.symbol[0], 'ETH')
+		assert(body.data.pool._id === '0x123')
+		assert(body.data.pool.symbol[0] === 'ETH')
 
-		assertEquals(Array.isArray(body.data.dailyPoolVolumes) && body.data.dailyPoolVolumes.length, 1)
-		assertMatch(body.data.dailyPoolVolumes[0]._id, /^[0-9a-f]{24}$/)
-		assertEquals(body.data.dailyPoolVolumes[0].pool._id, '0x123')
-		assertEquals(body.data.dailyPoolVolumes[0].pool.symbol[0], 'ETH')
-		assertEquals(new Date(body.data.dailyPoolVolumes[0].timestamp).getTime(), 123)
-		assertEquals(body.data.dailyPoolVolumes[0].block, 123)
-		assertEquals(body.data.dailyPoolVolumes[0].isLatest, true)
-		assertEquals(body.data.dailyPoolVolumes[0].stat.volume, 1.5)
-		assertEquals(body.data.dailyPoolVolumes[0].stat.volumeChange, 2)
-		assertEquals(body.data.dailyPoolVolumes[0].stat.innerStat.innerVolume, 3.5)
-		assertEquals(body.data.dailyPoolVolumes[0].stat.innerStat.innerVolumeChange, 4)
+		assert(Array.isArray(body.data.dailyPoolVolumes) && body.data.dailyPoolVolumes.length === 1)
+		assert(/^[0-9a-f]{24}$/.test(body.data.dailyPoolVolumes[0]._id ))
+		assert(body.data.dailyPoolVolumes[0].pool._id === '0x123')
+		assert(body.data.dailyPoolVolumes[0].pool.symbol[0] === 'ETH')
+		assert(new Date(body.data.dailyPoolVolumes[0].timestamp).getTime() === 123)
+		assert(body.data.dailyPoolVolumes[0].block === 123)
+		assert(body.data.dailyPoolVolumes[0].isLatest === true)
+		assert(body.data.dailyPoolVolumes[0].stat.volume === 1.5)
+		assert(body.data.dailyPoolVolumes[0].stat.volumeChange === 2)
+		assert(body.data.dailyPoolVolumes[0].stat.innerStat.innerVolume === 3.5)
+		assert(body.data.dailyPoolVolumes[0].stat.innerStat.innerVolumeChange === 4)
 	})
 
 	client.close()

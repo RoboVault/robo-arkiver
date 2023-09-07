@@ -10,7 +10,8 @@ import {
   polygonMumbai,
   polygonZkEvm,
   sepolia,
-} from 'npm:viem/chains'
+} from 'npm:viem@1.10.4/chains'
+import { Chain } from './deps.ts'
 
 export const supportedChains = {
   arbitrum,
@@ -25,4 +26,17 @@ export const supportedChains = {
   sepolia,
   polygonZkEvm,
   localhost,
-} as const
+} as {
+  arbitrum: Chain
+  avalanche: Chain
+  avalancheFuji: Chain
+  mainnet: Chain
+  ethereum: Chain
+  fantom: Chain
+  polygon: Chain
+  optimism: Chain
+  mumbai: Chain
+  sepolia: Chain
+  polygonZkEvm: Chain
+  localhost: Chain
+}

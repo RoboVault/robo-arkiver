@@ -1,5 +1,4 @@
-import { formatUnits } from 'npm:viem'
-import { type EventHandlerFor, Store, Types } from '../../../mod.ts'
+import { type EventHandlerFor, Store } from '../../../mod.ts'
 import { Erc721 } from './Erc721.ts'
 import {
   Erc721Balance,
@@ -11,7 +10,7 @@ import {
 export async function getCollection(address: String, contract, store: Store) {
   let record = await store.retrieve(
     `collection::${address}`,
-    async () => Erc721Set.findOne({ address }),
+    () => Erc721Set.findOne({ address }),
   )
   if (!record) {
     const name = await contract.read.name()

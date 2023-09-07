@@ -2,5 +2,6 @@
 src/packages
 scratchpad.ts
 .hypothesis/
+npm/
 
 .DS_Store

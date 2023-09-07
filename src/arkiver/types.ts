@@ -20,12 +20,6 @@ import {
 } from '../deps.ts'
 import { Store } from './store.ts'
 
-declare module 'npm:abitype' {
-  export interface Config {
-    StrictAbiType: true
-  }
-}
-
 export type Arkive = {
   id: number
   user_id: string
@@ -117,14 +111,6 @@ type RecursiveNonNullable<T> = {
   [K in keyof T]-?: RecursiveNonNullable<NonNullable<T[K]>>
 }
 
-export type SafeLog<TAbiEvent extends AbiEvent> = Log<
-  bigint,
-  number,
-  false,
-  TAbiEvent,
-  true
->
-
 export type SafeRpcLog = RecursiveNonNullable<RpcLog>
 
 export type EventHandlerContext<
@@ -132,7 +118,13 @@ export type EventHandlerContext<
   TEventName extends string,
   TAbi extends Abi,
 > = {
-  event: SafeLog<TAbiEvent>
+  event: Log<
+    bigint,
+    number,
+    false,
+    TAbiEvent,
+    true
+  > | never
   eventName: TEventName
   client: PublicClient
   store: Store
