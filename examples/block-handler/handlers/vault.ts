@@ -1,7 +1,7 @@
 import { formatUnits, getContract } from 'npm:viem'
 import { type BlockHandler } from '../deps.ts'
 import { VaultSnapshot } from '../collections/vault.ts'
-import { YEARN_V2_ABI } from '../abis/YearnV2.ts'
+import { YEARN_V2_ABI } from '../abis/yearnV2.ts'
 
 const VAULTS = [
   { address: '0xdA816459F1AB5631232FE5e97a05BBBb94970c95', block: 12796965 }, // yvDAI
@@ -14,7 +14,7 @@ export const snapshotVault: BlockHandler = async ({
   store,
   logger,
   db,
-}): Promise<void> => {
+}) => {
   // Filter out vaults that haven't been deployed yet
   const liveVaults = VAULTS.filter((e) => e.block < Number(block.number))
 
@@ -31,15 +31,15 @@ export const snapshotVault: BlockHandler = async ({
       contract,
       name: await store.retrieve(
         `${vault.address}:name`,
-        async () => await contract.read.name(),
+        contract.read.name,
       ),
       symbol: await store.retrieve(
         `${vault.address}:symbol`,
-        async () => await contract.read.symbol(),
+        contract.read.symbol,
       ),
       decimals: await store.retrieve(
         `${vault.address}:decimals`,
-        async () => await contract.read.decimals(),
+        contract.read.decimals,
       ),
     }
   }))

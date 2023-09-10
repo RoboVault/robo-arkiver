@@ -1,7 +1,7 @@
-import { UNISWAP_V2_PAIR } from '../abis/UniswapV2Pair.ts'
+import { UNISWAP_V2_PAIR_ABI } from '../abis/uniswap-v2-pair.ts'
 import { EventHandlerFor } from '../deps.ts'
 
-export const onSwap: EventHandlerFor<typeof UNISWAP_V2_PAIR, 'Swap'> = (
+export const onSwap: EventHandlerFor<typeof UNISWAP_V2_PAIR_ABI, 'Swap'> = (
   { event, logger },
 ) => {
   const { amount0In, amount0Out, amount1In, amount1Out, sender, to } =

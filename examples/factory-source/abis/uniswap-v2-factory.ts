@@ -1,4 +1,4 @@
-export const UNISWAP_V2_FACTORY = [{
+export const UNISWAP_V2_FACTORY_ABI = [{
   'inputs': [{
     'internalType': 'address',
     'name': '_feeToSetter',

@@ -1,4 +1,4 @@
-export const UNISWAP_V2_PAIR = [{
+export const UNISWAP_V2_PAIR_ABI = [{
   'inputs': [],
   'payable': false,
   'stateMutability': 'nonpayable',
