@@ -1,11 +1,6 @@
 // deno-lint-ignore-file no-explicit-any ban-types
 import { supportedChains } from '../../chains.ts'
-import {
-  ArkiveManifest,
-  ChainOptions,
-  Chains,
-  CheckManifestName,
-} from '../types.ts'
+import { ArkiveManifest, ChainOptions, Chains } from '../types.ts'
 import { Abi, mongoose, SchemaComposer } from '../../deps.ts'
 import { parseArkiveManifest } from '../manifest-validator.ts'
 import { DataSourceBuilder } from './data-source.ts'
@@ -14,12 +9,11 @@ import { CollectionFactory } from '../../collection/collection.ts'
 export const manifestVersion = 'v1'
 
 export class Manifest<
-  TName extends string = '',
   TChains extends Partial<Record<Chains, Record<string, Abi>>> = {},
 > {
   public manifest: ArkiveManifest
 
-  constructor(name: CheckManifestName<TName, TName>) {
+  constructor(name: string) {
     if (name === undefined) {
       throw new Error('Manifest name is required.')
     }
@@ -44,17 +38,15 @@ export class Manifest<
     chain: TChain,
     builderFn: (
       builder: DataSourceBuilder<
-        TName,
         TChains[TChain] extends {} ? TChains[TChain] : {}
       >,
-    ) => DataSourceBuilder<TName, TContracts>,
-  ): Manifest<TName, { [key in TChain]: TContracts } & TChains>
+    ) => DataSourceBuilder<TContracts>,
+  ): Manifest<{ [key in TChain]: TContracts } & TChains>
 
   public addChain<TChain extends Exclude<Chains, keyof TChains>>(
     chain: TChain,
     options?: Partial<ChainOptions>,
   ): DataSourceBuilder<
-    TName,
     TChains[TChain] extends {} ? TChains[TChain] : {}
   >
 
@@ -66,21 +58,18 @@ export class Manifest<
     optionsOrBuilderFn?:
       | ((
         builder: DataSourceBuilder<
-          TName,
           TChains[TChain] extends {} ? TChains[TChain] : {}
         >,
-      ) => DataSourceBuilder<TName, TContracts>)
+      ) => DataSourceBuilder<TContracts>)
       | Partial<ChainOptions>,
   ):
-    | Manifest<TName, { [key in TChain]: TContracts } & TChains>
+    | Manifest<{ [key in TChain]: TContracts } & TChains>
     | DataSourceBuilder<
-      TName,
       TChains[TChain] extends {} ? TChains[TChain] : {}
     > {
     if (optionsOrBuilderFn && typeof optionsOrBuilderFn === 'function') {
       optionsOrBuilderFn(
         new DataSourceBuilder<
-          TName,
           TChains[TChain] extends {} ? TChains[TChain] : {}
         >(this as any, chain),
       )
@@ -88,7 +77,6 @@ export class Manifest<
         throw new Error(`RPC URL is required for chain ${chain}`)
       }
       return this as unknown as Manifest<
-        TName,
         { [key in TChain]: TContracts } & TChains
       >
     }
@@ -97,7 +85,6 @@ export class Manifest<
       throw new Error(`RPC URL is required for chain ${chain}`)
     }
     return new DataSourceBuilder<
-      TName,
       TChains[TChain] extends {} ? TChains[TChain] : {}
     >(this as any, chain, optionsOrBuilderFn)
   }
@@ -105,9 +92,8 @@ export class Manifest<
   private chain<TChain extends Chains>(
     chain: TChain,
     options?: Partial<ChainOptions>,
-  ) {
+  ): DataSourceBuilder<any> {
     return new DataSourceBuilder<
-      TName,
       TChains[TChain] extends {} ? TChains[TChain] : {}
     >(this, chain, options)
   }

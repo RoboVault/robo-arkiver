@@ -6,24 +6,17 @@ import {
   keccak256,
   toHex,
 } from '../../deps.ts'
-import {
-  Contract,
-  EventHandler,
-  HexString,
-  MapAbiEventToArgsWithType,
-  ValidateSourcesObject,
-} from '../types.ts'
+import { Contract, EventHandler, MapAbiEventToArgsWithType } from '../types.ts'
 import { DataSourceBuilder } from './data-source.ts'
 
 export class ContractBuilder<
   const TAbi extends Abi,
-  TName extends string,
   TContracts extends Record<string, Abi>,
 > {
   public contract: Contract
 
   constructor(
-    private builder: DataSourceBuilder<TName, TContracts>,
+    private builder: DataSourceBuilder<TContracts>,
     abi: TAbi,
     name?: string,
   ) {
@@ -43,8 +36,8 @@ export class ContractBuilder<
     }
   }
 
-  private addSource<TAddress extends string>(
-    address: HexString<TAddress, 40> | '*',
+  private addSource(
+    address: string | '*' | never,
     startBlockHeight: bigint,
   ) {
     if (address === '*' && this.contract.sources.length > 0) {
@@ -57,8 +50,8 @@ export class ContractBuilder<
     return this
   }
 
-  public addSources<TSources extends Record<string, bigint>>(
-    sources: ValidateSourcesObject<TSources>,
+  public addSources(
+    sources: Record<string, bigint>,
   ) {
     if (typeof sources !== 'object') {
       throw new Error('Sources must be an object.')

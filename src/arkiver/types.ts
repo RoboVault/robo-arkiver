@@ -20,7 +20,7 @@ import {
 } from '../deps.ts'
 import { Store } from './store.ts'
 
-export type Arkive = {
+export interface Arkive {
   id: number
   user_id: string
   name: string
@@ -29,7 +29,7 @@ export type Arkive = {
   deployment: Omit<Deployment, 'arkive'>
 }
 
-export type Deployment = {
+export interface Deployment {
   id: number
   arkive_id: number
   major_version: number
@@ -47,14 +47,14 @@ export type Deployment = {
   arkive: Omit<Arkive, 'deployment'>
 }
 
-export type IBlockHandler = {
+export interface IBlockHandler {
   handler: BlockHandler
   startBlockHeight: bigint | 'live'
   blockInterval: bigint
   name: string
 }
 
-export type ChainOptions = {
+export interface ChainOptions {
   blockRange: bigint
   rpcUrl: string
 }
@@ -62,7 +62,7 @@ export type ChainOptions = {
 // deno-lint-ignore ban-types
 export type Chains = keyof typeof supportedChains | string & {}
 
-export type ArkiveManifest = {
+export interface ArkiveManifest {
   dataSources: Partial<
     Record<Chains, DataSource>
   >
@@ -79,13 +79,13 @@ export type ArkiveManifest = {
   schemaComposerCustomizer?: (sc: SchemaComposer) => void
 }
 
-export type DataSource = {
+export interface DataSource {
   contracts?: Contract[]
   blockHandlers?: IBlockHandler[]
   options: ChainOptions
 }
 
-export type Contract = {
+export interface Contract {
   abi: Abi
   sources: {
     address: string
@@ -96,7 +96,7 @@ export type Contract = {
   id: string
 }
 
-type EventSource = {
+interface EventSource {
   name: string
   // deno-lint-ignore no-explicit-any
   handler: EventHandler<any, any, any>
@@ -118,13 +118,15 @@ export type EventHandlerContext<
   TEventName extends string,
   TAbi extends Abi,
 > = {
-  event: Log<
-    bigint,
-    number,
-    false,
-    TAbiEvent,
-    true
-  > | never
+  event:
+    | Log<
+      bigint,
+      number,
+      false,
+      TAbiEvent,
+      true
+    >
+    | never
   eventName: TEventName
   client: PublicClient
   store: Store
@@ -134,7 +136,7 @@ export type EventHandlerContext<
   getTimestampMs: () => Promise<number>
 }
 
-export type BlockHandlerContext = {
+export interface BlockHandlerContext {
   block: SafeBlock
   client: PublicClient
   store: Store
@@ -153,102 +155,6 @@ export type EventHandler<
 ) => Promise<void> | void
 
 export type BlockHandler = (ctx: BlockHandlerContext) => Promise<void> | void
-
-type ValidNameChars =
-  | 'a'
-  | 'b'
-  | 'c'
-  | 'd'
-  | 'e'
-  | 'f'
-  | 'g'
-  | 'h'
-  | 'i'
-  | 'j'
-  | 'k'
-  | 'l'
-  | 'm'
-  | 'n'
-  | 'o'
-  | 'p'
-  | 'q'
-  | 'r'
-  | 's'
-  | 't'
-  | 'u'
-  | 'v'
-  | 'w'
-  | 'x'
-  | 'y'
-  | 'z'
-  | '0'
-  | '1'
-  | '2'
-  | '3'
-  | '4'
-  | '5'
-  | '6'
-  | '7'
-  | '8'
-  | '9'
-  | '-'
-  | '_'
-
-export type CheckManifestName<Name extends string, FullName extends string> =
-  Name extends `${infer First}${infer Rest}`
-    ? First extends ValidNameChars | Capitalize<ValidNameChars>
-      ? CheckManifestName<Rest, FullName>
-    : `Invalid character in manifest name: ${First}`
-    : FullName
-
-export type HexString<Str extends string, Length extends number> = Str extends
-  `0x${infer Rest}`
-  ? InnerHexStr<Rest, Length> extends number
-    ? InnerHexStr<Rest, Length> extends Length ? Str
-    : `Invalid hex string length. Expected ${Length}, got ${InnerHexStr<
-      Rest,
-      Length
-    >}`
-  : `Invalid hex character in string: ${InnerHexStr<Rest, Length>}`
-  : 'Missing 0x prefix'
-
-type InnerHexStr<
-  Str extends string,
-  Length extends number,
-  LengthStore extends never[] = [],
-> = Str extends `${infer First}${infer Rest}`
-  ? First extends HexChars | Capitalize<HexChars>
-    ? InnerHexStr<Rest, Length, [...LengthStore, never]>
-  : First
-  : LengthStore['length'] extends Length ? Length
-  : LengthStore['length']
-
-type HexChars =
-  | '0'
-  | '1'
-  | '2'
-  | '3'
-  | '4'
-  | '5'
-  | '6'
-  | '7'
-  | '8'
-  | '9'
-  | 'a'
-  | 'b'
-  | 'c'
-  | 'd'
-  | 'e'
-  | 'f'
-
-export type ValidateSourcesObject<Sources extends Record<string, bigint>> =
-  keyof Sources extends string
-    ? keyof Sources extends HexString<keyof Sources, 40> | '*'
-      ? keyof Sources extends '*' ? Sources
-      : keyof Sources extends HexString<keyof Sources, 40> ? Sources
-      : 'Can\'t mix wildcard and specific addresses'
-    : HexString<keyof Sources, 40>
-    : `Source addresses must be strings`
 
 export type MapAbiEventToArgsWithType<
   TAbi extends Abi,

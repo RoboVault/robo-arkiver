@@ -16,7 +16,7 @@ export type SchemaDefinition = {
   ]
 } & { _id?: Scalar }
 
-export type ScalarTypeMap = {
+export interface ScalarTypeMap {
   string: string
   int: number
   float: number
