@@ -3,7 +3,7 @@ import { ERC20_ABI } from './abis/erc20.ts'
 import { Balance } from './collections/balance.ts'
 import { onTransfer } from './handlers/transfer.ts'
 
-export default new Manifest('simple')
+export default new Manifest('my-arkive')
   .addCollection(Balance)
   .addChain('mainnet', (chain) =>
     chain

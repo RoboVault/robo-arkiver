@@ -142,9 +142,7 @@ export const mapScalarToFilterFieldCreator = (
     switch (scalar) {
       case 'string':
         return createStringFilterField
-      case 'int':
-        return createIntFilterField
-      case 'float':
+      case 'number':
         return createFloatFilterField
       case 'boolean':
         return () => GraphQLBoolean

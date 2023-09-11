@@ -6,7 +6,7 @@ export const Price = createCollection('Price', {
     symbol: 'string',
   },
   values: {
-    price: 'float',
-    volume: 'float',
+    price: 'number',
+    volume: 'number',
   },
 })

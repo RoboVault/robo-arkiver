@@ -4,7 +4,7 @@ export const VaultSnapshot = createCollection('Vault', {
   vault: 'string',
   name: 'string',
   symbol: 'string',
-  block: 'int',
-  timestamp: 'int',
-  sharePrice: 'float',
+  block: 'number',
+  timestamp: 'number',
+  sharePrice: 'number',
 })

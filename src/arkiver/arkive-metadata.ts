@@ -2,12 +2,12 @@ import { createCollection } from '../collection/collection.ts'
 
 export const ArkiveMetadata = createCollection('ArkiverMetadata', {
   _id: 'string',
-  processedBlockHeight: 'int',
+  processedBlockHeight: 'number',
   chain: 'string',
-  eventHandlerCalls: 'int',
-  blockHandlerCalls: 'int',
+  eventHandlerCalls: 'number',
+  blockHandlerCalls: 'number',
   errors: ['string'],
-  arkiveId: 'int',
-  arkiveMajorVersion: 'int',
-  arkiveMinorVersion: 'int',
+  arkiveId: 'number',
+  arkiveMajorVersion: 'number',
+  arkiveMinorVersion: 'number',
 })

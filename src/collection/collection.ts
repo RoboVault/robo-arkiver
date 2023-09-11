@@ -2,8 +2,7 @@ import { Collection, Database, ObjectId } from '../deps.ts'
 
 export type Scalar =
   | 'string'
-  | 'int'
-  | 'float'
+  | 'number'
   | 'boolean'
   | 'bigint'
   | 'date'
@@ -18,8 +17,7 @@ export type SchemaDefinition = {
 
 export interface ScalarTypeMap {
   string: string
-  int: number
-  float: number
+  number: number
   boolean: boolean
   bigint: bigint
   date: Date

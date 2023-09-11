@@ -5,7 +5,6 @@ import {
   GraphQLFieldConfig,
   GraphQLFieldResolver,
   GraphQLFloat,
-  GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -27,7 +26,7 @@ import {
   SchemaDefinition,
 } from '../collection.ts'
 import { Database, ObjectId } from '../../deps.ts'
-import { buildArrayQueryArgs, FilterArg } from './filter.ts'
+import { buildArrayQueryArgs, FilterArg } from './args.ts'
 import { buildAggregationStages } from './query.ts'
 
 export class ArkiveSchemaComposer {
@@ -231,9 +230,7 @@ export const mapScalarToGraphQLType = (scalar: Scalar) => {
   switch (scalar) {
     case 'string':
       return GraphQLString
-    case 'int':
-      return GraphQLInt
-    case 'float':
+    case 'number':
       return GraphQLFloat
     case 'boolean':
       return GraphQLBoolean
