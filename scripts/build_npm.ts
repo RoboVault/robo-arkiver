@@ -57,6 +57,5 @@ await build({
 
 		return true;
 	},
-	// scriptModule: false,
 	test: false
 });
